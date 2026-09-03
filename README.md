@@ -2,7 +2,7 @@
 
 An auditable knowledge assistant for synthetic hospital IT operations documents.
 
-This repository is intentionally developed in daily increments. Each day must leave runnable code, a negative test or failure example, a short explanation, and a focused Git commit. The project starts as a minimal FastAPI service and evolves into a cited, evaluated, tenant-isolated RAG application with restricted tool calling.
+This repository is developed in incremental, testable stages. It starts as a minimal FastAPI service and evolves into a cited, evaluated, tenant-isolated RAG application with restricted tool calling.
 
 ## Safety Boundary
 
@@ -13,17 +13,17 @@ This repository is intentionally developed in daily increments. Each day must le
 
 ## Current Stage
 
-**Day 0 — planning scaffold**
+**Day 1 — minimal FastAPI API complete**
 
-The application code is deliberately not generated yet. Day 1 begins from an empty Python application so the implementation can be completed and explained independently.
+- `GET /health`
+- `POST /users` with Pydantic request and response models
+- `GET /users/{user_id}` with integer path validation
 
 ## Documents
 
 - Chinese overview: [`README_CN.md`](README_CN.md)
 - Project specification: [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
-- 30-day plan: [`docs/plans/2026-09-03-medops-rag-30-day-plan.md`](docs/plans/2026-09-03-medops-rag-30-day-plan.md)
-- Daily evidence index: [`docs/progress/DAILY_LOG.md`](docs/progress/DAILY_LOG.md)
-- Daily report template: [`docs/progress/DAY_REPORT_TEMPLATE.md`](docs/progress/DAY_REPORT_TEMPLATE.md)
+- Clear 30-day task checklist: [`docs/plans/2026-09-03-medops-rag-30-day-plan.md`](docs/plans/2026-09-03-medops-rag-30-day-plan.md)
 
 ## Version Gates
 

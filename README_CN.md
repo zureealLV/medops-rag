@@ -2,18 +2,17 @@
 
 这是一个面向**医院信息化运维与制度文档**的可审计知识助手学习项目，只使用公开或合成资料，不进行医疗诊断。
 
-## 正确的学习方式
+## 开发方式
 
 这不是 30 个互不相关的小练习，而是一个仓库连续升级：
 
-1. 当天先学习完成任务所需的最小知识；
-2. 关掉教程，在本仓库独立实现；
-3. 主动制造至少一个失败场景；
-4. 保存运行命令、测试结果或截图作为证据；
-5. 用自己的话解释设计选择；
-6. 只提交当天相关文件，并写一个清楚的 Git commit。
+1. 先阅读当天清晰列出的接口、文件和行为要求；
+2. 只学习完成任务所需的最小知识；
+3. 关掉教程，在本仓库独立实现；
+4. 按验收清单运行功能和非法输入；
+5. 只提交当天相关文件，并写一个清楚的 Git commit。
 
-如果当天验收没有通过，不按日历硬冲下一天。修到通过后再继续。教程进度不是项目进度，能运行、能测试、能解释才算进度。
+如果验收没有通过，不按日历硬冲下一项。修到通过后再继续。教程进度不是项目进度，功能与测试通过才算进度。
 
 ## 项目边界
 
@@ -24,13 +23,11 @@
 - 只选择一套 RAG 技术链，不同时堆 LangChain、LlamaIndex、Dify 等框架；
 - 安全结论必须有负向测试，不能声称“绝对安全”。
 
-## 从哪里开始
+## 当前进度
 
-1. 阅读 [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)。
-2. 查看 [`docs/plans/2026-09-03-medops-rag-30-day-plan.md`](docs/plans/2026-09-03-medops-rag-30-day-plan.md) 的 Day 1。
-3. 将 [`docs/progress/DAY_REPORT_TEMPLATE.md`](docs/progress/DAY_REPORT_TEMPLATE.md) 复制为当天记录。
-4. 从空文件实现 Day 1；不要让 AI 直接生成验收答案。
-5. 把证据和结论填写到 [`docs/progress/DAILY_LOG.md`](docs/progress/DAILY_LOG.md)。
+- Day 1 已完成：`GET /health`、`POST /users`、`GET /users/{user_id}`。
+- 下一步：按照 [`30 天任务清单`](docs/plans/2026-09-03-medops-rag-30-day-plan.md) 完成 Day 2 分层。
+- 项目范围和最终边界见 [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)。
 
 ## 四个版本门禁
 
