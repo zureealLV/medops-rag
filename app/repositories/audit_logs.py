@@ -1,0 +1,1 @@
+"""Audit-event persistence operations."""
