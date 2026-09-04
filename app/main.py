@@ -1,37 +1,15 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+
+from app.api.health import router as health_router
+from app.api.users import router as users_router
+from app.api.knowledge_bases import router as knowledge_bases_router
+from app.api.documents import router as documents_router
+
 
 app = FastAPI()
 
-class UserCreate(BaseModel):
-    name: str
-    email: str
 
-class User(BaseModel):
-    id: int
-    name: str
-    email: str
-
-users = {}
-
-next_user_id = 1
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-@app.post("/users", response_model=User)
-async def create_user(user: UserCreate):
-    global next_user_id
-
-    new_user = User(
-        id=next_user_id,
-        name=user.name,
-        email=user.email
-    )
-
-    users[next_user_id] = new_user
-    next_user_id += 1
-    return new_user
-
-@app.get("/users/{user_id}")
-async def get_user(user_id: int):
-    return users.get(user_id)
+app.include_router(health_router)
+app.include_router(users_router)
+app.include_router(knowledge_bases_router)
+app.include_router(documents_router)

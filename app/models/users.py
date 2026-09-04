@@ -1,1 +1,11 @@
 """User request and response models."""
+from pydantic import BaseModel
+
+class UserCreate(BaseModel):
+    name:str
+    email:str
+
+class User(BaseModel):
+    id:int
+    name:str
+    email:str
