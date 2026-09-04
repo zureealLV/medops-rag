@@ -1,0 +1,18 @@
+* text=auto
+
+# Cross-platform source and configuration files use LF.
+*.py text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.svg text eol=lf
+.env.example text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+Dockerfile text eol=lf
+
+# PowerShell scripts keep native Windows line endings.
+*.ps1 text eol=crlf
