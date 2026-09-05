@@ -1,1 +1,25 @@
-# TODO(Day 23): define the application service, volumes, and exposed port.
+services:
+  medops:
+    build: .
+    environment:
+      DATABASE_URL: sqlite:///./data/runtime/medops.db
+      LOG_LEVEL: INFO
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - medops_data:/app/data/runtime
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  medops_data:

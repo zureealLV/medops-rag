@@ -1,35 +1,93 @@
-# MedOps RAG
+# MedOps RAG V1
 
-An auditable knowledge assistant for synthetic hospital IT operations documents.
+[中文说明](README_CN.md) · [Learning guide](docs/LEARNING_GUIDE.md) · [Threat model](THREAT_MODEL.md)
 
-This repository is developed in incremental, testable stages. It starts as a minimal FastAPI service and evolves into a cited, evaluated, tenant-isolated RAG application with restricted tool calling.
+An auditable, tenant-scoped RAG assistant for **synthetic hospital IT operations documents**. It demonstrates a complete FastAPI → SQLite → ingestion → hybrid retrieval → cited answer pipeline without requiring an API key.
 
-## Safety Boundary
+> Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
-- Use only public or synthetic data.
-- Do not provide diagnosis or treatment advice.
-- Do not store real patient information, credentials, cookies, or API tokens.
-- Treat retrieved documents and model output as untrusted data.
+## V1 capabilities
 
-## Current Stage
+- FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
+- SQLite transactions, foreign keys, indexes and restart persistence;
+- knowledge-base and document CRUD with automatic chunking and indexing;
+- deterministic hashing embeddings plus keyword/vector hybrid ranking;
+- cited extractive answers and evidence-threshold abstention;
+- optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
+- tenant filtering in SQL before retrieval/model context;
+- indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
+- three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
+- request IDs, `Server-Timing`, request metrics, 26 API/security tests and a 30-case offline evaluation;
+- reproducible local and Docker Compose startup.
 
-**Day 1 — minimal FastAPI API complete**
+## Quick start (Windows / PowerShell)
 
-- `GET /health`
-- `POST /users` with Pydantic request and response models
-- `GET /users/{user_id}` with integer path validation
+Requires Python 3.11+.
 
-## Documents
+```powershell
+git clone https://github.com/zureealLV/medops-rag.git
+cd medops-rag
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py
+.\.venv\Scripts\fastapi.exe dev
+```
 
-- Chinese overview: [`README_CN.md`](README_CN.md)
-- Project specification: [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
-- Clear 30-day task checklist: [`docs/plans/2026-09-03-medops-rag-30-day-plan.md`](docs/plans/2026-09-03-medops-rag-30-day-plan.md)
+Open `http://127.0.0.1:8000/docs`. Business endpoints require the demo trust-boundary header:
 
-## Version Gates
+```text
+X-Tenant-ID: hospital-a
+X-Actor-ID: local-demo
+```
 
-| Gate | Version | Evidence |
-|---|---|---|
-| Day 7 | MedKB API v0.1 | FastAPI, SQLite, CRUD, layers, errors, logs, pytest |
-| Day 14 | MedOps RAG v0.2 | ingestion, retrieval, citations, evaluation, restricted tools |
-| Day 21 | Secure MedOps RAG v0.3 | tenant isolation, injection tests, redaction, audit trail |
-| Day 30 | MedOps RAG v1.0 | reproducible deployment, observability, documentation, demo |
+`X-Tenant-ID` represents identity already authenticated by an upstream gateway. It is deliberately **not** production authentication.
+
+## Minimal demonstration
+
+```powershell
+$headers = @{ "X-Tenant-ID" = "hospital-a"; "X-Actor-ID" = "local-demo" }
+
+Invoke-RestMethod http://127.0.0.1:8000/search -Method Post -Headers $headers `
+  -ContentType "application/json" -Body '{"query":"LIS 接口连续超时先检查什么？"}'
+
+Invoke-RestMethod http://127.0.0.1:8000/answer -Method Post -Headers $headers `
+  -ContentType "application/json" -Body '{"question":"PACS 健康检查失败如何排查？"}'
+```
+
+See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injection and denied-tool cases.
+
+## Quality gates
+
+```powershell
+.\scripts\run_tests.ps1
+$env:PYTHONUTF8 = "1"
+.\.venv\Scripts\python.exe .\evals\run_eval.py
+```
+
+Validated V1 baseline: **26 tests passed**; 30 evaluation cases achieved Retrieval Hit@5 `1.00`, citation correctness `1.00`, and correct abstention `1.00` on the bundled synthetic corpus. This is a small deterministic benchmark, not a production-quality claim.
+
+## Docker Compose
+
+```powershell
+docker compose up --build
+```
+
+The API binds only to `127.0.0.1:8000`; SQLite data lives in the named volume `medops_data`.
+
+## Optional model provider
+
+Offline extractive answers are the default. To use an OpenAI-compatible `/chat/completions` endpoint, copy `.env.example` to `.env` and configure `MODEL_API_KEY`, `MODEL_BASE_URL`, and `MODEL_NAME`. Never commit `.env`.
+
+## Architecture
+
+![MedOps RAG architecture](docs/architecture.svg)
+
+Read [`docs/LEARNING_GUIDE.md`](docs/LEARNING_GUIDE.md) in the listed order to understand the FastAPI and RAG implementation without treating every file as equally important.
+
+## Explicit limits
+
+- Hashing embeddings are lightweight and deterministic, not comparable to production embedding models.
+- Prompt-injection detection is heuristic defense-in-depth, not a complete solution.
+- The tenant header is a demo boundary; production deployments require authenticated identity and authorization.
+- SQLite and in-process retrieval target a local demonstration, not hospital-scale traffic.
+- The corpus is synthetic and the evaluation set is intentionally small.

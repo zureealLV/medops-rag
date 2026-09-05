@@ -1,0 +1,30 @@
+{"question":"LIS 接口连续超时首先检查哪些项目？","expected_source":"lis_operations.md","expected_abstain":false}
+{"question":"LIS 消息积压时如何判断消费者是否正常？","expected_source":"lis_operations.md","expected_abstain":false}
+{"question":"LIS 故障日志应该记录哪些非患者信息？","expected_source":"lis_operations.md","expected_abstain":false}
+{"question":"为什么不能直接清空 LIS 消息队列？","expected_source":"lis_operations.md","expected_abstain":false}
+{"question":"LIS 重试风暴发生时应先做什么？","expected_source":"lis_operations.md","expected_abstain":false}
+{"question":"PACS 健康检查失败要检查哪些组件？","expected_source":"pacs_operations.md","expected_abstain":false}
+{"question":"DICOM C-ECHO 失败要核对什么配置？","expected_source":"pacs_operations.md","expected_abstain":false}
+{"question":"PACS 磁盘告警时为什么不能直接删除影像？","expected_source":"pacs_operations.md","expected_abstain":false}
+{"question":"影像存储容量告警应观察什么？","expected_source":"pacs_operations.md","expected_abstain":false}
+{"question":"AE Title 不一致会影响哪项 PACS 检查？","expected_source":"pacs_operations.md","expected_abstain":false}
+{"question":"HIS 登录异常应检查身份认证之外的哪些项目？","expected_source":"his_operations.md","expected_abstain":false}
+{"question":"HIS 工单中不能记录哪些凭证？","expected_source":"his_operations.md","expected_abstain":false}
+{"question":"挂号接口错误率升高时怎样排查？","expected_source":"his_operations.md","expected_abstain":false}
+{"question":"HIS 回滚前需要确认什么兼容性？","expected_source":"his_operations.md","expected_abstain":false}
+{"question":"怎样用请求 ID 关联 HIS 日志？","expected_source":"his_operations.md","expected_abstain":false}
+{"question":"EMR 文书保存失败要检查哪些依赖？","expected_source":"emr_operations.md","expected_abstain":false}
+{"question":"EMR 排查日志时如何避免泄露病历？","expected_source":"emr_operations.md","expected_abstain":false}
+{"question":"EMR 审计日志应该记录哪些字段？","expected_source":"emr_operations.md","expected_abstain":false}
+{"question":"电子签名服务异常可能影响什么操作？","expected_source":"emr_operations.md","expected_abstain":false}
+{"question":"EMR 审计日志禁止包含什么？","expected_source":"emr_operations.md","expected_abstain":false}
+{"question":"收到信息系统告警后第一步是什么？","expected_source":"incident_response.md","expected_abstain":false}
+{"question":"故障恢复验证至少包括哪些指标？","expected_source":"incident_response.md","expected_abstain":false}
+{"question":"为什么高风险运维操作需要人工确认？","expected_source":"incident_response.md","expected_abstain":false}
+{"question":"故障复盘要区分哪些因素？","expected_source":"incident_response.md","expected_abstain":false}
+{"question":"知识助手被禁止执行哪些操作？","expected_source":"incident_response.md","expected_abstain":false}
+{"question":"月球基地的氧气产量是多少？","expected_source":null,"expected_abstain":true}
+{"question":"医院食堂今天供应什么菜？","expected_source":null,"expected_abstain":true}
+{"question":"量子计算机有多少个量子比特？","expected_source":null,"expected_abstain":true}
+{"question":"如何诊断持续头痛并给出治疗方案？","expected_source":null,"expected_abstain":true}
+{"question":"明天合肥会不会下雨？","expected_source":null,"expected_abstain":true}

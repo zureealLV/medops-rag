@@ -1,94 +1,123 @@
-"""Document and chunk persistence operations."""
-from app.models.documents import (
-    Document,
-    DocumentCreate,
-    DocumentUpdate,
-)
+"""SQLite document and chunk persistence operations."""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+from pathlib import Path
+
+from app.db import transaction
+from app.models.documents import Document, DocumentCreate, DocumentUpdate
+from app.retrieval.embeddings import embed
 
 
-documents: dict[int, Document] = {}
+def _model(row: sqlite3.Row) -> Document:
+    data = dict(row)
+    data["kb_id"] = data.pop("knowledge_base_id")
+    return Document(**data)
 
-next_document_id = 1
 
-
-def create_document(
+def _insert_chunks(
+    connection: sqlite3.Connection,
+    document_id: int,
     kb_id: int,
-    document: DocumentCreate,
-) -> Document:
-
-    global next_document_id
-
-    new_document = Document(
-        id=next_document_id,
-        kb_id=kb_id,
-        title=document.title,
-        content=document.content,
+    tenant_id: str,
+    chunks: list[str],
+) -> None:
+    connection.executemany(
+        """INSERT INTO chunks
+           (document_id, knowledge_base_id, tenant_id, chunk_index, text, embedding_json)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        [
+            (document_id, kb_id, tenant_id, index, text, json.dumps(embed(text)))
+            for index, text in enumerate(chunks)
+        ],
     )
 
-    documents[next_document_id] = new_document
 
-    next_document_id += 1
+def create(path: Path, tenant_id: str, kb_id: int, data: DocumentCreate, chunks: list[str]) -> Document:
+    with transaction(path) as connection:
+        cursor = connection.execute(
+            """INSERT INTO documents (knowledge_base_id, tenant_id, title, content, source)
+               VALUES (?, ?, ?, ?, ?)""",
+            (kb_id, tenant_id, data.title, data.content, data.source),
+        )
+        document_id = int(cursor.lastrowid)
+        _insert_chunks(connection, document_id, kb_id, tenant_id, chunks)
+        row = connection.execute(
+            """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
+                      COUNT(c.id) AS chunk_count
+               FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
+               WHERE d.id = ? GROUP BY d.id""",
+            (document_id,),
+        ).fetchone()
+    return _model(row)
 
-    return new_document
+
+def get(path: Path, tenant_id: str, document_id: int) -> Document | None:
+    with transaction(path) as connection:
+        row = connection.execute(
+            """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
+                      COUNT(c.id) AS chunk_count
+               FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
+               WHERE d.id = ? AND d.tenant_id = ? GROUP BY d.id""",
+            (document_id, tenant_id),
+        ).fetchone()
+    return _model(row) if row else None
 
 
-def get_document(
+def list_for_kb(path: Path, tenant_id: str, kb_id: int) -> list[Document]:
+    with transaction(path) as connection:
+        rows = connection.execute(
+            """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
+                      COUNT(c.id) AS chunk_count
+               FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
+               WHERE d.knowledge_base_id = ? AND d.tenant_id = ?
+               GROUP BY d.id ORDER BY d.id""",
+            (kb_id, tenant_id),
+        ).fetchall()
+    return [_model(row) for row in rows]
+
+
+def update(
+    path: Path,
+    tenant_id: str,
     document_id: int,
+    data: DocumentUpdate,
+    chunks: list[str] | None,
 ) -> Document | None:
-
-    return documents.get(document_id)
-
-
-def update_document(
-    document_id: int,
-    document: DocumentUpdate,
-) -> Document | None:
-
-    stored_document = documents.get(document_id)
-
-    if stored_document is None:
+    stored = get(path, tenant_id, document_id)
+    if stored is None:
         return None
-
-    update_data = document.model_dump(
-        exclude_unset=True
-    )
-
-    stored_data = stored_document.model_dump()
-
-    stored_data.update(update_data)
-
-    updated_document = Document(
-        **stored_data
-    )
-
-    documents[document_id] = updated_document
-
-    return updated_document
+    values = stored.model_dump(exclude={"chunk_count", "id", "kb_id", "tenant_id"})
+    values.update(data.model_dump(exclude_unset=True))
+    with transaction(path) as connection:
+        connection.execute(
+            """UPDATE documents SET title = ?, content = ?, source = ?, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ? AND tenant_id = ?""",
+            (values["title"], values["content"], values["source"], document_id, tenant_id),
+        )
+        if chunks is not None:
+            connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
+            _insert_chunks(connection, document_id, stored.kb_id, tenant_id, chunks)
+    return get(path, tenant_id, document_id)
 
 
-def delete_document(
-    document_id: int,
-) -> bool:
-
-    if document_id not in documents:
-        return False
-
-    del documents[document_id]
-
-    return True
+def delete(path: Path, tenant_id: str, document_id: int) -> bool:
+    with transaction(path) as connection:
+        cursor = connection.execute(
+            "DELETE FROM documents WHERE id = ? AND tenant_id = ?", (document_id, tenant_id)
+        )
+        return cursor.rowcount == 1
 
 
-def delete_documents_by_kb_id(
-    kb_id: int,
-) -> int:
-
-    document_ids = [
-        document_id
-        for document_id, document in documents.items()
-        if document.kb_id == kb_id
-    ]
-
-    for document_id in document_ids:
-        del documents[document_id]
-
-    return len(document_ids)
+def retrieval_rows(path: Path, tenant_id: str, kb_id: int | None = None) -> list[sqlite3.Row]:
+    sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json, d.source
+             FROM chunks c JOIN documents d ON d.id = c.document_id
+             WHERE c.tenant_id = ?"""
+    params: list[object] = [tenant_id]
+    if kb_id is not None:
+        sql += " AND c.knowledge_base_id = ?"
+        params.append(kb_id)
+    with transaction(path) as connection:
+        return list(connection.execute(sql, params).fetchall())

@@ -1,7 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="240" viewBox="0 0 960 240" role="img" aria-labelledby="title description">
-  <title id="title">MedOps RAG architecture placeholder</title>
-  <desc id="description">The complete architecture diagram will be produced during the documentation stage.</desc>
-  <rect width="960" height="240" fill="#10131a"/>
-  <text x="480" y="110" text-anchor="middle" fill="#e8edf5" font-family="sans-serif" font-size="28">MedOps RAG Architecture</text>
-  <text x="480" y="150" text-anchor="middle" fill="#8fa3bf" font-family="sans-serif" font-size="17">TODO(Day 26): API -> Service -> Retrieval / Repository -> Security controls</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title description">
+  <title id="title">MedOps RAG V1 architecture</title>
+  <desc id="description">FastAPI routes call services, tenant-scoped SQLite repositories, hybrid retrieval, a model fallback and allowlisted tools with security and observability controls.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#66e3ff"/></marker>
+    <style>
+      .box{fill:#161d2b;stroke:#66e3ff;stroke-width:2;rx:10}.security{fill:#251a32;stroke:#ff76c8;stroke-width:2;rx:10}
+      .title{fill:#f1f5ff;font:700 25px sans-serif}.label{fill:#e6ecff;font:600 17px sans-serif}.note{fill:#aab9d6;font:14px sans-serif}
+      .line{stroke:#66e3ff;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="620" fill="#0d111b"/>
+  <text x="600" y="44" text-anchor="middle" class="title">MedOps RAG V1 — auditable, tenant-scoped, offline-first</text>
+  <rect class="box" x="40" y="100" width="170" height="95"/><text class="label" x="125" y="138" text-anchor="middle">Client</text><text class="note" x="125" y="166" text-anchor="middle">Swagger / HTTP</text>
+  <rect class="box" x="260" y="100" width="185" height="95"/><text class="label" x="352" y="138" text-anchor="middle">FastAPI API</text><text class="note" x="352" y="166" text-anchor="middle">validation + DI</text>
+  <rect class="box" x="500" y="100" width="185" height="95"/><text class="label" x="592" y="138" text-anchor="middle">Services</text><text class="note" x="592" y="166" text-anchor="middle">use cases + policy</text>
+  <path class="line" d="M210 148 H255"/><path class="line" d="M445 148 H495"/>
+  <rect class="box" x="770" y="80" width="190" height="95"/><text class="label" x="865" y="118" text-anchor="middle">Repositories</text><text class="note" x="865" y="146" text-anchor="middle">parameterized SQL</text>
+  <rect class="box" x="1000" y="80" width="160" height="95"/><text class="label" x="1080" y="118" text-anchor="middle">SQLite</text><text class="note" x="1080" y="146" text-anchor="middle">docs + chunks</text>
+  <path class="line" d="M685 132 H765"/><path class="line" d="M960 128 H995"/>
+  <rect class="box" x="770" y="230" width="190" height="120"/><text class="label" x="865" y="268" text-anchor="middle">Hybrid Retrieval</text><text class="note" x="865" y="296" text-anchor="middle">keyword + vector</text><text class="note" x="865" y="322" text-anchor="middle">ranked Evidence[]</text>
+  <rect class="box" x="1000" y="230" width="160" height="120"/><text class="label" x="1080" y="268" text-anchor="middle">Answer</text><text class="note" x="1080" y="296" text-anchor="middle">optional model</text><text class="note" x="1080" y="322" text-anchor="middle">offline fallback</text>
+  <path class="line" d="M685 160 C720 160 720 290 765 290"/><path class="line" d="M960 290 H995"/>
+  <rect class="box" x="500" y="260" width="185" height="90"/><text class="label" x="592" y="298" text-anchor="middle">Read-only tools</text><text class="note" x="592" y="326" text-anchor="middle">three allowlisted</text>
+  <path class="line" d="M592 195 V255"/>
+  <rect class="security" x="260" y="430" width="700" height="125"/><text class="label" x="610" y="468" text-anchor="middle">Security controls</text><text class="note" x="610" y="500" text-anchor="middle">tenant filter before retrieval · injection quarantine · PII redaction · evidence threshold · tool validation</text><text class="note" x="610" y="530" text-anchor="middle">audit events · medical-advice denial · bounded timeout/retry/fallback</text>
+  <path class="line" d="M352 195 V425"/><path class="line" d="M592 350 V425"/><path class="line" d="M865 350 V425"/>
+  <rect class="box" x="1000" y="430" width="160" height="125"/><text class="label" x="1080" y="468" text-anchor="middle">Observability</text><text class="note" x="1080" y="498" text-anchor="middle">request ID</text><text class="note" x="1080" y="522" text-anchor="middle">latency + tokens</text>
+  <path class="line" d="M960 493 H995"/>
+  <text class="note" x="40" y="594">Synthetic data only · educational system · not medical advice · not production authentication</text>
 </svg>

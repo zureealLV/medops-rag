@@ -1,1 +1,1 @@
-"""Model-facing workflows and restricted tool definitions."""
+"""Model-facing prompt and provider adapters."""

@@ -1,55 +1,41 @@
 """Document lifecycle and ingestion orchestration."""
 
-from app.models.documents import (
-    Document,
-    DocumentCreate,
-    DocumentUpdate,
-)
+from pathlib import Path
 
-from app.repositories import documents as document_repository
-from app.repositories import knowledge_bases as kb_repository
+from app.config import Settings
+from app.models.documents import Document, DocumentCreate, DocumentUpdate
+from app.repositories import documents as repository
+from app.repositories import knowledge_bases
+from app.retrieval.chunking import split_text
 
 
-def create_document(
-    kb_id: int,
-    document: DocumentCreate,
+def create(
+    path: Path, settings: Settings, tenant_id: str, kb_id: int, data: DocumentCreate
 ) -> Document | None:
-
-    knowledge_base = kb_repository.get_knowledge_base(kb_id)
-
-    if knowledge_base is None:
+    if knowledge_bases.get(path, tenant_id, kb_id) is None:
         return None
-
-    return document_repository.create_document(
-        kb_id,
-        document,
-    )
+    chunks = split_text(data.content, size=settings.chunk_size, overlap=settings.chunk_overlap)
+    return repository.create(path, tenant_id, kb_id, data, chunks)
 
 
-def get_document(
-    document_id: int,
+def get(path: Path, tenant_id: str, document_id: int) -> Document | None:
+    return repository.get(path, tenant_id, document_id)
+
+
+def list_for_kb(path: Path, tenant_id: str, kb_id: int) -> list[Document] | None:
+    if knowledge_bases.get(path, tenant_id, kb_id) is None:
+        return None
+    return repository.list_for_kb(path, tenant_id, kb_id)
+
+
+def update(
+    path: Path, settings: Settings, tenant_id: str, document_id: int, data: DocumentUpdate
 ) -> Document | None:
-
-    return document_repository.get_document(
-        document_id
-    )
-
-
-def update_document(
-    document_id: int,
-    document: DocumentUpdate,
-) -> Document | None:
-
-    return document_repository.update_document(
-        document_id,
-        document,
-    )
+    chunks = None
+    if data.content is not None:
+        chunks = split_text(data.content, size=settings.chunk_size, overlap=settings.chunk_overlap)
+    return repository.update(path, tenant_id, document_id, data, chunks)
 
 
-def delete_document(
-    document_id: int,
-) -> bool:
-
-    return document_repository.delete_document(
-        document_id
-    )
+def delete(path: Path, tenant_id: str, document_id: int) -> bool:
+    return repository.delete(path, tenant_id, document_id)

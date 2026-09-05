@@ -1,61 +1,38 @@
 """Knowledge-base business rules."""
-from app.repositories import documents as document_repository
-from app.models.knowledge_bases import (
-    KnowledgeBase,
-    KnowledgeBaseCreate,
-    KnowledgeBaseUpdate,
-)
 
-from app.repositories import knowledge_bases as kb_repository
+import sqlite3
+from pathlib import Path
 
-
-def create_knowledge_base(
-    knowledge_base: KnowledgeBaseCreate,
-) -> KnowledgeBase:
-
-    return kb_repository.create_knowledge_base(
-        knowledge_base
-    )
+from app.exceptions import AppError
+from app.models.knowledge_bases import KnowledgeBase, KnowledgeBaseCreate, KnowledgeBaseUpdate
+from app.repositories import knowledge_bases as repository
 
 
-def list_knowledge_bases() -> list[KnowledgeBase]:
-
-    return kb_repository.list_knowledge_bases()
-
-
-def get_knowledge_base(
-    kb_id: int,
-) -> KnowledgeBase | None:
-
-    return kb_repository.get_knowledge_base(kb_id)
+def create(path: Path, tenant_id: str, data: KnowledgeBaseCreate) -> KnowledgeBase:
+    try:
+        return repository.create(path, tenant_id, data)
+    except sqlite3.IntegrityError as exc:
+        raise AppError(
+            409, "knowledge_base_exists", "A knowledge base with this name already exists"
+        ) from exc
 
 
-def update_knowledge_base(
-    kb_id: int,
-    knowledge_base: KnowledgeBaseUpdate,
-) -> KnowledgeBase | None:
-
-    return kb_repository.update_knowledge_base(
-        kb_id,
-        knowledge_base,
-    )
+def list_all(path: Path, tenant_id: str) -> list[KnowledgeBase]:
+    return repository.list_all(path, tenant_id)
 
 
-def delete_knowledge_base(
-    kb_id: int,
-) -> bool:
+def get(path: Path, tenant_id: str, kb_id: int) -> KnowledgeBase | None:
+    return repository.get(path, tenant_id, kb_id)
 
-    knowledge_base = kb_repository.get_knowledge_base(
-        kb_id
-    )
 
-    if knowledge_base is None:
-        return False
+def update(path: Path, tenant_id: str, kb_id: int, data: KnowledgeBaseUpdate) -> KnowledgeBase | None:
+    try:
+        return repository.update(path, tenant_id, kb_id, data)
+    except sqlite3.IntegrityError as exc:
+        raise AppError(
+            409, "knowledge_base_exists", "A knowledge base with this name already exists"
+        ) from exc
 
-    document_repository.delete_documents_by_kb_id(
-        kb_id
-    )
 
-    return kb_repository.delete_knowledge_base(
-        kb_id
-    )
+def delete(path: Path, tenant_id: str, kb_id: int) -> bool:
+    return repository.delete(path, tenant_id, kb_id)

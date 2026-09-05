@@ -1,22 +1,40 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "medops-rag"
-version = "0.1.0"
+version = "1.0.0"
 description = "An auditable RAG assistant for synthetic hospital IT operations documents."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.141,<1.0",
+    "httpx>=0.28,<1.0",
+    "python-multipart>=0.0.20,<1.0",
     "uvicorn[standard]>=0.52,<1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "httpx>=0.28,<1.0",
     "pytest>=8,<9",
+    "ruff>=0.12,<1.0",
 ]
 
 [tool.fastapi]
 entrypoint = "app.main:app"
 
+[tool.setuptools.packages.find]
+include = ["app*", "scripts*"]
+namespaces = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

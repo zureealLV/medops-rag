@@ -1,24 +1,24 @@
-"""User persistence operations."""
+"""SQLite user persistence operations."""
+
+from pathlib import Path
+
+from app.db import transaction
 from app.models.users import User, UserCreate
 
-users : dict[int, User] = {}
 
-next_user_id = 1
-
-def create_user(user_data:UserCreate) -> User:
-    global next_user_id
-
-    new_user = User(
-        id=next_user_id,
-        name=user_data.name,
-        email=user_data.email,
+def create_user(path: Path, tenant_id: str, data: UserCreate) -> User:
+    with transaction(path) as connection:
+        cursor = connection.execute(
+            "INSERT INTO users (tenant_id, name, email) VALUES (?, ?, ?)",
+            (tenant_id, data.name, data.email),
         )
-    users[next_user_id] = new_user
+        return User(id=cursor.lastrowid, tenant_id=tenant_id, **data.model_dump())
 
-    next_user_id += 1
 
-    return new_user
-
-def get_user(user_id:int) -> User | None:
-
-    return users.get(user_id)
+def get_user(path: Path, tenant_id: str, user_id: int) -> User | None:
+    with transaction(path) as connection:
+        row = connection.execute(
+            "SELECT id, tenant_id, name, email FROM users WHERE id = ? AND tenant_id = ?",
+            (user_id, tenant_id),
+        ).fetchone()
+    return User(**dict(row)) if row else None
