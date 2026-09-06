@@ -1,0 +1,72 @@
+{
+  "benchmark": "synthetic-operations-v1-semantic",
+  "generated_at": "2026-09-06T08:25:00.288723+00:00",
+  "corpus_documents": 6,
+  "corpus_chunks": 6,
+  "answerable_cases": 25,
+  "environment": "Windows 10 CPU / ONNX Runtime",
+  "models": {
+    "dense": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "reranker": "BAAI/bge-reranker-base",
+    "dense_load_ms": 1056.661,
+    "reranker_load_ms": 4116.388,
+    "dense_corpus_index_ms": 1466.439
+  },
+  "results": [
+    {
+      "strategy": "hash_dense",
+      "cases": 25,
+      "hit_at_1": 0.88,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9333,
+      "latency_mean_ms": 0.187,
+      "latency_p95_ms": 0.404
+    },
+    {
+      "strategy": "multilingual_minilm_dense",
+      "cases": 25,
+      "hit_at_1": 0.88,
+      "hit_at_3": 0.96,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.928,
+      "latency_mean_ms": 124.153,
+      "latency_p95_ms": 225.281
+    },
+    {
+      "strategy": "bm25",
+      "cases": 25,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "latency_mean_ms": 0.424,
+      "latency_p95_ms": 1.214
+    },
+    {
+      "strategy": "bm25_minilm_rrf",
+      "cases": 25,
+      "hit_at_1": 0.96,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9733,
+      "latency_mean_ms": 124.188,
+      "latency_p95_ms": 225.296
+    },
+    {
+      "strategy": "bm25_minilm_rrf_bge_rerank_top10",
+      "cases": 25,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "latency_mean_ms": 1198.455,
+      "latency_p95_ms": 1339.681
+    }
+  ],
+  "limitations": [
+    "The corpus has only six synthetic documents; Hit@5 is not discriminative.",
+    "Model files were already cached, so load times exclude network download.",
+    "The reranker receives at most ten candidate chunks per query."
+  ]
+}

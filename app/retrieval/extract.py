@@ -1,22 +1,18 @@
-"""Extraction boundary for V1 text and Markdown documents."""
+"""Backward-compatible extraction helpers.
+
+New code should use :mod:`app.ingestion.parsers` directly so it can retain
+element-level provenance instead of flattening the parsed document to text.
+"""
 
 from pathlib import Path
 
-from app.exceptions import AppError
-
-SUPPORTED_SUFFIXES = {".txt", ".md"}
+from app.ingestion.parsers import SUPPORTED_SUFFIXES as SUPPORTED_SUFFIXES
+from app.ingestion.parsers import parse_bytes
 
 
 def extract_file(path: Path) -> str:
-    if path.suffix.lower() not in SUPPORTED_SUFFIXES:
-        raise AppError(400, "unsupported_document", "Only .txt and .md are supported in V1")
-    return path.read_text(encoding="utf-8")
+    return extract_bytes(path.name, path.read_bytes())
 
 
 def extract_bytes(filename: str, content: bytes) -> str:
-    if Path(filename).suffix.lower() not in SUPPORTED_SUFFIXES:
-        raise AppError(400, "unsupported_document", "Only .txt and .md are supported in V1")
-    try:
-        return content.decode("utf-8-sig")
-    except UnicodeDecodeError as exc:
-        raise AppError(400, "invalid_encoding", "Uploaded documents must use UTF-8") from exc
+    return parse_bytes(filename, content).content

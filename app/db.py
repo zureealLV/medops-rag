@@ -32,12 +32,30 @@ CREATE TABLE IF NOT EXISTS documents (
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     source TEXT NOT NULL,
+    mime_type TEXT NOT NULL DEFAULT 'text/plain',
+    sha256 TEXT NOT NULL DEFAULT '',
+    parser TEXT NOT NULL DEFAULT 'manual',
+    ingest_status TEXT NOT NULL DEFAULT 'succeeded',
+    warning_json TEXT NOT NULL DEFAULT '[]',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_documents_kb ON documents(knowledge_base_id);
 CREATE INDEX IF NOT EXISTS idx_documents_tenant ON documents(tenant_id);
+CREATE TABLE IF NOT EXISTS document_elements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    element_index INTEGER NOT NULL,
+    modality TEXT NOT NULL,
+    text TEXT NOT NULL,
+    page_number INTEGER,
+    heading TEXT,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    UNIQUE(document_id, element_index)
+);
+CREATE INDEX IF NOT EXISTS idx_document_elements_document ON document_elements(document_id);
 CREATE TABLE IF NOT EXISTS chunks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL,
@@ -110,3 +128,20 @@ def initialize(path: Path) -> None:
             connection.execute(
                 "ALTER TABLE request_metrics ADD COLUMN token_usage INTEGER NOT NULL DEFAULT 0"
             )
+        document_columns = {row["name"] for row in connection.execute("PRAGMA table_info(documents)")}
+        migrations = {
+            "mime_type": "ALTER TABLE documents ADD COLUMN mime_type TEXT NOT NULL DEFAULT 'text/plain'",
+            "sha256": "ALTER TABLE documents ADD COLUMN sha256 TEXT NOT NULL DEFAULT ''",
+            "parser": "ALTER TABLE documents ADD COLUMN parser TEXT NOT NULL DEFAULT 'manual'",
+            "ingest_status": (
+                "ALTER TABLE documents ADD COLUMN ingest_status TEXT NOT NULL DEFAULT 'succeeded'"
+            ),
+            "warning_json": "ALTER TABLE documents ADD COLUMN warning_json TEXT NOT NULL DEFAULT '[]'",
+        }
+        for name, sql in migrations.items():
+            if name not in document_columns:
+                connection.execute(sql)
+        connection.execute(
+            """CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_ingest_dedup
+               ON documents(tenant_id, knowledge_base_id, sha256) WHERE sha256 <> ''"""
+        )

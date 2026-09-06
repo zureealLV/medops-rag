@@ -36,3 +36,18 @@ class Document(BaseModel):
     content: str
     source: str
     chunk_count: int = 0
+    element_count: int = 0
+    mime_type: str = "text/plain"
+    sha256: str = ""
+    parser: str = "manual"
+    ingest_status: str = "succeeded"
+    warnings: list[str] = Field(default_factory=list)
+
+
+class DocumentElement(BaseModel):
+    index: int
+    modality: str
+    text: str
+    page_number: int | None = None
+    heading: str | None = None
+    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)

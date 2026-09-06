@@ -1,0 +1,63 @@
+{
+  "benchmark": "synthetic-operations-v1",
+  "generated_at": "2026-09-06T08:31:49.373472+00:00",
+  "corpus_documents": 6,
+  "answerable_cases": 25,
+  "embedding": "deterministic-hashing-256d",
+  "notes": [
+    "Hit@5 is weak on a six-document corpus; Hit@1 and MRR@5 are the primary diagnostics.",
+    "These results compare orchestration only and do not represent a production embedding model."
+  ],
+  "results": [
+    {
+      "strategy": "keyword",
+      "cases": 25,
+      "hit_at_1": 0.96,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.98,
+      "latency_mean_ms": 5.781,
+      "latency_p95_ms": 6.779
+    },
+    {
+      "strategy": "vector",
+      "cases": 25,
+      "hit_at_1": 0.88,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9333,
+      "latency_mean_ms": 5.807,
+      "latency_p95_ms": 6.872
+    },
+    {
+      "strategy": "weighted",
+      "cases": 25,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "latency_mean_ms": 6.33,
+      "latency_p95_ms": 7.185
+    },
+    {
+      "strategy": "bm25",
+      "cases": 25,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "latency_mean_ms": 5.713,
+      "latency_p95_ms": 6.524
+    },
+    {
+      "strategy": "rrf",
+      "cases": 25,
+      "hit_at_1": 0.92,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.96,
+      "latency_mean_ms": 5.755,
+      "latency_p95_ms": 7.076
+    }
+  ]
+}

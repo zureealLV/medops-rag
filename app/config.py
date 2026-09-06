@@ -23,6 +23,10 @@ class Settings:
     retrieval_threshold: float = 0.20
     chunk_size: int = 600
     chunk_overlap: int = 80
+    max_upload_bytes: int = 10_000_000
+    max_image_pixels: int = 25_000_000
+    ocr_enabled: bool = True
+    ocr_min_confidence: float = 0.50
     model_api_key: str = ""
     model_base_url: str = ""
     model_name: str = ""
@@ -38,6 +42,10 @@ class Settings:
             retrieval_threshold=float(os.getenv("RETRIEVAL_THRESHOLD", "0.20")),
             chunk_size=int(os.getenv("CHUNK_SIZE", "600")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "80")),
+            max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", "10000000")),
+            max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
+            ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},
+            ocr_min_confidence=float(os.getenv("OCR_MIN_CONFIDENCE", "0.50")),
             model_api_key=os.getenv("MODEL_API_KEY", ""),
             model_base_url=os.getenv("MODEL_BASE_URL", ""),
             model_name=os.getenv("MODEL_NAME", ""),

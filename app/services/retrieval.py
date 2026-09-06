@@ -17,9 +17,10 @@ def search(path: Path, tenant_id: str, request: SearchRequest) -> SearchResponse
     started = time.perf_counter()
     # Tenant filtering happens in SQL, before any chunk can enter ranking or a model prompt.
     rows = retrieval_rows(path, tenant_id, request.knowledge_base_id)
-    results = rank(request.query, rows, top_k=request.top_k)
+    results = rank(request.query, rows, top_k=request.top_k, strategy=request.strategy)
     return SearchResponse(
         query=request.query,
+        strategy=request.strategy,
         results=results,
         retrieval_ms=round((time.perf_counter() - started) * 1000, 3),
     )

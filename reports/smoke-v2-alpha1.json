@@ -1,0 +1,11 @@
+{
+  "health": "ok",
+  "openapi_elements_path": "ok",
+  "document_id": 1,
+  "sha256": "e77fc8777d0bbe69c246712d41e2c1d9cb19267dd0433e1ffeb4d22ee7034117",
+  "element_modalities": [
+    "image_ocr"
+  ],
+  "search_strategy": "bm25",
+  "top_source": "pacs-check.png"
+}

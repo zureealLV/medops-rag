@@ -20,6 +20,7 @@ venv/
 *.sqlite
 *.sqlite3
 data/runtime/
+data/models/
 uploads/
 vector_store/
 
