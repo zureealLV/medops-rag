@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 — Engineering Design
 
-Status: `alpha.1` implementation in progress on `feat/multimodal-rag-v2`.
+Status: `alpha.2` implementation in progress on `feat/multimodal-rag-v2`.
 
 ## 1. Product boundary
 
@@ -13,10 +13,11 @@ V2 must support two distinct meanings that are often incorrectly collapsed into 
    element model. Implemented in alpha.1.
 2. **Image-grounded retrieval and answering** — charts, screenshots, diagrams, and scanned pages remain
    first-class evidence with visual embeddings/description and region citations. OCR-only ingestion is not
-   sufficient for this claim. Planned for alpha.2–beta.1.
+   sufficient for this claim. The first image-evidence path is implemented in alpha.2; chart/VLM reasoning
+   remains a beta goal.
 
-Alpha.1 therefore makes the honest claim **multiformat + OCR multimodal ingestion**, not yet full visual
-question answering.
+Alpha.2 can retrieve a text-free image and return its stored bytes as a visual citation. It still does not
+claim chart reasoning or visual question answering.
 
 ## 2. Quality attributes
 
@@ -24,6 +25,7 @@ question answering.
 | --- | --- | --- |
 | Grounding | An answer may cite only persisted evidence returned by tenant-scoped retrieval | citation and cross-tenant tests |
 | Traceability | Every element retains modality, source, page/slide, heading, and parser metadata | `GET /documents/{id}/elements` |
+| Visual evidence | Original image bytes are tenant-scoped and content-addressed | artifact API and isolation tests |
 | Idempotency | Identical bytes in the same tenant/KB resolve to one document | partial unique index + upload test |
 | Failure visibility | Parse/OCR warnings are stored; no-text input is not silently accepted | stable error codes and warning list |
 | Local reproducibility | Core OCR and retrieval work without an external API key | ONNX Runtime and deterministic tests |
@@ -62,7 +64,7 @@ Query API
   -> text/page/region citations + pipeline trace
 ```
 
-## 4. Implemented alpha.1 components
+## 4. Implemented components
 
 ### 4.1 Parser boundary
 
@@ -117,6 +119,23 @@ while making byte uploads idempotent.
 All results expose keyword, vector, and normalized BM25 component scores. The default remains `weighted`
 for backward compatibility until a harder versioned corpus justifies a migration.
 
+### 4.5 First-class image artifacts and visual retrieval
+
+Alpha.2 separates an immutable image blob from its document placement:
+
+- `artifact_blobs` deduplicates bytes by `(tenant_id, sha256)` and stores MIME, dimensions, optional vector,
+  embedding model, and original bytes;
+- `document_artifacts` stores document/slide/page placement, OCR text, bounding box, and parser metadata;
+- identical image bytes may be referenced by two documents without duplicating the BLOB;
+- manual content replacement and document deletion garbage-collect unreferenced tenant blobs;
+- `GET /documents/{id}/artifacts` lists visual citations and
+  `GET /artifacts/{id}/content` returns tenant-scoped bytes with an ETag;
+- `POST /visual-search` supports `ocr`, `image`, and weighted `fusion` strategies.
+
+The local provider uses paired FastEmbed ONNX CLIP text/image towers. It is disabled by default because a
+cold install must not silently download hundreds of megabytes. Enabling `IMAGE_EMBEDDING_ENABLED=true`
+turns on image indexing and text-to-image queries.
+
 ## 5. Technology decisions
 
 ### 5.1 PDF: pypdf + pypdfium2, not PyMuPDF as the default
@@ -166,7 +185,22 @@ would change operational complexity without improving this benchmark. The beta d
 Qdrant is the leading beta candidate because its query API supports multiple named vectors, prefetch, RRF,
 and DBSF. It is not selected merely because it is fashionable.
 
-## 6. Planned data model
+### 5.5 Visual embeddings: FastEmbed CLIP-B/32 is the alpha profile, not the final Chinese profile
+
+The 20-image, 40-query text-free icon benchmark produced:
+
+| Profile | English Hit@1 | Chinese Hit@1 | 20-image index | warm query mean (EN) |
+| --- | ---: | ---: | ---: | ---: |
+| Qdrant CLIP-B/32 | 0.95 | 0.10 | 410.448 ms | 12.122 ms |
+| Jina CLIP v1 | 1.00 | 0.10 | 1428.047 ms | 32.633 ms |
+| OCR-only | 0.05 | 0.05 | 13568.450 ms | <0.2 ms after OCR |
+
+Jina v1 gains five English Hit@1 points but takes ~3.5x the image-index time and ~2.7x the English query
+latency. Both fail Chinese cross-modal retrieval, so neither is allowed to become a Chinese production
+default. CLIP-B/32 is retained as the smaller local alpha profile; Jina CLIP v2 or a bilingual AltCLIP
+profile must be evaluated next. Model/license, memory, Chinese quality, and latency all belong to that gate.
+
+## 6. Current and planned data model
 
 ```text
 documents
@@ -175,10 +209,15 @@ documents
 
 document_elements
   id, document_id, element_index, modality, text,
-  page_number, heading, bbox_json, artifact_id, metadata_json
+  page_number, heading, artifact_sha256, metadata_json
 
-artifacts
-  id, tenant_id, sha256, media_type, storage_uri, width, height, bytes
+artifact_blobs
+  id, tenant_id, sha256, mime_type, width, height,
+  content, embedding_model, embedding_json
+
+document_artifacts
+  id, document_id, blob_id, artifact_index, page_number,
+  bbox_json, ocr_text, metadata_json
 
 parent_chunks
   id, document_id, element_start, element_end, text, token_count
@@ -191,8 +230,8 @@ ingestion_jobs
   error_code, created_at, started_at, completed_at
 ```
 
-The alpha schema contains `documents`, `document_elements`, and legacy `chunks`. Parent/child chunks,
-artifacts, and jobs must be migrations, not destructive table rewrites.
+The alpha schema contains `documents`, `document_elements`, `artifact_blobs`, `document_artifacts`, and
+legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructive table rewrites.
 
 ## 7. API evolution
 
@@ -206,6 +245,12 @@ artifacts, and jobs must be migrations, not destructive table rewrites.
   - tenant-scoped normalized provenance.
 - `POST /search`
   - explicit retrieval `strategy` and component scores.
+- `GET /documents/{document_id}/artifacts`
+  - tenant-scoped image metadata, placement, and visual citation URL.
+- `GET /artifacts/{artifact_id}/content`
+  - original tenant-scoped image bytes with content hash ETag.
+- `POST /visual-search`
+  - OCR-only, paired text-to-image, or fused image evidence retrieval.
 
 ### Planned
 
@@ -221,7 +266,7 @@ artifacts, and jobs must be migrations, not destructive table rewrites.
 | --- | --- |
 | unsupported or malformed file | stable 4xx code; no document row |
 | image exceeds pixel budget | reject before OCR |
-| OCR returns no text | 422 for image-only input; warning when native text remains |
+| OCR returns no text | retain the image artifact; visual retrieval remains possible |
 | duplicate bytes | reuse same document inside one tenant/KB |
 | parser partially succeeds | persist usable elements and warnings |
 | embedding/reranker unavailable | fall back to BM25 and record degraded trace |
@@ -251,11 +296,12 @@ artifacts, and jobs must be migrations, not destructive table rewrites.
 
 ### alpha.2 — first-class multimodal evidence
 
-- artifact store and bounding boxes;
-- image embeddings or VLM descriptions behind a provider interface;
-- text-to-image retrieval fixture set;
-- visual citations that point to page/slide/region;
-- image retrieval ablation against OCR-only baseline.
+- content-addressed tenant artifact store and placement metadata (implemented);
+- local image embeddings behind a provider interface (implemented);
+- 20 text-free images with English and Chinese query sets (implemented);
+- artifact byte citations and PPTX shape bounding boxes (implemented; other parser regions remain);
+- image retrieval ablation against OCR-only baseline (implemented);
+- multilingual model gate and chart/diagram evidence set (remaining).
 
 ### beta.1 — retrieval quality
 

@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.answers import router as answers_router
+from app.api.artifacts import router as artifacts_router
 from app.api.audit import router as audit_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
@@ -29,7 +30,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title="MedOps RAG",
-        version="2.0.0-alpha.1",
+        version="2.0.0-alpha.2",
         description=(
             "Auditable multimodal RAG for synthetic hospital IT operations knowledge. "
             "Not medical advice."
@@ -42,6 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         users_router,
         knowledge_bases_router,
         documents_router,
+        artifacts_router,
         search_router,
         answers_router,
         tools_router,

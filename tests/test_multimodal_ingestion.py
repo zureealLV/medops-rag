@@ -101,12 +101,21 @@ def test_office_documents_preserve_text_tables_and_image_ocr(
         assert expected in payload["content"]
         assert "PACS PORT 104" in payload["content"]
         assert payload["element_count"] >= 2
+        assert payload["artifact_count"] == 1
         elements = client.get(
             f"/documents/{payload['id']}/elements", headers=tenant_headers
         ).json()
-        assert any(element["modality"] == "image_ocr" for element in elements)
+        image_element = next(element for element in elements if element["modality"] == "image_ocr")
+        artifacts = client.get(
+            f"/documents/{payload['id']}/artifacts", headers=tenant_headers
+        ).json()
+        assert image_element["artifact_sha256"] == artifacts[0]["sha256"]
         if filename.endswith(".docx"):
             assert any(element["modality"] == "table" for element in elements)
+            assert artifacts[0]["page_number"] is None
+        else:
+            assert artifacts[0]["page_number"] == 1
+            assert artifacts[0]["bbox"]["unit"] == "emu"
 
 
 def test_image_and_scanned_pdf_are_searchable_through_ocr(
@@ -124,6 +133,7 @@ def test_image_and_scanned_pdf_are_searchable_through_ocr(
         assert "PACS PORT 104" in payload["content"]
         assert payload["parser"] in {"png", "pdf"}
         assert payload["element_count"] >= 1
+        assert payload["artifact_count"] == 1
 
     search = client.post(
         "/search",
@@ -211,6 +221,19 @@ def test_v1_database_migrates_document_metadata_without_data_loss(tmp_path: Path
         """INSERT INTO documents (knowledge_base_id, tenant_id, title, content, source)
            VALUES (1, 'hospital-a', 'Legacy', 'PACS legacy runbook', 'legacy.md')"""
     )
+    connection.execute(
+        """CREATE TABLE document_elements (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               document_id INTEGER NOT NULL,
+               element_index INTEGER NOT NULL,
+               modality TEXT NOT NULL,
+               text TEXT NOT NULL,
+               page_number INTEGER,
+               heading TEXT,
+               metadata_json TEXT NOT NULL DEFAULT '{}',
+               UNIQUE(document_id, element_index)
+           )"""
+    )
     connection.commit()
     connection.close()
 
@@ -225,3 +248,16 @@ def test_v1_database_migrates_document_metadata_without_data_loss(tmp_path: Path
     assert row["mime_type"] == "text/plain"
     assert row["sha256"] == ""
     assert row["parser"] == "manual"
+    migrated = sqlite3.connect(database)
+    element_columns = {
+        item[1] for item in migrated.execute("PRAGMA table_info(document_elements)").fetchall()
+    }
+    artifact_tables = {
+        item[0]
+        for item in migrated.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%artifact%'"
+        ).fetchall()
+    }
+    migrated.close()
+    assert "artifact_sha256" in element_columns
+    assert artifact_tables == {"artifact_blobs", "document_artifacts"}

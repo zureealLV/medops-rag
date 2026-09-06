@@ -27,6 +27,10 @@ class Settings:
     max_image_pixels: int = 25_000_000
     ocr_enabled: bool = True
     ocr_min_confidence: float = 0.50
+    image_embedding_enabled: bool = False
+    image_embedding_model: str = "Qdrant/clip-ViT-B-32-vision"
+    image_text_embedding_model: str = "Qdrant/clip-ViT-B-32-text"
+    model_cache_dir: Path = Path("data/models/fastembed")
     model_api_key: str = ""
     model_base_url: str = ""
     model_name: str = ""
@@ -46,6 +50,15 @@ class Settings:
             max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
             ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},
             ocr_min_confidence=float(os.getenv("OCR_MIN_CONFIDENCE", "0.50")),
+            image_embedding_enabled=os.getenv("IMAGE_EMBEDDING_ENABLED", "false").lower()
+            in {"1", "true", "yes", "on"},
+            image_embedding_model=os.getenv(
+                "IMAGE_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-vision"
+            ),
+            image_text_embedding_model=os.getenv(
+                "IMAGE_TEXT_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-text"
+            ),
+            model_cache_dir=Path(os.getenv("MODEL_CACHE_DIR", "data/models/fastembed")),
             model_api_key=os.getenv("MODEL_API_KEY", ""),
             model_base_url=os.getenv("MODEL_BASE_URL", ""),
             model_name=os.getenv("MODEL_NAME", ""),

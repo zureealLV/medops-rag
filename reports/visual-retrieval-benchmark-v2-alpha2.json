@@ -1,0 +1,127 @@
+{
+  "benchmark": "visual-icons-v1",
+  "generated_at": "2026-09-06T08:55:58.028272+00:00",
+  "cases": 20,
+  "queries": 40,
+  "visual_only": true,
+  "fixture": "generated 384x384 icons without text",
+  "ocr_index_20_images_ms": 13568.45,
+  "ocr_nonempty_images": 8,
+  "models": [
+    {
+      "label": "qdrant_clip_b32",
+      "image_model": "Qdrant/clip-ViT-B-32-vision",
+      "text_model": "Qdrant/clip-ViT-B-32-text",
+      "cached_load_ms": 1407.235,
+      "index_20_images_ms": 410.448,
+      "languages": {
+        "english": {
+          "image_only": {
+            "hit_at_1": 0.95,
+            "hit_at_5": 1.0,
+            "mrr": 0.975,
+            "query_mean_ms": 12.122,
+            "query_p95_ms": 23.355
+          },
+          "ocr_only": {
+            "hit_at_1": 0.05,
+            "hit_at_5": 0.25,
+            "mrr": 0.1799,
+            "query_mean_ms": 0.079,
+            "query_p95_ms": 0.096
+          },
+          "image_80_ocr_20": {
+            "hit_at_1": 0.95,
+            "hit_at_5": 1.0,
+            "mrr": 0.975,
+            "query_mean_ms": 12.202,
+            "query_p95_ms": 23.429
+          }
+        },
+        "chinese": {
+          "image_only": {
+            "hit_at_1": 0.1,
+            "hit_at_5": 0.35,
+            "mrr": 0.2265,
+            "query_mean_ms": 15.963,
+            "query_p95_ms": 32.137
+          },
+          "ocr_only": {
+            "hit_at_1": 0.05,
+            "hit_at_5": 0.25,
+            "mrr": 0.1799,
+            "query_mean_ms": 0.179,
+            "query_p95_ms": 0.278
+          },
+          "image_80_ocr_20": {
+            "hit_at_1": 0.1,
+            "hit_at_5": 0.35,
+            "mrr": 0.2265,
+            "query_mean_ms": 16.142,
+            "query_p95_ms": 32.298
+          }
+        }
+      }
+    },
+    {
+      "label": "jina_clip_v1",
+      "image_model": "jinaai/jina-clip-v1",
+      "text_model": "jinaai/jina-clip-v1",
+      "cached_load_ms": 1841.722,
+      "index_20_images_ms": 1428.047,
+      "languages": {
+        "english": {
+          "image_only": {
+            "hit_at_1": 1.0,
+            "hit_at_5": 1.0,
+            "mrr": 1.0,
+            "query_mean_ms": 32.633,
+            "query_p95_ms": 81.631
+          },
+          "ocr_only": {
+            "hit_at_1": 0.05,
+            "hit_at_5": 0.25,
+            "mrr": 0.1799,
+            "query_mean_ms": 0.084,
+            "query_p95_ms": 0.114
+          },
+          "image_80_ocr_20": {
+            "hit_at_1": 1.0,
+            "hit_at_5": 1.0,
+            "mrr": 1.0,
+            "query_mean_ms": 32.717,
+            "query_p95_ms": 81.733
+          }
+        },
+        "chinese": {
+          "image_only": {
+            "hit_at_1": 0.1,
+            "hit_at_5": 0.55,
+            "mrr": 0.2699,
+            "query_mean_ms": 12.199,
+            "query_p95_ms": 13.03
+          },
+          "ocr_only": {
+            "hit_at_1": 0.05,
+            "hit_at_5": 0.25,
+            "mrr": 0.1799,
+            "query_mean_ms": 0.18,
+            "query_p95_ms": 0.285
+          },
+          "image_80_ocr_20": {
+            "hit_at_1": 0.1,
+            "hit_at_5": 0.55,
+            "mrr": 0.2699,
+            "query_mean_ms": 12.379,
+            "query_p95_ms": 13.219
+          }
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Synthetic icons test cross-modal color/shape matching, not charts or clinical images.",
+    "Model files were cached before timed load; network download is excluded.",
+    "Fusion weight 80/20 was fixed before evaluation and was not tuned on these cases."
+  ]
+}

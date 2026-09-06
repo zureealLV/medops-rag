@@ -37,6 +37,7 @@ class Document(BaseModel):
     source: str
     chunk_count: int = 0
     element_count: int = 0
+    artifact_count: int = 0
     mime_type: str = "text/plain"
     sha256: str = ""
     parser: str = "manual"
@@ -50,4 +51,5 @@ class DocumentElement(BaseModel):
     text: str
     page_number: int | None = None
     heading: str | None = None
+    artifact_sha256: str | None = None
     metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)

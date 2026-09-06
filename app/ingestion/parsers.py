@@ -38,6 +38,20 @@ class NormalizedElement:
     text: str
     page_number: int | None = None
     heading: str | None = None
+    artifact_sha256: str | None = None
+    metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class ParsedArtifact:
+    sha256: str
+    mime_type: str
+    content: bytes
+    width: int
+    height: int
+    page_number: int | None = None
+    bbox: dict[str, str | int | float] | None = None
+    ocr_text: str = ""
     metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
 
 
@@ -48,6 +62,7 @@ class ParsedDocument:
     parser: str
     sha256: str
     elements: tuple[NormalizedElement, ...]
+    artifacts: tuple[ParsedArtifact, ...] = ()
     warnings: tuple[str, ...] = ()
 
     @property
@@ -82,29 +97,74 @@ def _validate_image(content: bytes, max_image_pixels: int) -> tuple[int, int]:
 def _ocr_image(
     content: bytes,
     *,
+    mime_type: str,
     page_number: int | None,
     min_confidence: float,
     max_image_pixels: int,
+    bbox: dict[str, str | int | float] | None = None,
     metadata: dict[str, str | int | float | bool | None] | None = None,
-) -> NormalizedElement | None:
+) -> tuple[NormalizedElement | None, ParsedArtifact]:
     width, height = _validate_image(content, max_image_pixels)
     with _ocr_lock:
         result = _ocr_engine()(content)
-    lines = [
-        text.strip()
+    accepted = [
+        (text.strip(), float(score))
         for text, score in zip(result.txts or (), result.scores or (), strict=False)
         if text.strip() and float(score) >= min_confidence
     ]
-    if not lines:
-        return None
-    scores = [float(score) for score in (result.scores or ()) if float(score) >= min_confidence]
+    lines = [text for text, _ in accepted]
+    scores = [score for _, score in accepted]
     details = {"width": width, "height": height, "ocr_engine": "RapidOCR"}
     if scores:
         details["ocr_mean_confidence"] = round(sum(scores) / len(scores), 4)
     if metadata:
         details.update(metadata)
-    return NormalizedElement(
-        modality="image_ocr", text="\n".join(lines), page_number=page_number, metadata=details
+    digest = hashlib.sha256(content).hexdigest()
+    ocr_text = "\n".join(lines)
+    artifact = ParsedArtifact(
+        sha256=digest,
+        mime_type=mime_type,
+        content=content,
+        width=width,
+        height=height,
+        page_number=page_number,
+        bbox=bbox,
+        ocr_text=ocr_text,
+        metadata=dict(details),
+    )
+    if not ocr_text:
+        return None, artifact
+    return (
+        NormalizedElement(
+            modality="image_ocr",
+            text=ocr_text,
+            page_number=page_number,
+            artifact_sha256=digest,
+            metadata=details,
+        ),
+        artifact,
+    )
+
+
+def _image_without_ocr(
+    content: bytes,
+    *,
+    mime_type: str,
+    page_number: int | None,
+    max_image_pixels: int,
+    bbox: dict[str, str | int | float] | None = None,
+    metadata: dict[str, str | int | float | bool | None] | None = None,
+) -> ParsedArtifact:
+    width, height = _validate_image(content, max_image_pixels)
+    return ParsedArtifact(
+        sha256=hashlib.sha256(content).hexdigest(),
+        mime_type=mime_type,
+        content=content,
+        width=width,
+        height=height,
+        page_number=page_number,
+        bbox=bbox,
+        metadata=dict(metadata or {}),
     )
 
 
@@ -115,19 +175,21 @@ def _decode_text(content: bytes) -> str:
         raise AppError(400, "invalid_encoding", "Text documents must use UTF-8") from exc
 
 
-def _parse_text(content: bytes, suffix: str) -> tuple[list[NormalizedElement], list[str]]:
+def _parse_text(
+    content: bytes, suffix: str
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     text = _decode_text(content)
     elements = [
         NormalizedElement(modality="text", text=part.strip(), metadata={"format": suffix[1:]})
         for part in text.replace("\r\n", "\n").replace("\r", "\n").split("\n\n")
         if part.strip()
     ]
-    return elements, []
+    return elements, [], []
 
 
 def _parse_docx(
     content: bytes, *, ocr: bool, min_confidence: float, max_image_pixels: int
-) -> tuple[list[NormalizedElement], list[str]]:
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     from docx import Document as WordDocument
 
     try:
@@ -135,6 +197,7 @@ def _parse_docx(
     except Exception as exc:
         raise AppError(400, "invalid_docx", "DOCX package cannot be parsed") from exc
     elements: list[NormalizedElement] = []
+    artifacts: list[ParsedArtifact] = []
     warnings: list[str] = []
     heading: str | None = None
     for paragraph in document.paragraphs:
@@ -158,36 +221,48 @@ def _parse_docx(
                     modality="table", text=text, heading=heading, metadata={"table_index": table_index}
                 )
             )
-    if ocr:
-        seen_hashes: set[str] = set()
-        for relationship in document.part.rels.values():
-            part = getattr(relationship, "target_part", None)
-            blob = getattr(part, "blob", None)
-            content_type = getattr(part, "content_type", "")
-            if not blob or not str(content_type).startswith("image/"):
-                continue
-            digest = hashlib.sha256(blob).hexdigest()
-            if digest in seen_hashes:
-                continue
-            seen_hashes.add(digest)
-            try:
-                element = _ocr_image(
-                    blob,
-                    page_number=None,
-                    min_confidence=min_confidence,
-                    max_image_pixels=max_image_pixels,
-                    metadata={"container": "docx"},
+    seen_hashes: set[str] = set()
+    for relationship in document.part.rels.values():
+        part = getattr(relationship, "target_part", None)
+        blob = getattr(part, "blob", None)
+        content_type = getattr(part, "content_type", "")
+        if not blob or not str(content_type).startswith("image/"):
+            continue
+        digest = hashlib.sha256(blob).hexdigest()
+        if digest in seen_hashes:
+            continue
+        seen_hashes.add(digest)
+        try:
+            if not ocr:
+                artifacts.append(
+                    _image_without_ocr(
+                        blob,
+                        mime_type=str(content_type),
+                        page_number=None,
+                        max_image_pixels=max_image_pixels,
+                        metadata={"container": "docx"},
+                    )
                 )
-                if element:
-                    elements.append(element)
-            except AppError as exc:
-                warnings.append(f"docx image skipped: {exc.code}")
-    return elements, warnings
+                continue
+            element, artifact = _ocr_image(
+                blob,
+                mime_type=str(content_type),
+                page_number=None,
+                min_confidence=min_confidence,
+                max_image_pixels=max_image_pixels,
+                metadata={"container": "docx"},
+            )
+            artifacts.append(artifact)
+            if element:
+                elements.append(element)
+        except AppError as exc:
+            warnings.append(f"docx image skipped: {exc.code}")
+    return elements, warnings, artifacts
 
 
 def _parse_pptx(
     content: bytes, *, ocr: bool, min_confidence: float, max_image_pixels: int
-) -> tuple[list[NormalizedElement], list[str]]:
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     from pptx import Presentation
     from pptx.enum.shapes import MSO_SHAPE_TYPE
 
@@ -196,6 +271,7 @@ def _parse_pptx(
     except Exception as exc:
         raise AppError(400, "invalid_pptx", "PPTX package cannot be parsed") from exc
     elements: list[NormalizedElement] = []
+    artifacts: list[ParsedArtifact] = []
     warnings: list[str] = []
     for slide_number, slide in enumerate(presentation.slides, start=1):
         for shape_index, shape in enumerate(slide.shapes, start=1):
@@ -225,20 +301,42 @@ def _parse_pptx(
                             metadata={"shape_index": shape_index},
                         )
                     )
-            if ocr and shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
                 try:
-                    element = _ocr_image(
+                    bbox = {
+                        "unit": "emu",
+                        "x": int(shape.left),
+                        "y": int(shape.top),
+                        "width": int(shape.width),
+                        "height": int(shape.height),
+                    }
+                    if not ocr:
+                        artifacts.append(
+                            _image_without_ocr(
+                                shape.image.blob,
+                                mime_type=shape.image.content_type,
+                                page_number=slide_number,
+                                max_image_pixels=max_image_pixels,
+                                bbox=bbox,
+                                metadata={"container": "pptx", "shape_index": shape_index},
+                            )
+                        )
+                        continue
+                    element, artifact = _ocr_image(
                         shape.image.blob,
+                        mime_type=shape.image.content_type,
                         page_number=slide_number,
                         min_confidence=min_confidence,
                         max_image_pixels=max_image_pixels,
+                        bbox=bbox,
                         metadata={"container": "pptx", "shape_index": shape_index},
                     )
+                    artifacts.append(artifact)
                     if element:
                         elements.append(element)
                 except AppError as exc:
                     warnings.append(f"pptx image on slide {slide_number} skipped: {exc.code}")
-    return elements, warnings
+    return elements, warnings, artifacts
 
 
 def _render_pdf_page(content: bytes, page_index: int) -> bytes:
@@ -257,7 +355,7 @@ def _render_pdf_page(content: bytes, page_index: int) -> bytes:
 
 def _parse_pdf(
     content: bytes, *, ocr: bool, min_confidence: float, max_image_pixels: int
-) -> tuple[list[NormalizedElement], list[str]]:
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     from pypdf import PdfReader
 
     try:
@@ -265,6 +363,7 @@ def _parse_pdf(
     except Exception as exc:
         raise AppError(400, "invalid_pdf", "PDF cannot be parsed") from exc
     elements: list[NormalizedElement] = []
+    artifacts: list[ParsedArtifact] = []
     warnings: list[str] = []
     for page_number, page in enumerate(reader.pages, start=1):
         try:
@@ -284,33 +383,54 @@ def _parse_pdf(
         if ocr and len(text) < 24:
             try:
                 rendered = _render_pdf_page(content, page_number - 1)
-                element = _ocr_image(
+                element, artifact = _ocr_image(
                     rendered,
+                    mime_type="image/png",
                     page_number=page_number,
                     min_confidence=min_confidence,
                     max_image_pixels=max_image_pixels,
                     metadata={"container": "pdf", "rendered_page": True},
                 )
+                artifacts.append(artifact)
                 if element:
                     elements.append(element)
                 elif not text:
                     warnings.append(f"pdf page {page_number} produced no OCR text")
             except Exception as exc:
                 warnings.append(f"pdf page {page_number} OCR failed: {type(exc).__name__}")
-    return elements, warnings
+    return elements, warnings, artifacts
 
 
 def _parse_image(
-    content: bytes, *, min_confidence: float, max_image_pixels: int
-) -> tuple[list[NormalizedElement], list[str]]:
-    element = _ocr_image(
+    content: bytes,
+    *,
+    mime_type: str,
+    ocr: bool,
+    min_confidence: float,
+    max_image_pixels: int,
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
+    if not ocr:
+        artifact = _image_without_ocr(
+            content,
+            mime_type=mime_type,
+            page_number=1,
+            max_image_pixels=max_image_pixels,
+            metadata={"container": "image"},
+        )
+        return [], [], [artifact]
+    element, artifact = _ocr_image(
         content,
+        mime_type=mime_type,
         page_number=1,
         min_confidence=min_confidence,
         max_image_pixels=max_image_pixels,
         metadata={"container": "image"},
     )
-    return ([element] if element else []), ([] if element else ["image produced no OCR text"])
+    return (
+        [element] if element else [],
+        [] if element else ["image produced no OCR text"],
+        [artifact],
+    )
 
 
 def parse_bytes(
@@ -332,34 +452,38 @@ def parse_bytes(
 
     parser_name = suffix.removeprefix(".")
     if suffix in {".txt", ".md"}:
-        elements, warnings = _parse_text(content, suffix)
+        elements, warnings, artifacts = _parse_text(content, suffix)
     elif suffix == ".docx":
-        elements, warnings = _parse_docx(
+        elements, warnings, artifacts = _parse_docx(
             content,
             ocr=ocr_enabled,
             min_confidence=ocr_min_confidence,
             max_image_pixels=max_image_pixels,
         )
     elif suffix == ".pptx":
-        elements, warnings = _parse_pptx(
+        elements, warnings, artifacts = _parse_pptx(
             content,
             ocr=ocr_enabled,
             min_confidence=ocr_min_confidence,
             max_image_pixels=max_image_pixels,
         )
     elif suffix == ".pdf":
-        elements, warnings = _parse_pdf(
+        elements, warnings, artifacts = _parse_pdf(
             content,
             ocr=ocr_enabled,
             min_confidence=ocr_min_confidence,
             max_image_pixels=max_image_pixels,
         )
     else:
-        elements, warnings = _parse_image(
-            content, min_confidence=ocr_min_confidence, max_image_pixels=max_image_pixels
+        elements, warnings, artifacts = _parse_image(
+            content,
+            mime_type=MIME_BY_SUFFIX[suffix],
+            ocr=ocr_enabled,
+            min_confidence=ocr_min_confidence,
+            max_image_pixels=max_image_pixels,
         )
-    if not any(element.text.strip() for element in elements):
-        raise AppError(422, "no_extractable_content", "No searchable text could be extracted")
+    if not any(element.text.strip() for element in elements) and not artifacts:
+        raise AppError(422, "no_extractable_content", "No searchable content could be extracted")
 
     canonical_mime = MIME_BY_SUFFIX[suffix]
     if declared_mime and declared_mime not in {canonical_mime, "application/octet-stream"}:
@@ -370,6 +494,7 @@ def parse_bytes(
         parser=parser_name,
         sha256=hashlib.sha256(content).hexdigest(),
         elements=tuple(elements),
+        artifacts=tuple(artifacts),
         warnings=tuple(dict.fromkeys(warnings)),
     )
 

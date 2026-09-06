@@ -9,6 +9,7 @@ from pathlib import Path
 from app.db import transaction
 from app.ingestion.parsers import ParsedDocument, element_metadata_json
 from app.models.documents import Document, DocumentCreate, DocumentUpdate
+from app.repositories import artifacts as artifact_repository
 from app.retrieval.embeddings import embed
 
 
@@ -22,10 +23,12 @@ def _model(row: sqlite3.Row) -> Document:
 DOCUMENT_SELECT = """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
                             d.mime_type, d.sha256, d.parser, d.ingest_status, d.warning_json,
                             COUNT(DISTINCT c.id) AS chunk_count,
-                            COUNT(DISTINCT e.id) AS element_count
+                            COUNT(DISTINCT e.id) AS element_count,
+                            COUNT(DISTINCT da.id) AS artifact_count
                      FROM documents d
                      LEFT JOIN chunks c ON c.document_id = d.id
-                     LEFT JOIN document_elements e ON e.document_id = d.id"""
+                     LEFT JOIN document_elements e ON e.document_id = d.id
+                     LEFT JOIN document_artifacts da ON da.document_id = d.id"""
 
 
 def _insert_chunks(
@@ -53,6 +56,8 @@ def create(
     data: DocumentCreate,
     chunks: list[str],
     parsed: ParsedDocument | None = None,
+    artifact_embeddings: dict[str, list[float]] | None = None,
+    artifact_embedding_model: str | None = None,
 ) -> Document:
     with transaction(path) as connection:
         cursor = connection.execute(
@@ -76,8 +81,9 @@ def create(
         if parsed:
             connection.executemany(
                 """INSERT INTO document_elements
-                   (document_id, element_index, modality, text, page_number, heading, metadata_json)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (document_id, element_index, modality, text, page_number, heading,
+                    artifact_sha256, metadata_json)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 [
                     (
                         document_id,
@@ -86,10 +92,19 @@ def create(
                         element.text,
                         element.page_number,
                         element.heading,
+                        element.artifact_sha256,
                         element_metadata_json(element),
                     )
                     for index, element in enumerate(parsed.elements)
                 ],
+            )
+            artifact_repository.persist(
+                connection,
+                tenant_id=tenant_id,
+                document_id=document_id,
+                artifacts=parsed.artifacts,
+                embeddings=artifact_embeddings or {},
+                embedding_model=artifact_embedding_model,
             )
         _insert_chunks(connection, document_id, kb_id, tenant_id, chunks)
         row = connection.execute(
@@ -133,7 +148,8 @@ def list_elements(path: Path, tenant_id: str, document_id: int) -> list[dict[str
         return None
     with transaction(path) as connection:
         rows = connection.execute(
-            """SELECT element_index, modality, text, page_number, heading, metadata_json
+            """SELECT element_index, modality, text, page_number, heading, artifact_sha256,
+                      metadata_json
                FROM document_elements WHERE document_id = ? ORDER BY element_index""",
             (document_id,),
         ).fetchall()
@@ -144,6 +160,7 @@ def list_elements(path: Path, tenant_id: str, document_id: int) -> list[dict[str
             "text": row["text"],
             "page_number": row["page_number"],
             "heading": row["heading"],
+            "artifact_sha256": row["artifact_sha256"],
             "metadata": json.loads(row["metadata_json"]),
         }
         for row in rows
@@ -164,6 +181,7 @@ def update(
         exclude={
             "chunk_count",
             "element_count",
+            "artifact_count",
             "id",
             "kb_id",
             "tenant_id",
@@ -193,6 +211,8 @@ def update(
                 (values["title"], values["content"], values["source"], document_id, tenant_id),
             )
             connection.execute("DELETE FROM document_elements WHERE document_id = ?", (document_id,))
+            connection.execute("DELETE FROM document_artifacts WHERE document_id = ?", (document_id,))
+            artifact_repository.delete_orphan_blobs(connection, tenant_id)
         if chunks is not None:
             connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
             _insert_chunks(connection, document_id, stored.kb_id, tenant_id, chunks)
@@ -204,7 +224,10 @@ def delete(path: Path, tenant_id: str, document_id: int) -> bool:
         cursor = connection.execute(
             "DELETE FROM documents WHERE id = ? AND tenant_id = ?", (document_id, tenant_id)
         )
-        return cursor.rowcount == 1
+        deleted = cursor.rowcount == 1
+        if deleted:
+            artifact_repository.delete_orphan_blobs(connection, tenant_id)
+        return deleted
 
 
 def retrieval_rows(path: Path, tenant_id: str, kb_id: int | None = None) -> list[sqlite3.Row]:

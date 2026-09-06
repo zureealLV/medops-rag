@@ -9,6 +9,7 @@ from app.models.documents import Document, DocumentCreate, DocumentUpdate
 from app.repositories import documents as repository
 from app.repositories import knowledge_bases
 from app.retrieval.chunking import split_text
+from app.retrieval.image_embeddings import provider_from_settings
 
 
 def create(
@@ -28,8 +29,14 @@ def create_from_parsed(
     existing = repository.find_by_hash(path, tenant_id, kb_id, parsed.sha256)
     if existing is not None:
         return existing, True
-    content = parsed.content
+    content = parsed.content or f"[visual artifact: {parsed.filename}]"
     chunks = split_text(content, size=settings.chunk_size, overlap=settings.chunk_overlap)
+    provider = provider_from_settings(settings)
+    artifact_embeddings: dict[str, list[float]] = {}
+    if provider is not None:
+        for artifact in parsed.artifacts:
+            if artifact.sha256 not in artifact_embeddings:
+                artifact_embeddings[artifact.sha256] = provider.embed_image(artifact.content)
     try:
         document = repository.create(
             path,
@@ -38,6 +45,12 @@ def create_from_parsed(
             DocumentCreate(title=Path(parsed.filename).stem, content=content, source=parsed.filename),
             chunks,
             parsed,
+            artifact_embeddings,
+            (
+                f"{provider.model_name}|{provider.text_model_name}"
+                if provider is not None
+                else None
+            ),
         )
     except sqlite3.IntegrityError:
         # Close the check-then-insert race through the partial unique index.

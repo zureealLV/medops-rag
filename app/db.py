@@ -51,11 +51,41 @@ CREATE TABLE IF NOT EXISTS document_elements (
     text TEXT NOT NULL,
     page_number INTEGER,
     heading TEXT,
+    artifact_sha256 TEXT,
     metadata_json TEXT NOT NULL DEFAULT '{}',
     FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
     UNIQUE(document_id, element_index)
 );
 CREATE INDEX IF NOT EXISTS idx_document_elements_document ON document_elements(document_id);
+CREATE TABLE IF NOT EXISTS artifact_blobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    content BLOB NOT NULL,
+    embedding_json TEXT,
+    embedding_model TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tenant_id, sha256)
+);
+CREATE INDEX IF NOT EXISTS idx_artifact_blobs_tenant ON artifact_blobs(tenant_id);
+CREATE TABLE IF NOT EXISTS document_artifacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    blob_id INTEGER NOT NULL,
+    artifact_index INTEGER NOT NULL,
+    page_number INTEGER,
+    bbox_json TEXT,
+    ocr_text TEXT NOT NULL DEFAULT '',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    FOREIGN KEY(blob_id) REFERENCES artifact_blobs(id) ON DELETE RESTRICT,
+    UNIQUE(document_id, artifact_index)
+);
+CREATE INDEX IF NOT EXISTS idx_document_artifacts_document ON document_artifacts(document_id);
+CREATE INDEX IF NOT EXISTS idx_document_artifacts_blob ON document_artifacts(blob_id);
 CREATE TABLE IF NOT EXISTS chunks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL,
@@ -141,6 +171,11 @@ def initialize(path: Path) -> None:
         for name, sql in migrations.items():
             if name not in document_columns:
                 connection.execute(sql)
+        element_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(document_elements)")
+        }
+        if "artifact_sha256" not in element_columns:
+            connection.execute("ALTER TABLE document_elements ADD COLUMN artifact_sha256 TEXT")
         connection.execute(
             """CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_ingest_dedup
                ON documents(tenant_id, knowledge_base_id, sha256) WHERE sha256 <> ''"""

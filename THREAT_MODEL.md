@@ -2,7 +2,7 @@
 
 ## Assets and trust boundaries
 
-Protected assets are tenant documents, model credentials, audit integrity and service availability. External request bodies, tenant headers, ingested documents, model responses and tool arguments are untrusted. SQLite, application policy and the tool registry are inside the demonstration boundary.
+Protected assets are tenant documents, original image artifacts, derived embeddings, model credentials, audit integrity and service availability. External request bodies, tenant headers, ingested documents, model responses and tool arguments are untrusted. SQLite, application policy and the tool registry are inside the demonstration boundary.
 
 `X-Tenant-ID` is assumed to be supplied by a trusted upstream gateway. V2 alpha does not authenticate it, so exposing this service directly to hostile clients would break that assumption.
 
@@ -18,7 +18,10 @@ Protected assets are tenant documents, model credentials, audit integrity and se
 | Resource exhaustion | oversized upload or decoded raster | independent byte and decoded-pixel limits before OCR | `tests/test_multimodal_ingestion.py` | office archive expansion and per-page PDF render budgets remain beta work |
 | Malformed parser input | corrupt PDF/Office/image container | parser-specific stable 4xx errors; no document row is committed | `tests/test_multimodal_ingestion.py` | third-party parser vulnerabilities require isolation and fuzzing |
 | OCR poisoning | misleading text embedded in screenshots/scans | OCR output remains untrusted document data and passes the same retrieval/injection policy | parser and prompt-injection tests | visual prompt injection and adversarial images need dedicated V2 cases |
-| Cross-tenant byte deduplication | identical document uploaded by different tenants | SHA-256 uniqueness is scoped by tenant and knowledge base | `tests/test_multimodal_ingestion.py`, tenant tests | a future global artifact store must preserve tenant authorization |
+| Artifact ID enumeration | forged artifact/reference ID | metadata and byte endpoints join through a tenant-owned document; foreign IDs return hidden `404` | `tests/test_visual_artifacts.py` | demo tenant header is still forgeable without a gateway |
+| Cross-tenant byte deduplication | identical image uploaded by different tenants | image BLOB uniqueness is `(tenant_id, sha256)`; no cross-tenant existence signal | `tests/test_visual_artifacts.py` | object-storage migration must preserve tenant-local namespaces |
+| Embedding leakage | image vector from another tenant enters ranking | artifact retrieval rows filter document tenant in SQL before cosine scoring | `tests/test_visual_artifacts.py` | approximate external indexes require payload-filter tests |
+| Model supply chain | first-use model download is replaced or unavailable | exact model IDs, isolated cache path, opt-in feature, no model files committed | smoke and benchmark scripts | model revision hashes and offline packaging remain release work |
 
 ## Data flow
 
@@ -34,4 +37,4 @@ request + trusted tenant context
 
 ## Non-claims
 
-V2 is not HIPAA, GDPR, PIPL or medical-device compliance evidence. It does not claim complete prompt-injection prevention, production authentication, clinical correctness or hospital-scale availability. Alpha.1 OCR support is not yet full chart/diagram reasoning or visual prompt-injection protection.
+V2 is not HIPAA, GDPR, PIPL or medical-device compliance evidence. It does not claim complete prompt-injection prevention, production authentication, clinical correctness or hospital-scale availability. Alpha.2 text-to-image retrieval is not chart/diagram reasoning, Chinese production quality or visual prompt-injection protection.

@@ -1,14 +1,14 @@
-# MedOps Multimodal RAG V2 Alpha.1
+# MedOps Multimodal RAG V2 Alpha.2
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.1 benchmark](docs/v2/BENCHMARK_REPORT_ALPHA1.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 benchmark](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. Alpha.1 adds real PDF/DOCX/PPTX/image ingestion, OCR evidence, provenance, idempotent uploads, and measured retrieval baselines to the V1 FastAPI → SQLite → cited-answer pipeline.
+An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. Alpha.2 adds content-addressed image artifacts, optional paired CLIP embeddings, text-to-image retrieval, and retrievable visual citations to the multiformat/OCR pipeline.
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
-> **Claim boundary:** alpha.1 implements multiformat and OCR-based multimodal ingestion. First-class visual embeddings, chart/diagram reasoning, and region citations are scheduled for alpha.2; OCR alone is not presented as complete visual RAG.
+> **Claim boundary:** alpha.2 retrieves text-free images and returns stored image evidence. It does not yet claim chart/diagram reasoning or production Chinese cross-modal quality.
 
-## Alpha.1 capabilities
+## Alpha.2 capabilities
 
 - FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
 - SQLite transactions, foreign keys, indexes and restart persistence;
@@ -16,13 +16,16 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP parsing with native text, table, and OCR elements;
 - page/slide/heading provenance through `GET /documents/{id}/elements`;
 - conditional scanned-PDF OCR and embedded-image OCR through RapidOCR/ONNX Runtime;
+- tenant-local SHA-256 image BLOB deduplication with page/slide/shape placement metadata;
+- `GET /documents/{id}/artifacts`, tenant-scoped original bytes, and hash ETags;
+- optional paired CLIP image/text embeddings and `ocr`/`image`/`fusion` visual search;
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
 - cited extractive answers and evidence-threshold abstention;
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 34 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 38 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local and Docker Compose startup.
 
 ## Quick start (Windows / PowerShell)
@@ -70,9 +73,10 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_ingestion.py
 .\.venv\Scripts\python.exe .\evals\benchmark_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_semantic_retrieval.py
+.\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 ```
 
-See the [Alpha.1 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA1.md). The current six-document corpus favors BM25; local dense retrieval and BGE reranking are experiments rather than defaults until a harder held-out V2 dataset justifies their latency and memory cost.
+See the [Alpha.2 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA2.md). CLIP-B/32 reached 0.95 English Hit@1 on 20 text-free icons versus 0.05 for OCR-only, but only 0.10 Chinese Hit@1. Image embeddings therefore remain opt-in until a multilingual profile passes the Chinese gate.
 
 ## Docker Compose
 
@@ -86,6 +90,9 @@ The API binds only to `127.0.0.1:8000`; SQLite data lives in the named volume `m
 
 Offline extractive answers are the default. To use an OpenAI-compatible `/chat/completions` endpoint, copy `.env.example` to `.env` and configure `MODEL_API_KEY`, `MODEL_BASE_URL`, and `MODEL_NAME`. Never commit `.env`.
 
+To enable the local alpha visual profile, set `IMAGE_EMBEDDING_ENABLED=true`. The paired ONNX model files are
+downloaded to `MODEL_CACHE_DIR` on first use and are excluded from Git.
+
 ## Architecture
 
 ![MedOps RAG architecture](docs/architecture.svg)
@@ -94,7 +101,8 @@ Read [`docs/v2/ENGINEERING_DESIGN.md`](docs/v2/ENGINEERING_DESIGN.md), then [`do
 
 ## Explicit limits
 
-- OCR extracts text from images but does not yet understand non-textual charts or diagrams.
+- CLIP retrieves non-text images but does not reason over chart values or diagram relationships.
+- The tested CLIP profiles failed the current Chinese retrieval gate and remain opt-in.
 - Hashing embeddings are lightweight and deterministic, not comparable to production embedding models.
 - Prompt-injection detection is heuristic defense-in-depth, not a complete solution.
 - The tenant header is a demo boundary; production deployments require authenticated identity and authorization.

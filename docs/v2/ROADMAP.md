@@ -21,14 +21,17 @@ Non-goals: background workers, visual embeddings, VLM reasoning, Chroma/Qdrant, 
 
 ## Gate 2 — Alpha.2: first-class image evidence
 
-- [ ] add `artifacts` storage with SHA-256, MIME, dimensions, and source location;
-- [ ] persist PDF/PPTX/DOCX image bytes without duplicating identical artifacts;
+- [x] add artifact storage with SHA-256, MIME, dimensions, and source location;
+- [x] persist rendered PDF/PPTX/DOCX/raster image bytes without duplicating identical tenant blobs;
 - [ ] add bounding boxes/shape coordinates to element provenance;
-- [ ] implement `ImageEmbeddingProvider` with an offline model and a disabled remote-provider adapter;
-- [ ] compare OCR-only, image-only, and fused image+text retrieval;
+- [x] implement `ImageEmbeddingProvider` with a disabled-by-default local ONNX profile;
+- [x] compare OCR-only, image-only, and fused image+text retrieval;
 - [ ] return page/slide/region visual citations;
-- [ ] add at least 20 visual-only or image-essential held-out questions;
-- [ ] prove tenant isolation for image artifacts.
+- [x] add 20 visual-only fixtures with 20 English and 20 Chinese queries;
+- [x] prove tenant isolation and tenant-local blob deduplication for image artifacts.
+
+Current evidence: English text-to-image Hit@1 is 0.95 for CLIP-B/32 and 1.00 for Jina CLIP v1 versus 0.05
+for OCR-only. Both tested profiles score only 0.10 Chinese Hit@1, so the multilingual model gate remains open.
 
 Acceptance: a question whose answer exists only in a screenshot or diagram retrieves the correct artifact and
 returns a verifiable visual citation. OCR text alone must not be sufficient for every visual test.

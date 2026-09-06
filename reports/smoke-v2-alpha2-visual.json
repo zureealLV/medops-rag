@@ -1,0 +1,9 @@
+{
+  "health": "ok",
+  "image_embedding_available": true,
+  "strategy": "image",
+  "top_source": "red-triangle.png",
+  "top_score": 1.0,
+  "visual_citation": "/artifacts/1/content",
+  "content_sha256": "e9cd616ab4785d16eab4cd7cc13f6b7ff061bb4d5cb735607417b10c2fa91757"
+}
