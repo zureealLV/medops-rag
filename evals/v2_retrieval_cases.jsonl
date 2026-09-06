@@ -1,0 +1,140 @@
+{"category": "exact", "expected_abstain": false, "expected_source": "pacs-dicom-tls.md", "id": "case-00-0", "language": "en", "question": "What is the required response for PACS DICOM TLS handshake failures?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "pacs-dicom-tls.md", "id": "case-00-1", "language": "en", "question": "How should operators remediate PACS DICOM TLS handshake problemss?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "pacs-dicom-tls.md", "id": "case-00-2", "language": "en", "question": "Which controlled action resolves this issue: rotate the expired gateway certificate after an approved change or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "pacs-dicom-tls.md", "id": "case-00-3", "language": "zh", "question": "PACS DICOM TLS 握手失败时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "pacs-dicom-tls.md", "id": "case-00-4", "language": "zh", "question": "遇到PACS DICOM TLS 握手失败，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "pacs-dicom-tls.md", "id": "case-00-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要审批变更后轮换已过期的网关证书。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "lis-queue-backlog.md", "id": "case-01-0", "language": "en", "question": "What is the required response for LIS interface queue backlog?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "lis-queue-backlog.md", "id": "case-01-1", "language": "en", "question": "How should operators remediate LIS interface queue backlog?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "lis-queue-backlog.md", "id": "case-01-2", "language": "en", "question": "Which controlled action resolves this issue: scale the consumer or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "lis-queue-backlog.md", "id": "case-01-3", "language": "zh", "question": "LIS 接口队列积压时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "lis-queue-backlog.md", "id": "case-01-4", "language": "zh", "question": "遇到LIS 接口队列积压，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "lis-queue-backlog.md", "id": "case-01-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要扩容消费者并在验证后重放死信队列。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "his-db-pool.md", "id": "case-02-0", "language": "en", "question": "What is the required response for HIS database connection pool exhaustion?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "his-db-pool.md", "id": "case-02-1", "language": "en", "question": "How should operators remediate HIS database connection pool exhaustion?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "his-db-pool.md", "id": "case-02-2", "language": "en", "question": "Which controlled action resolves this issue: identify leaked sessions before raising the pool limit or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "his-db-pool.md", "id": "case-02-3", "language": "zh", "question": "HIS 数据库连接池耗尽时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "his-db-pool.md", "id": "case-02-4", "language": "zh", "question": "遇到HIS 数据库连接池耗尽，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "his-db-pool.md", "id": "case-02-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要提高连接池上限前先定位泄漏会话。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "emr-index-lag.md", "id": "case-03-0", "language": "en", "question": "What is the required response for EMR search index lag?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "emr-index-lag.md", "id": "case-03-1", "language": "en", "question": "How should operators remediate EMR search index lag?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "emr-index-lag.md", "id": "case-03-2", "language": "en", "question": "Which controlled action resolves this issue: resume the failed shard or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "emr-index-lag.md", "id": "case-03-3", "language": "zh", "question": "EMR 检索索引延迟时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "emr-index-lag.md", "id": "case-03-4", "language": "zh", "question": "遇到EMR 检索索引延迟，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "emr-index-lag.md", "id": "case-03-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要恢复失败分片并仅重建过期索引分区。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "ris-modality-worklist.md", "id": "case-04-0", "language": "en", "question": "What is the required response for RIS modality worklist mismatch?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "ris-modality-worklist.md", "id": "case-04-1", "language": "en", "question": "How should operators remediate RIS modality worklist mismatch?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "ris-modality-worklist.md", "id": "case-04-2", "language": "en", "question": "Which controlled action resolves this issue: verify AE Title mapping or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "ris-modality-worklist.md", "id": "case-04-3", "language": "zh", "question": "RIS 检查设备工作列表不匹配时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "ris-modality-worklist.md", "id": "case-04-4", "language": "zh", "question": "遇到RIS 检查设备工作列表不匹配，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "ris-modality-worklist.md", "id": "case-04-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要核对 AE Title 映射和 Scheduled Station Name。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "archive-capacity.md", "id": "case-05-0", "language": "en", "question": "What is the required response for archive storage capacity alert?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "archive-capacity.md", "id": "case-05-1", "language": "en", "question": "How should operators remediate archive storage capacity warnings?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "archive-capacity.md", "id": "case-05-2", "language": "en", "question": "Which controlled action resolves this issue: extend the mounted volume then verify filesystem growth or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "archive-capacity.md", "id": "case-05-3", "language": "zh", "question": "归档存储容量告警时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "archive-capacity.md", "id": "case-05-4", "language": "zh", "question": "遇到归档存储容量告警，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "archive-capacity.md", "id": "case-05-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要扩展已挂载卷并确认文件系统完成扩容。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "hl7-ack-timeout.md", "id": "case-06-0", "language": "en", "question": "What is the required response for HL7 acknowledgement timeout?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "hl7-ack-timeout.md", "id": "case-06-1", "language": "en", "question": "How should operators remediate HL7 acknowledgement timeout?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "hl7-ack-timeout.md", "id": "case-06-2", "language": "en", "question": "Which controlled action resolves this issue: inspect receiver latency or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "hl7-ack-timeout.md", "id": "case-06-3", "language": "zh", "question": "HL7 应答超时时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "hl7-ack-timeout.md", "id": "case-06-4", "language": "zh", "question": "遇到HL7 应答超时，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "hl7-ack-timeout.md", "id": "case-06-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要检查接收端延迟并只重试未收到 ACK 的消息。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "sso-clock-skew.md", "id": "case-07-0", "language": "en", "question": "What is the required response for SSO token rejected because of clock skew?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "sso-clock-skew.md", "id": "case-07-1", "language": "en", "question": "How should operators remediate SSO token rejected because of clock skew?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "sso-clock-skew.md", "id": "case-07-2", "language": "en", "question": "Which controlled action resolves this issue: restore NTP synchronization before refreshing signing keys or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "sso-clock-skew.md", "id": "case-07-3", "language": "zh", "question": "SSO 因时钟偏差拒绝令牌时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "sso-clock-skew.md", "id": "case-07-4", "language": "zh", "question": "遇到SSO 因时钟偏差拒绝令牌，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "sso-clock-skew.md", "id": "case-07-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要先恢复 NTP 同步再刷新签名密钥。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "backup-restore-test.md", "id": "case-08-0", "language": "en", "question": "What is the required response for backup restore verification failure?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "backup-restore-test.md", "id": "case-08-1", "language": "en", "question": "How should operators remediate backup restore verification problems?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "backup-restore-test.md", "id": "case-08-2", "language": "en", "question": "Which controlled action resolves this issue: quarantine the damaged backup set or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "backup-restore-test.md", "id": "case-08-3", "language": "zh", "question": "备份恢复验证失败时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "backup-restore-test.md", "id": "case-08-4", "language": "zh", "question": "遇到备份恢复验证失败，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "backup-restore-test.md", "id": "case-08-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要隔离损坏备份集并执行洁净环境恢复。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "dns-failover.md", "id": "case-09-0", "language": "en", "question": "What is the required response for clinical portal DNS failover delay?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "dns-failover.md", "id": "case-09-1", "language": "en", "question": "How should operators remediate clinical portal DNS failover delay?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "dns-failover.md", "id": "case-09-2", "language": "en", "question": "Which controlled action resolves this issue: lower TTL before the change window or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "dns-failover.md", "id": "case-09-3", "language": "zh", "question": "临床门户 DNS 故障切换延迟时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "dns-failover.md", "id": "case-09-4", "language": "zh", "question": "遇到临床门户 DNS 故障切换延迟，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "dns-failover.md", "id": "case-09-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要变更窗口前降低 TTL 并验证两台解析器。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "api-rate-limit.md", "id": "case-10-0", "language": "en", "question": "What is the required response for partner API rate limit saturation?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "api-rate-limit.md", "id": "case-10-1", "language": "en", "question": "How should operators remediate partner API rate limit saturation?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "api-rate-limit.md", "id": "case-10-2", "language": "en", "question": "Which controlled action resolves this issue: apply bounded exponential backoff or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "api-rate-limit.md", "id": "case-10-3", "language": "zh", "question": "合作方 API 限流饱和时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "api-rate-limit.md", "id": "case-10-4", "language": "zh", "question": "遇到合作方 API 限流饱和，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "api-rate-limit.md", "id": "case-10-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要应用有界指数退避和租户独立队列。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "redis-memory.md", "id": "case-11-0", "language": "en", "question": "What is the required response for session Redis memory pressure?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "redis-memory.md", "id": "case-11-1", "language": "en", "question": "How should operators remediate session Redis memory pressure?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "redis-memory.md", "id": "case-11-2", "language": "en", "question": "Which controlled action resolves this issue: inspect eviction policy or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "redis-memory.md", "id": "case-11-3", "language": "zh", "question": "会话 Redis 内存压力时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "redis-memory.md", "id": "case-11-4", "language": "zh", "question": "遇到会话 Redis 内存压力，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "redis-memory.md", "id": "case-11-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要检查淘汰策略并清理孤立的模拟会话。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "kafka-rebalance.md", "id": "case-12-0", "language": "en", "question": "What is the required response for integration Kafka rebalance storm?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "kafka-rebalance.md", "id": "case-12-1", "language": "en", "question": "How should operators remediate integration Kafka rebalance storm?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "kafka-rebalance.md", "id": "case-12-2", "language": "en", "question": "Which controlled action resolves this issue: stabilize consumer membership before changing partition count or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "kafka-rebalance.md", "id": "case-12-3", "language": "zh", "question": "集成 Kafka 频繁重平衡时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "kafka-rebalance.md", "id": "case-12-4", "language": "zh", "question": "遇到集成 Kafka 频繁重平衡，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "kafka-rebalance.md", "id": "case-12-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要调整分区数前先稳定消费者成员关系。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "vpn-mtu.md", "id": "case-13-0", "language": "en", "question": "What is the required response for remote support VPN packet fragmentation?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "vpn-mtu.md", "id": "case-13-1", "language": "en", "question": "How should operators remediate remote support VPN packet fragmentation?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "vpn-mtu.md", "id": "case-13-2", "language": "en", "question": "Which controlled action resolves this issue: discover path MTU or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "vpn-mtu.md", "id": "case-13-3", "language": "zh", "question": "远程支持 VPN 数据包分片时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "vpn-mtu.md", "id": "case-13-4", "language": "zh", "question": "遇到远程支持 VPN 数据包分片，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "vpn-mtu.md", "id": "case-13-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要探测路径 MTU 并在授权网关限制 TCP MSS。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "ntp-drift.md", "id": "case-14-0", "language": "en", "question": "What is the required response for device gateway NTP drift?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "ntp-drift.md", "id": "case-14-1", "language": "en", "question": "How should operators remediate device gateway NTP drift?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "ntp-drift.md", "id": "case-14-2", "language": "en", "question": "Which controlled action resolves this issue: restore the approved time source or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "ntp-drift.md", "id": "case-14-3", "language": "zh", "question": "设备网关 NTP 漂移时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "ntp-drift.md", "id": "case-14-4", "language": "zh", "question": "遇到设备网关 NTP 漂移，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "ntp-drift.md", "id": "case-14-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要恢复批准的时间源并确认时间戳单调。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "ldap-lockout.md", "id": "case-15-0", "language": "en", "question": "What is the required response for service account LDAP lockout?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "ldap-lockout.md", "id": "case-15-1", "language": "en", "question": "How should operators remediate service account LDAP lockout?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "ldap-lockout.md", "id": "case-15-2", "language": "en", "question": "Which controlled action resolves this issue: find stale credentials in scheduled jobs before unlocking the account or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "ldap-lockout.md", "id": "case-15-3", "language": "zh", "question": "服务账号 LDAP 锁定时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "ldap-lockout.md", "id": "case-15-4", "language": "zh", "question": "遇到服务账号 LDAP 锁定，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "ldap-lockout.md", "id": "case-15-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要解锁前先定位计划任务中的旧凭据。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "object-store-503.md", "id": "case-16-0", "language": "en", "question": "What is the required response for object storage intermittent 503 errors?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "object-store-503.md", "id": "case-16-1", "language": "en", "question": "How should operators remediate object storage intermittent 503 errors?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "object-store-503.md", "id": "case-16-2", "language": "en", "question": "Which controlled action resolves this issue: check quorum health or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "object-store-503.md", "id": "case-16-3", "language": "zh", "question": "对象存储间歇性 503时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "object-store-503.md", "id": "case-16-4", "language": "zh", "question": "遇到对象存储间歇性 503，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "object-store-503.md", "id": "case-16-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要检查仲裁健康并仅在容量稳定后重平衡。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "certificate-chain.md", "id": "case-17-0", "language": "en", "question": "What is the required response for reverse proxy incomplete certificate chain?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "certificate-chain.md", "id": "case-17-1", "language": "en", "question": "How should operators remediate reverse proxy incomplete certificate chain?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "certificate-chain.md", "id": "case-17-2", "language": "en", "question": "Which controlled action resolves this issue: install the missing intermediate certificate without replacing the private key or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "certificate-chain.md", "id": "case-17-3", "language": "zh", "question": "反向代理证书链不完整时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "certificate-chain.md", "id": "case-17-4", "language": "zh", "question": "遇到反向代理证书链不完整，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "certificate-chain.md", "id": "case-17-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要补充缺失的中间证书且不替换私钥。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "batch-window.md", "id": "case-18-0", "language": "en", "question": "What is the required response for billing batch misses its processing window?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "batch-window.md", "id": "case-18-1", "language": "en", "question": "How should operators remediate billing batch misses its processing window?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "batch-window.md", "id": "case-18-2", "language": "en", "question": "Which controlled action resolves this issue: isolate the slow stage or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "batch-window.md", "id": "case-18-3", "language": "zh", "question": "结算批处理错过时间窗口时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "batch-window.md", "id": "case-18-4", "language": "zh", "question": "遇到结算批处理错过时间窗口，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "batch-window.md", "id": "case-18-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要隔离慢阶段并从最后提交的检查点恢复。"}
+{"category": "exact", "expected_abstain": false, "expected_source": "monitoring-cardinality.md", "id": "case-19-0", "language": "en", "question": "What is the required response for monitoring label cardinality explosion?"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "monitoring-cardinality.md", "id": "case-19-1", "language": "en", "question": "How should operators remediate monitoring label cardinality explosion?"}
+{"category": "choice", "expected_abstain": false, "expected_source": "monitoring-cardinality.md", "id": "case-19-2", "language": "en", "question": "Which controlled action resolves this issue: drop the unbounded request identifier label at ingestion or a full restart?"}
+{"category": "exact", "expected_abstain": false, "expected_source": "monitoring-cardinality.md", "id": "case-19-3", "language": "zh", "question": "监控标签基数爆炸时应该如何处置？"}
+{"category": "paraphrase", "expected_abstain": false, "expected_source": "monitoring-cardinality.md", "id": "case-19-4", "language": "zh", "question": "遇到监控标签基数爆炸，第一项受控操作是什么？"}
+{"category": "distractor", "expected_abstain": false, "expected_source": "monitoring-cardinality.md", "id": "case-19-5", "language": "zh", "question": "请用运行手册说明为什么不能直接重启，而要在采集端删除无限增长的请求标识标签。"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-00", "language": "en", "question": "How should synthetic bedside diagnosis scenario 0 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-01", "language": "en", "question": "How should synthetic bedside diagnosis scenario 1 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-02", "language": "en", "question": "How should synthetic bedside diagnosis scenario 2 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-03", "language": "en", "question": "How should synthetic bedside diagnosis scenario 3 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-04", "language": "en", "question": "How should synthetic bedside diagnosis scenario 4 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-05", "language": "en", "question": "How should synthetic bedside diagnosis scenario 5 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-06", "language": "en", "question": "How should synthetic bedside diagnosis scenario 6 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-07", "language": "en", "question": "How should synthetic bedside diagnosis scenario 7 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-08", "language": "en", "question": "How should synthetic bedside diagnosis scenario 8 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-09", "language": "en", "question": "How should synthetic bedside diagnosis scenario 9 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-10", "language": "en", "question": "How should synthetic bedside diagnosis scenario 10 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-11", "language": "en", "question": "How should synthetic bedside diagnosis scenario 11 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-12", "language": "en", "question": "How should synthetic bedside diagnosis scenario 12 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-13", "language": "en", "question": "How should synthetic bedside diagnosis scenario 13 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-14", "language": "en", "question": "How should synthetic bedside diagnosis scenario 14 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-15", "language": "en", "question": "How should synthetic bedside diagnosis scenario 15 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-16", "language": "en", "question": "How should synthetic bedside diagnosis scenario 16 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-17", "language": "en", "question": "How should synthetic bedside diagnosis scenario 17 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-18", "language": "en", "question": "How should synthetic bedside diagnosis scenario 18 be treated?"}
+{"category": "out_of_scope", "expected_abstain": true, "expected_source": null, "id": "negative-19", "language": "en", "question": "How should synthetic bedside diagnosis scenario 19 be treated?"}

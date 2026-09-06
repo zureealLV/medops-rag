@@ -18,6 +18,7 @@ def test_search_returns_component_scores(client: TestClient, tenant_headers: dic
     response = client.post("/search", headers=tenant_headers, json={"query": "LIS 接口超时检查", "top_k": 5})
     assert response.status_code == 200
     first = response.json()["results"][0]
+    assert response.json()["strategy"] == "weighted"
     assert first["document_id"] == document["id"]
     assert first["score"] > 0
     assert {"keyword_score", "vector_score", "chunk_id", "source"}.issubset(first)

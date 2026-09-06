@@ -23,14 +23,22 @@ def search(
         return None
     started = time.perf_counter()
     # Tenant filtering happens in SQL, before any chunk can enter ranking or a model prompt.
-    use_parent_child = request.strategy == "parent_child"
+    resolved_strategy = request.strategy
+    use_parent_child = resolved_strategy == "parent_child"
     rows = retrieval_rows(
         path,
         tenant_id,
         request.knowledge_base_id,
         parent_child=use_parent_child,
     )
-    scoring_strategy = "bm25" if use_parent_child else request.strategy
+    if resolved_strategy == "auto":
+        if settings and settings.text_embedding_enabled:
+            resolved_strategy = "rrf"
+        else:
+            # rank_bm25 can produce non-positive IDF for one/two-row corpora;
+            # preserve a meaningful score there instead of normalizing to zero.
+            resolved_strategy = "weighted" if len(rows) < 3 else "bm25"
+    scoring_strategy = "bm25" if use_parent_child else resolved_strategy
     query_vector = None
     if scoring_strategy in {"vector", "weighted", "rrf"}:
         provider = provider_from_settings(settings)
@@ -59,7 +67,7 @@ def search(
         results = deduplicated
     return SearchResponse(
         query=request.query,
-        strategy=request.strategy,
+        strategy=resolved_strategy,
         results=results,
         retrieval_ms=round((time.perf_counter() - started) * 1000, 3),
     )

@@ -13,7 +13,7 @@ class AnswerRequest(BaseModel):
     knowledge_base_id: int | None = Field(default=None, ge=1)
     top_k: int = Field(default=5, ge=1, le=10)
     retrieval_profile: Literal["auto", "text", "visual"] = "auto"
-    text_strategy: RetrievalStrategy = "weighted"
+    text_strategy: RetrievalStrategy = "auto"
     visual_strategy: VisualStrategy = "fusion"
 
 

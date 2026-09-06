@@ -4,14 +4,14 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-RetrievalStrategy = Literal["keyword", "vector", "weighted", "bm25", "rrf", "parent_child"]
+RetrievalStrategy = Literal["auto", "keyword", "vector", "weighted", "bm25", "rrf", "parent_child"]
 
 
 class SearchRequest(BaseModel):
     query: str = Field(min_length=2, max_length=1000)
     knowledge_base_id: int | None = Field(default=None, ge=1)
     top_k: int = Field(default=5, ge=1, le=10)
-    strategy: RetrievalStrategy = "weighted"
+    strategy: RetrievalStrategy = "auto"
 
 
 class Evidence(BaseModel):

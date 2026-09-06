@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 Alpha.2
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 visual benchmark](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Beta.1 parent-child benchmark](docs/v2/BENCHMARK_REPORT_BETA1.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 visual benchmark](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. Alpha.2 adds content-addressed image artifacts, optional paired CLIP embeddings, text-to-image retrieval, and retrievable visual citations to the multiformat/OCR pipeline.
 
@@ -106,6 +106,9 @@ Set `TEXT_EMBEDDING_ENABLED=true` to persist/query normalized FastEmbed vectors.
 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; rows carry their model identity, so vectors
 from incompatible models are never scored together. A real local smoke retrieved the Chinese/English
 credential fixture first at cosine `0.497208` in `63.082 ms` after indexing three documents in `2094.785 ms`.
+
+On the frozen 120-question set, BM25 scored 0.9583 Hit@1, MiniLM 0.9417, RRF 0.9917, and RRF+BGE 1.0000.
+The BGE stage remains offline because its 0.83-point gain raised mean latency from 130.244 to 1082.388 ms.
 
 ## Architecture
 

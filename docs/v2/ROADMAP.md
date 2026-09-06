@@ -45,11 +45,11 @@ coordinates and real VLM chart reasoning remain open; the offline path deliberat
 
 - [x] add parent/child chunk schema and additive migration;
 - [x] build structure-aware chunks from normalized elements;
-- [ ] freeze the V2 evaluation split and record dataset hashes;
+- [x] freeze a 120-answerable/20-negative V2 evaluation set and record dataset hashes;
 - [x] implement pluggable hashing/MiniLM embedding profiles with persisted model identity;
 - [ ] compare SQLite scan, Chroma, and Qdrant on 1k/10k/100k synthetic chunks;
-- [ ] select fusion method from held-out Hit@K/MRR/nDCG and filtered-query behavior;
-- [ ] enable BGE reranking only when quality gain justifies CPU/memory/latency;
+- [x] select BM25+MiniLM RRF for the opt-in dense profile from Hit@K/MRR/nDCG evidence;
+- [x] keep BGE reranking offline because +0.83 Hit@1 point costs about +952 ms mean latency;
 - [ ] implement HyDE behind a query policy and compare against rewrite/multi-query/no-transform baselines.
 
 Acceptance: the selected default wins on the held-out set under a documented latency/memory budget. A more

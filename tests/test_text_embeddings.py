@@ -62,10 +62,11 @@ def test_configured_embedding_provider_is_persisted_and_used_for_vector_query(
         response = client.post(
             "/search",
             headers=headers,
-            json={"query": "renew gateway credential", "strategy": "vector", "top_k": 2},
+            json={"query": "renew gateway credential", "top_k": 2},
         )
         assert response.status_code == 200
         results = response.json()["results"]
+        assert response.json()["strategy"] == "rrf"
         assert results[0]["source"] == "Certificate.md"
         assert results[0]["embedding_model"] == provider.model_name
         assert all(item["embedding_model"] == provider.model_name for item in results)
