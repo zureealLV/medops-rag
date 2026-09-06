@@ -1,0 +1,31 @@
+{
+  "vectors": 10000,
+  "dimensions": 64,
+  "queries": 100,
+  "filter": "tenant=a",
+  "stores": {
+    "sqlite_exact": {
+      "index_ms": 0.531,
+      "p50_ms": 0.359,
+      "p95_ms": 0.424,
+      "recall_at_10": 1.0,
+      "disk_bytes": 2560000
+    },
+    "qdrant_local": {
+      "version": "1.19.0",
+      "index_ms": 19349.115,
+      "p50_ms": 60.542,
+      "p95_ms": 63.263,
+      "recall_at_10": 1.0,
+      "disk_bytes": 10535462
+    },
+    "chroma_persistent": {
+      "version": "1.5.9",
+      "index_ms": 1700.367,
+      "p50_ms": 9.58,
+      "p95_ms": 10.785,
+      "recall_at_10": 0.997,
+      "disk_bytes": 6833684
+    }
+  }
+}

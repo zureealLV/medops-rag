@@ -31,6 +31,10 @@ dev = [
     "reportlab>=4,<5",
     "ruff>=0.12,<1.0",
 ]
+vectorstores = [
+    "chromadb>=1.5,<2",
+    "qdrant-client>=1.19,<2",
+]
 
 [tool.fastapi]
 entrypoint = "app.main:app"
