@@ -35,6 +35,10 @@ vectorstores = [
     "chromadb>=1.5,<2",
     "qdrant-client>=1.19,<2",
 ]
+distributed = [
+    "celery>=5.5,<6",
+    "redis>=5,<7",
+]
 
 [tool.fastapi]
 entrypoint = "app.main:app"

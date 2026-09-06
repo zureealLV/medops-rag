@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 Beta.2 (in progress)
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce summaries](docs/v2/BETA2_MAP_REDUCE.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce summaries](docs/v2/BETA2_MAP_REDUCE.md) · [Queue benchmark](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The current Beta.2 increment adds a persisted, leased ingestion queue and an isolated worker process to the multimodal retrieval foundation.
 
@@ -136,6 +136,11 @@ credential fixture first at cosine `0.497208` in `63.082 ms` after indexing thre
 
 On the frozen 120-question set, BM25 scored 0.9583 Hit@1, MiniLM 0.9417, RRF 0.9917, and RRF+BGE 1.0000.
 The BGE stage remains offline because its 0.83-point gain raised mean latency from 130.244 to 1082.388 ms.
+
+On a real Redis 7.0.15 broker in WSL2, Celery 5.6.3 processed no-op transport tasks at a median 480.528
+tasks/s versus 347.085 tasks/s for the SQLite lease loop. SQLite remains selected for the single-host profile:
+the measured transport delta is tiny beside OCR/model latency, while Celery still needs the same domain tables
+for progress, partial maps and citations. See the [queue benchmark](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md).
 
 ## Architecture
 

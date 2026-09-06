@@ -68,7 +68,7 @@ latency increased from 13.628 ms to 19.702 ms. This validates reconstruction, no
 - [x] isolated polling worker for parsing/OCR/chunking/embedding;
 - [x] Map-Reduce multi-document summary with persisted per-map and final citations;
 - [x] partial result semantics and hard 30-second per-model-call timeout;
-- [ ] Redis/Celery versus database-backed worker benchmark before selection;
+- [x] benchmark real Redis/Celery against the database-backed worker and select SQLite for single-host V2;
 - [x] lease restart, duplicate-delivery fencing, transient retry, cancellation and poison-document tests;
 - [x] multi-process contention and abrupt worker-exit recovery tests for summary jobs;
 - [ ] abrupt worker-exit integration test during OCR.

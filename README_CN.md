@@ -1,6 +1,6 @@
 # MedOps 多模态 RAG V2 Beta.2（开发中）
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [向量库基准](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [向量库基准](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
 
@@ -118,6 +118,10 @@ docker compose up --build
 设置 `TEXT_EMBEDDING_ENABLED=true` 可启用真实 FastEmbed 文本向量。每条向量持久化模型标识，避免
 不同维度/模型的向量混算。本机 MiniLM 中英混合冒烟中，目标文档以余弦 `0.497208` 排名第一，
 查询 `63.082 ms`，三文档首次建索引 `2094.785 ms`；它仍是可选配置，不凭一次冒烟升级成默认。
+
+真实 WSL2 Redis 7.0.15 上，Celery 5.6.3 的无操作任务吞吐中位数为 `480.528 tasks/s`，SQLite
+租约队列为 `347.085 tasks/s`。单机配置仍选择 SQLite：这点传输差值远小于 OCR/模型耗时，而
+Celery 仍不能替代进度、局部结果和引用所需的领域表。详见[任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md)。
 
 ## 建议学习顺序
 
