@@ -16,8 +16,33 @@ def search(path: Path, tenant_id: str, request: SearchRequest) -> SearchResponse
         return None
     started = time.perf_counter()
     # Tenant filtering happens in SQL, before any chunk can enter ranking or a model prompt.
-    rows = retrieval_rows(path, tenant_id, request.knowledge_base_id)
-    results = rank(request.query, rows, top_k=request.top_k, strategy=request.strategy)
+    use_parent_child = request.strategy == "parent_child"
+    rows = retrieval_rows(
+        path,
+        tenant_id,
+        request.knowledge_base_id,
+        parent_child=use_parent_child,
+    )
+    results = rank(
+        request.query,
+        rows,
+        top_k=(len(rows) if use_parent_child else request.top_k),
+        # The current benchmark shows BM25 outperforming the hashing-vector baseline.
+        # Parent/child retrieval therefore reconstructs context without smuggling in
+        # an unvalidated dense model; beta will benchmark a real dense child index.
+        strategy=("bm25" if use_parent_child else request.strategy),
+    )
+    if use_parent_child:
+        deduplicated = []
+        seen_parent_ids: set[int] = set()
+        for item in results:
+            if item.parent_id is None or item.parent_id in seen_parent_ids:
+                continue
+            seen_parent_ids.add(item.parent_id)
+            deduplicated.append(item)
+            if len(deduplicated) == request.top_k:
+                break
+        results = deduplicated
     return SearchResponse(
         query=request.query,
         strategy=request.strategy,

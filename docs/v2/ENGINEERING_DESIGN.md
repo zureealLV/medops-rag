@@ -1,6 +1,7 @@
 # MedOps Multimodal RAG V2 — Engineering Design
 
-Status: `alpha.2` implemented and published on `feat/multimodal-rag-v2`; beta work remains.
+Status: `alpha.2` implemented and published; the `beta.1` parent-child foundation is now in progress on
+`feat/multimodal-rag-v2`.
 
 ## 1. Product boundary
 
@@ -116,11 +117,24 @@ while making byte uploads idempotent.
 - `weighted`: legacy normalized weighted baseline;
 - `bm25`: Okapi BM25;
 - `rrf`: rank fusion of BM25 and the hashing-vector baseline.
+- `parent_child`: BM25 scores smaller persisted children and returns their structure-aware parent context.
 
-All results expose keyword, vector, and normalized BM25 component scores. The default remains `weighted`
+All results expose keyword, vector, and normalized BM25 component scores. Parent-child results additionally
+expose the matched child, parent ID, heading, and page range. The default remains `weighted`
 for backward compatibility until a harder versioned corpus justifies a migration.
 
-### 4.5 First-class image artifacts and visual retrieval
+### 4.5 Parent-child context reconstruction
+
+Ingestion packs adjacent normalized elements by heading and size into `parent_chunks`, then creates smaller
+overlapping `child_chunks`. Search scores child text and deduplicates by parent before returning the parent
+body to generation. Manual edits transactionally rebuild both levels. On the 50-question context fixture,
+the linked action was available in 50/50 parent-child results versus 0/50 fixed-chunk results; mean retrieval
+increased from 13.628 ms to 19.702 ms. See `docs/v2/BENCHMARK_REPORT_BETA1.md`.
+
+The child scorer remains BM25 because the current hashing-vector baseline has not earned a default role.
+This is parent-child retrieval, not yet a claim of production dense hybrid retrieval.
+
+### 4.6 First-class image artifacts and visual retrieval
 
 Alpha.2 separates an immutable image blob from its document placement:
 
@@ -236,8 +250,8 @@ ingestion_jobs
   error_code, created_at, started_at, completed_at
 ```
 
-The alpha schema contains `documents`, `document_elements`, `artifact_blobs`, `document_artifacts`, and
-legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructive table rewrites.
+The schema now contains `documents`, `document_elements`, `artifact_blobs`, `document_artifacts`, legacy
+`chunks`, and additive `parent_chunks`/`child_chunks`. Job tables remain future additive migrations.
 
 ## 7. API evolution
 
@@ -250,7 +264,7 @@ legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructiv
 - `GET /documents/{document_id}/elements`
   - tenant-scoped normalized provenance.
 - `POST /search`
-  - explicit retrieval `strategy` and component scores.
+  - explicit retrieval `strategy`, component scores, and opt-in parent-child reconstruction.
 - `GET /documents/{document_id}/artifacts`
   - tenant-scoped image metadata, placement, and visual citation URL.
 - `GET /artifacts/{artifact_id}/content`
@@ -317,7 +331,7 @@ legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructiv
 
 ### beta.1 — retrieval quality
 
-- parent-child chunking;
+- parent-child schema, structure-aware packing, and BM25 child retrieval (implemented foundation);
 - versioned V2 benchmark with at least 100 questions and adversarial distractors;
 - selected dense embedding and optional BGE reranker;
 - conditional HyDE only if the held-out set shows a justified gain;

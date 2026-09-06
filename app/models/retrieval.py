@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-RetrievalStrategy = Literal["keyword", "vector", "weighted", "bm25", "rrf"]
+RetrievalStrategy = Literal["keyword", "vector", "weighted", "bm25", "rrf", "parent_child"]
 
 
 class SearchRequest(BaseModel):
@@ -24,6 +24,12 @@ class Evidence(BaseModel):
     chunk_id: int
     chunk_index: int
     text: str
+    parent_id: int | None = None
+    parent_text: str | None = None
+    matched_text: str | None = None
+    page_start: int | None = None
+    page_end: int | None = None
+    heading: str | None = None
 
 
 class SearchResponse(BaseModel):

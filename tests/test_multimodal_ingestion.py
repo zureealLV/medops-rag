@@ -258,6 +258,13 @@ def test_v1_database_migrates_document_metadata_without_data_loss(tmp_path: Path
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%artifact%'"
         ).fetchall()
     }
+    chunk_tables = {
+        item[0]
+        for item in migrated.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%chunk%'"
+        ).fetchall()
+    }
     migrated.close()
     assert "artifact_sha256" in element_columns
     assert artifact_tables == {"artifact_blobs", "document_artifacts"}
+    assert {"chunks", "parent_chunks", "child_chunks"}.issubset(chunk_tables)

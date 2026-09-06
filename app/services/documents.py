@@ -4,12 +4,13 @@ import sqlite3
 from pathlib import Path
 
 from app.config import Settings
-from app.ingestion.parsers import ParsedDocument
+from app.ingestion.parsers import NormalizedElement, ParsedDocument
 from app.models.documents import Document, DocumentCreate, DocumentUpdate
 from app.repositories import documents as repository
 from app.repositories import knowledge_bases
 from app.retrieval.chunking import split_text
 from app.retrieval.image_embeddings import provider_from_settings
+from app.retrieval.structure_chunking import build_parent_child_chunks
 
 
 def create(
@@ -18,7 +19,14 @@ def create(
     if knowledge_bases.get(path, tenant_id, kb_id) is None:
         return None
     chunks = split_text(data.content, size=settings.chunk_size, overlap=settings.chunk_overlap)
-    return repository.create(path, tenant_id, kb_id, data, chunks)
+    elements = (NormalizedElement(modality="text", text=data.content),)
+    parents = build_parent_child_chunks(
+        elements,
+        parent_size=settings.parent_chunk_size,
+        child_size=settings.child_chunk_size,
+        child_overlap=settings.child_chunk_overlap,
+    )
+    return repository.create(path, tenant_id, kb_id, data, chunks, parents)
 
 
 def create_from_parsed(
@@ -31,6 +39,12 @@ def create_from_parsed(
         return existing, True
     content = parsed.content or f"[visual artifact: {parsed.filename}]"
     chunks = split_text(content, size=settings.chunk_size, overlap=settings.chunk_overlap)
+    parents = build_parent_child_chunks(
+        parsed.elements,
+        parent_size=settings.parent_chunk_size,
+        child_size=settings.child_chunk_size,
+        child_overlap=settings.child_chunk_overlap,
+    )
     provider = provider_from_settings(settings)
     artifact_embeddings: dict[str, list[float]] = {}
     if provider is not None:
@@ -44,6 +58,7 @@ def create_from_parsed(
             kb_id,
             DocumentCreate(title=Path(parsed.filename).stem, content=content, source=parsed.filename),
             chunks,
+            parents,
             parsed,
             artifact_embeddings,
             (
@@ -75,9 +90,16 @@ def update(
     path: Path, settings: Settings, tenant_id: str, document_id: int, data: DocumentUpdate
 ) -> Document | None:
     chunks = None
+    parents = None
     if data.content is not None:
         chunks = split_text(data.content, size=settings.chunk_size, overlap=settings.chunk_overlap)
-    return repository.update(path, tenant_id, document_id, data, chunks)
+        parents = build_parent_child_chunks(
+            (NormalizedElement(modality="text", text=data.content),),
+            parent_size=settings.parent_chunk_size,
+            child_size=settings.child_chunk_size,
+            child_overlap=settings.child_chunk_overlap,
+        )
+    return repository.update(path, tenant_id, document_id, data, chunks, parents)
 
 
 def delete(path: Path, tenant_id: str, document_id: int) -> bool:

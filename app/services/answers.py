@@ -71,7 +71,12 @@ def _response(
     return AnswerResponse(
         answer=answer_text,
         citations=[
-            Citation(source=item.source, document_id=item.document_id, chunk_id=item.chunk_id)
+            Citation(
+                source=item.source,
+                document_id=item.document_id,
+                chunk_id=item.chunk_id,
+                parent_id=item.parent_id,
+            )
             for item in text_evidence[:3]
         ],
         visual_citations=[

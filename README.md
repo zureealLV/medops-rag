@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 Alpha.2
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 benchmark](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 visual benchmark](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Beta.1 parent-child benchmark](docs/v2/BENCHMARK_REPORT_BETA1.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. Alpha.2 adds content-addressed image artifacts, optional paired CLIP embeddings, text-to-image retrieval, and retrievable visual citations to the multiformat/OCR pipeline.
 
@@ -21,12 +21,13 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - optional paired CLIP image/text embeddings and `ocr`/`image`/`fusion` visual search;
 - automatic `text`/`visual` answer routing, calibrated visual abstention, and retrievable image citations;
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
+- opt-in structure-aware `parent_child` retrieval that matches small children and reconstructs parent context;
 - cited extractive answers and evidence-threshold abstention;
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 44 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 48 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)
@@ -75,9 +76,13 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_semantic_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
+.\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
 ```
 
 See the [Alpha.2 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA2.md). CLIP-B/32 reached 0.95 English Hit@1 on 20 text-free icons versus 0.05 for OCR-only, but only 0.10 Chinese Hit@1. Image embeddings therefore remain opt-in until a multilingual profile passes the Chinese gate.
+
+The [parent-child benchmark](docs/v2/BENCHMARK_REPORT_BETA1.md) kept the linked action in returned context for
+50/50 questions versus 0/50 with fixed chunks, while mean local retrieval rose from 13.628 to 19.702 ms.
 
 ## Docker Compose
 

@@ -7,7 +7,7 @@ Raw evidence:
 - `reports/visual-retrieval-benchmark-v2-alpha2.json`
 - `reports/smoke-v2-alpha2-visual.json`
 
-Code validation: Ruff passed; Pytest passed 44/44 tests. The visual smoke uses the real FastEmbed CLIP ONNX
+Current repository validation: Ruff passed; Pytest passed 48/48 tests. The visual smoke uses the real FastEmbed CLIP ONNX
 models rather than the deterministic provider used by unit tests.
 
 ## 1. Question being tested

@@ -99,6 +99,40 @@ CREATE TABLE IF NOT EXISTS chunks (
     UNIQUE(document_id, chunk_index)
 );
 CREATE INDEX IF NOT EXISTS idx_chunks_tenant_kb ON chunks(tenant_id, knowledge_base_id);
+CREATE TABLE IF NOT EXISTS parent_chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    knowledge_base_id INTEGER NOT NULL,
+    tenant_id TEXT NOT NULL,
+    parent_index INTEGER NOT NULL,
+    element_start INTEGER,
+    element_end INTEGER,
+    page_start INTEGER,
+    page_end INTEGER,
+    heading TEXT,
+    text TEXT NOT NULL,
+    FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE,
+    UNIQUE(document_id, parent_index)
+);
+CREATE INDEX IF NOT EXISTS idx_parent_chunks_tenant_kb
+    ON parent_chunks(tenant_id, knowledge_base_id);
+CREATE TABLE IF NOT EXISTS child_chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER NOT NULL,
+    document_id INTEGER NOT NULL,
+    knowledge_base_id INTEGER NOT NULL,
+    tenant_id TEXT NOT NULL,
+    child_index INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    embedding_json TEXT NOT NULL,
+    FOREIGN KEY(parent_id) REFERENCES parent_chunks(id) ON DELETE CASCADE,
+    FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE,
+    UNIQUE(parent_id, child_index)
+);
+CREATE INDEX IF NOT EXISTS idx_child_chunks_tenant_kb
+    ON child_chunks(tenant_id, knowledge_base_id);
 CREATE TABLE IF NOT EXISTS audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     request_id TEXT NOT NULL,
@@ -179,4 +213,29 @@ def initialize(path: Path) -> None:
         connection.execute(
             """CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_ingest_dedup
                ON documents(tenant_id, knowledge_base_id, sha256) WHERE sha256 <> ''"""
+        )
+        # Existing alpha databases have only fixed chunks. Preserve their searchability
+        # under the new strategy without rewriting or deleting the legacy rows. New and
+        # edited documents receive richer structure-aware parents in the service layer.
+        connection.execute(
+            """INSERT INTO parent_chunks
+               (document_id, knowledge_base_id, tenant_id, parent_index, text)
+               SELECT c.document_id, c.knowledge_base_id, c.tenant_id, c.chunk_index, c.text
+               FROM chunks c
+               WHERE NOT EXISTS (
+                   SELECT 1 FROM parent_chunks p WHERE p.document_id = c.document_id
+               )"""
+        )
+        connection.execute(
+            """INSERT INTO child_chunks
+               (parent_id, document_id, knowledge_base_id, tenant_id, child_index, text,
+                embedding_json)
+               SELECT p.id, c.document_id, c.knowledge_base_id, c.tenant_id, 0, c.text,
+                      c.embedding_json
+               FROM chunks c
+               JOIN parent_chunks p
+                 ON p.document_id = c.document_id AND p.parent_index = c.chunk_index
+               WHERE NOT EXISTS (
+                   SELECT 1 FROM child_chunks cc WHERE cc.parent_id = p.id
+               )"""
         )

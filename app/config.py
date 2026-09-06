@@ -23,6 +23,9 @@ class Settings:
     retrieval_threshold: float = 0.20
     chunk_size: int = 600
     chunk_overlap: int = 80
+    parent_chunk_size: int = 1600
+    child_chunk_size: int = 350
+    child_chunk_overlap: int = 50
     max_upload_bytes: int = 10_000_000
     max_image_pixels: int = 25_000_000
     ocr_enabled: bool = True
@@ -51,6 +54,9 @@ class Settings:
             retrieval_threshold=float(os.getenv("RETRIEVAL_THRESHOLD", "0.20")),
             chunk_size=int(os.getenv("CHUNK_SIZE", "600")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "80")),
+            parent_chunk_size=int(os.getenv("PARENT_CHUNK_SIZE", "1600")),
+            child_chunk_size=int(os.getenv("CHILD_CHUNK_SIZE", "350")),
+            child_chunk_overlap=int(os.getenv("CHILD_CHUNK_OVERLAP", "50")),
             max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", "10000000")),
             max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
             ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},

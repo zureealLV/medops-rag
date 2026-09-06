@@ -58,6 +58,7 @@ def rank(
 
     results: list[Evidence] = []
     for index, row in enumerate(materialized):
+        row_keys = set(row.keys()) if hasattr(row, "keys") else set()
         keyword = keyword_scores[index]
         vector = vector_scores[index]
         bm25 = bm25_scores[index]
@@ -80,7 +81,13 @@ def rank(
                 document_id=row["document_id"],
                 chunk_id=row["id"],
                 chunk_index=row["chunk_index"],
-                text=row["text"],
+                text=row["parent_text"] if "parent_text" in row_keys else row["text"],
+                parent_id=row["parent_id"] if "parent_id" in row_keys else None,
+                parent_text=row["parent_text"] if "parent_text" in row_keys else None,
+                matched_text=row["text"] if "parent_text" in row_keys else None,
+                page_start=row["page_start"] if "page_start" in row_keys else None,
+                page_end=row["page_end"] if "page_end" in row_keys else None,
+                heading=row["heading"] if "heading" in row_keys else None,
             )
         )
     return sorted(results, key=lambda item: (-item.score, item.chunk_id))[:top_k]

@@ -11,6 +11,7 @@ from app.ingestion.parsers import ParsedDocument, element_metadata_json
 from app.models.documents import Document, DocumentCreate, DocumentUpdate
 from app.repositories import artifacts as artifact_repository
 from app.retrieval.embeddings import embed
+from app.retrieval.structure_chunking import ParentChunkPlan
 
 
 def _model(row: sqlite3.Row) -> Document:
@@ -49,12 +50,60 @@ def _insert_chunks(
     )
 
 
+def _insert_parent_child_chunks(
+    connection: sqlite3.Connection,
+    document_id: int,
+    kb_id: int,
+    tenant_id: str,
+    plans: list[ParentChunkPlan],
+) -> None:
+    for parent_index, plan in enumerate(plans):
+        cursor = connection.execute(
+            """INSERT INTO parent_chunks
+               (document_id, knowledge_base_id, tenant_id, parent_index, element_start,
+                element_end, page_start, page_end, heading, text)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                document_id,
+                kb_id,
+                tenant_id,
+                parent_index,
+                plan.element_start,
+                plan.element_end,
+                plan.page_start,
+                plan.page_end,
+                plan.heading,
+                plan.text,
+            ),
+        )
+        parent_id = int(cursor.lastrowid)
+        connection.executemany(
+            """INSERT INTO child_chunks
+               (parent_id, document_id, knowledge_base_id, tenant_id, child_index, text,
+                embedding_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            [
+                (
+                    parent_id,
+                    document_id,
+                    kb_id,
+                    tenant_id,
+                    child_index,
+                    text,
+                    json.dumps(embed(text)),
+                )
+                for child_index, text in enumerate(plan.children)
+            ],
+        )
+
+
 def create(
     path: Path,
     tenant_id: str,
     kb_id: int,
     data: DocumentCreate,
     chunks: list[str],
+    parent_chunks: list[ParentChunkPlan],
     parsed: ParsedDocument | None = None,
     artifact_embeddings: dict[str, list[float]] | None = None,
     artifact_embedding_model: str | None = None,
@@ -107,6 +156,7 @@ def create(
                 embedding_model=artifact_embedding_model,
             )
         _insert_chunks(connection, document_id, kb_id, tenant_id, chunks)
+        _insert_parent_child_chunks(connection, document_id, kb_id, tenant_id, parent_chunks)
         row = connection.execute(
             DOCUMENT_SELECT + " WHERE d.id = ? GROUP BY d.id",
             (document_id,),
@@ -173,6 +223,7 @@ def update(
     document_id: int,
     data: DocumentUpdate,
     chunks: list[str] | None,
+    parent_chunks: list[ParentChunkPlan] | None,
 ) -> Document | None:
     stored = get(path, tenant_id, document_id)
     if stored is None:
@@ -215,7 +266,11 @@ def update(
             artifact_repository.delete_orphan_blobs(connection, tenant_id)
         if chunks is not None:
             connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
+            connection.execute("DELETE FROM parent_chunks WHERE document_id = ?", (document_id,))
             _insert_chunks(connection, document_id, stored.kb_id, tenant_id, chunks)
+            _insert_parent_child_chunks(
+                connection, document_id, stored.kb_id, tenant_id, parent_chunks or []
+            )
     return get(path, tenant_id, document_id)
 
 
@@ -230,10 +285,25 @@ def delete(path: Path, tenant_id: str, document_id: int) -> bool:
         return deleted
 
 
-def retrieval_rows(path: Path, tenant_id: str, kb_id: int | None = None) -> list[sqlite3.Row]:
-    sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json, d.source
-             FROM chunks c JOIN documents d ON d.id = c.document_id
-             WHERE c.tenant_id = ?"""
+def retrieval_rows(
+    path: Path,
+    tenant_id: str,
+    kb_id: int | None = None,
+    *,
+    parent_child: bool = False,
+) -> list[sqlite3.Row]:
+    if parent_child:
+        sql = """SELECT c.id, c.document_id, c.child_index AS chunk_index, c.text,
+                        c.embedding_json, d.source, p.id AS parent_id, p.text AS parent_text,
+                        p.page_start, p.page_end, p.heading
+                 FROM child_chunks c
+                 JOIN parent_chunks p ON p.id = c.parent_id
+                 JOIN documents d ON d.id = c.document_id
+                 WHERE c.tenant_id = ?"""
+    else:
+        sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json, d.source
+                 FROM chunks c JOIN documents d ON d.id = c.document_id
+                 WHERE c.tenant_id = ?"""
     params: list[object] = [tenant_id]
     if kb_id is not None:
         sql += " AND c.knowledge_base_id = ?"

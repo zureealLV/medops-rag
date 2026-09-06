@@ -1,6 +1,6 @@
 # MedOps 多模态 RAG V2 Alpha.2
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 基准报告](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 视觉基准](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Beta.1 父子块基准](docs/v2/BENCHMARK_REPORT_BETA1.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。Alpha.2 在多格式/OCR 链路上加入图片原始证据、CLIP 跨模态向量、视觉检索和可访问的图片引用。
 
@@ -21,13 +21,14 @@
 - 可选配对 CLIP 图文向量，以及 `ocr`/`image`/`fusion` 三种视觉检索；
 - `/answer` 自动区分文本/视觉问题，以相似度和候选差值双门禁拒答，并返回可读取的图片引用；
 - 哈希向量、关键词、BM25、加权及 RRF 五种可比较检索策略；
+- 可选的结构感知 `parent_child` 检索：小块命中，大块恢复回答上下文；
 - 带 `source`、`document_id`、`chunk_id` 的引用回答与低证据拒答；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
 - 在 SQL 检索阶段执行租户过滤，其他租户内容不会先进入模型再过滤；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`、持久化请求指标；
-- 44 个 API/安全/解析器/迁移测试，以及可重复的摄取与检索基准；
+- 48 个 API/安全/解析器/迁移测试，以及可重复的摄取与检索基准；
 - 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
 
 ## Windows 快速启动
@@ -62,9 +63,14 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_semantic_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
+.\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
 ```
 
 详细数据见 [`docs/v2/BENCHMARK_REPORT_ALPHA2.md`](docs/v2/BENCHMARK_REPORT_ALPHA2.md)。20 张无文字图标上，CLIP-B/32 英文 Hit@1 为 0.95，OCR-only 只有 0.05；但中文 Hit@1 仅 0.10，因此图片向量保持显式开启，不能冒充合格的中文生产方案。
+
+父子块实测见 [`docs/v2/BENCHMARK_REPORT_BETA1.md`](docs/v2/BENCHMARK_REPORT_BETA1.md)：50 个问题中，
+父块恢复让关联操作出现在返回上下文的比例从 0/50 提升到 50/50，本机平均检索耗时由
+13.628 ms 增至 19.702 ms。
 
 ## Docker Compose
 

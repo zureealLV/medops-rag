@@ -43,8 +43,8 @@ coordinates and real VLM chart reasoning remain open; the offline path deliberat
 
 ## Gate 3 — Beta.1: parent-child hybrid retrieval
 
-- [ ] add parent/child chunk schema and migration;
-- [ ] build structure-aware chunks from normalized elements;
+- [x] add parent/child chunk schema and additive migration;
+- [x] build structure-aware chunks from normalized elements;
 - [ ] freeze the V2 evaluation split and record dataset hashes;
 - [ ] implement pluggable hashing/MiniLM/BGE-M3-or-E5 embedding profiles;
 - [ ] compare SQLite scan, Chroma, and Qdrant on 1k/10k/100k synthetic chunks;
@@ -54,6 +54,10 @@ coordinates and real VLM chart reasoning remain open; the offline path deliberat
 
 Acceptance: the selected default wins on the held-out set under a documented latency/memory budget. A more
 complex pipeline that ties a simpler one does not win.
+
+Foundation evidence: on 50 synthetic long sections, both fixed BM25 and parent-child retrieval reached 1.00
+Hit@1, but the linked action was present in 0/50 fixed contexts versus 50/50 reconstructed parents. Mean
+latency increased from 13.628 ms to 19.702 ms. This validates reconstruction, not the final dense/fusion choice.
 
 ## Gate 4 — Beta.2: asynchronous ingestion and summaries
 

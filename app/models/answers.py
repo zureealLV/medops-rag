@@ -21,6 +21,7 @@ class Citation(BaseModel):
     source: str
     document_id: int
     chunk_id: int
+    parent_id: int | None = None
 
 
 class VisualCitation(BaseModel):
