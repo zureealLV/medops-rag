@@ -165,6 +165,52 @@ CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_claim
     ON ingestion_jobs(state, lease_expires_at, created_at);
 CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_tenant
     ON ingestion_jobs(tenant_id, created_at);
+CREATE TABLE IF NOT EXISTS summary_jobs (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    knowledge_base_id INTEGER NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    request_sha256 TEXT NOT NULL,
+    question TEXT NOT NULL,
+    document_ids_json TEXT NOT NULL,
+    state TEXT NOT NULL CHECK(state IN ('queued','running','succeeded','failed','partial','cancelled')),
+    progress INTEGER NOT NULL DEFAULT 0 CHECK(progress BETWEEN 0 AND 100),
+    attempt INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 3,
+    lease_owner TEXT,
+    lease_expires_at REAL,
+    summary TEXT,
+    provider TEXT,
+    token_usage INTEGER NOT NULL DEFAULT 0,
+    error_code TEXT,
+    error_message TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TEXT,
+    completed_at TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE,
+    UNIQUE(tenant_id, idempotency_key)
+);
+CREATE INDEX IF NOT EXISTS idx_summary_jobs_claim
+    ON summary_jobs(state, lease_expires_at, created_at);
+CREATE INDEX IF NOT EXISTS idx_summary_jobs_tenant
+    ON summary_jobs(tenant_id, created_at);
+CREATE TABLE IF NOT EXISTS summary_map_results (
+    job_id TEXT NOT NULL,
+    document_id INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('succeeded','failed')),
+    source TEXT NOT NULL,
+    summary TEXT,
+    provider TEXT,
+    token_usage INTEGER NOT NULL DEFAULT 0,
+    citation_json TEXT NOT NULL DEFAULT '{}',
+    error_code TEXT,
+    error_message TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(job_id, document_id),
+    FOREIGN KEY(job_id) REFERENCES summary_jobs(id) ON DELETE CASCADE
+);
 CREATE TABLE IF NOT EXISTS audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     request_id TEXT NOT NULL,

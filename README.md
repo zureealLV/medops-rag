@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 Beta.2 (in progress)
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce summaries](docs/v2/BETA2_MAP_REDUCE.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The current Beta.2 increment adds a persisted, leased ingestion queue and an isolated worker process to the multimodal retrieval foundation.
 
@@ -15,6 +15,8 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - knowledge-base and document CRUD with SHA-256 idempotent uploads;
 - durable asynchronous ingestion jobs with tenant-scoped idempotency keys, leases, bounded retries, cancellation and crash recovery;
 - an isolated polling worker for parsing, OCR, chunking and embedding outside the API process;
+- resumable multi-document Map-Reduce summary jobs with persisted per-document results, final citations,
+  partial-failure visibility and a hard 30-second per-model-call timeout;
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP parsing with native text, table, and OCR elements;
 - page/slide/heading provenance through `GET /documents/{id}/elements`;
 - conditional scanned-PDF OCR and embedded-image OCR through RapidOCR/ONNX Runtime;
@@ -29,7 +31,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 56 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 63 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)
@@ -78,6 +80,16 @@ Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/ingestion-jobs `
 
 The first accepted upload returns `202`; replaying the same key and payload returns the same job with `200`.
 Reusing the key for different bytes or a different knowledge base returns `409`.
+
+Queue a summary over explicit tenant-scoped document IDs, then run its worker:
+
+```powershell
+$headers["Idempotency-Key"] = "demo-summary-0001"
+$body = @{ question = "Summarize recovery checks"; document_ids = @(1, 2) } | ConvertTo-Json
+Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/summary-jobs `
+  -Method Post -Headers $headers -ContentType "application/json" -Body $body
+.\.venv\Scripts\python.exe .\scripts\summary_worker.py --once
+```
 
 See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injection and denied-tool cases.
 

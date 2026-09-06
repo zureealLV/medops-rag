@@ -1,7 +1,7 @@
 # MedOps Multimodal RAG V2 — Engineering Design
 
-Status: `alpha.2` implemented and published; the `beta.1` parent-child foundation is now in progress on
-`feat/multimodal-rag-v2`.
+Status: Beta.1 retrieval gates are frozen and Beta.2 durable ingestion plus resumable Map-Reduce summaries
+are implemented on `feat/multimodal-rag-v2`. Distributed queue selection remains open pending benchmarks.
 
 ## 1. Product boundary
 
@@ -64,6 +64,13 @@ Query API
   -> prompt-injection quarantine
   -> grounded generation or abstention
   -> text/page/region citations + pipeline trace
+
+Summary API
+  -> explicit tenant-scoped document IDs
+  -> summary_jobs lease and idempotency boundary
+  -> persisted per-document map results
+  -> reduce successful maps with final document citations
+  -> succeeded / partial / failed terminal result
 ```
 
 ## 4. Implemented components

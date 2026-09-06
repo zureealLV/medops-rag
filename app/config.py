@@ -46,6 +46,7 @@ class Settings:
     model_max_visual_bytes: int = 6_000_000
     model_timeout_seconds: float = 8.0
     model_max_retries: int = 1
+    summary_model_timeout_seconds: float = 30.0
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -89,4 +90,7 @@ class Settings:
             model_max_visual_bytes=int(os.getenv("MODEL_MAX_VISUAL_BYTES", "6000000")),
             model_timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "8")),
             model_max_retries=int(os.getenv("MODEL_MAX_RETRIES", "1")),
+            summary_model_timeout_seconds=float(
+                os.getenv("SUMMARY_MODEL_TIMEOUT_SECONDS", "30")
+            ),
         )

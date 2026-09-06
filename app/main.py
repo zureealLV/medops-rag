@@ -12,6 +12,7 @@ from app.api.health import router as health_router
 from app.api.jobs import router as jobs_router
 from app.api.knowledge_bases import router as knowledge_bases_router
 from app.api.search import router as search_router
+from app.api.summaries import router as summaries_router
 from app.api.tools import router as tools_router
 from app.api.users import router as users_router
 from app.config import Settings
@@ -44,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         users_router,
         knowledge_bases_router,
         jobs_router,
+        summaries_router,
         documents_router,
         artifacts_router,
         search_router,
