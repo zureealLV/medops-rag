@@ -5,7 +5,7 @@ tests, benchmark evidence, and an explicit non-goal list.
 
 ## Gate 1 — Alpha.1: multiformat ingestion and baseline evidence
 
-Status: implemented and locally verified; feature-branch publication pending.
+Status: implemented, locally verified, and published on the feature branch.
 
 - [x] parser registry for TXT/MD/PDF/DOCX/PPTX/PNG/JPEG/WebP;
 - [x] native text, table, and OCR element normalization;
@@ -15,7 +15,7 @@ Status: implemented and locally verified; feature-branch publication pending.
 - [x] BM25/RRF strategy surface;
 - [x] local parser, retrieval, semantic, and reranker benchmarks;
 - [x] runtime HTTP smoke test after all documentation changes;
-- [ ] commit and publish feature branch after review.
+- [x] commit and publish feature branch after review.
 
 Non-goals: background workers, visual embeddings, VLM reasoning, Chroma/Qdrant, HyDE, production auth.
 
