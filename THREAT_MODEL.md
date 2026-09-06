@@ -18,6 +18,8 @@ Protected assets are tenant documents, original image artifacts, derived embeddi
 | Resource exhaustion | oversized upload or decoded raster | independent byte and decoded-pixel limits before OCR | `tests/test_multimodal_ingestion.py` | office archive expansion and per-page PDF render budgets remain beta work |
 | Malformed parser input | corrupt PDF/Office/image container | parser-specific stable 4xx errors; no document row is committed | `tests/test_multimodal_ingestion.py` | third-party parser vulnerabilities require isolation and fuzzing |
 | OCR poisoning | misleading text embedded in screenshots/scans | OCR output remains untrusted document data and passes the same retrieval/injection policy | parser and prompt-injection tests | visual prompt injection and adversarial images need dedicated V2 cases |
+| Visual prompt injection | instructions rendered inside an image sent to a VLM | visual content is labeled untrusted; no tools are exposed; image transfer is opt-in; count and aggregate-byte caps apply | `tests/test_multimodal_answers.py` | a VLM can still follow adversarial pixels or misread the image |
+| Excessive model payload | many/large retrieved images | `MODEL_MAX_VISUAL_IMAGES` and `MODEL_MAX_VISUAL_BYTES`; answer abstains if accepted evidence cannot be loaded safely | `tests/test_multimodal_answers.py` | remote providers may impose lower encoded-request limits |
 | Artifact ID enumeration | forged artifact/reference ID | metadata and byte endpoints join through a tenant-owned document; foreign IDs return hidden `404` | `tests/test_visual_artifacts.py` | demo tenant header is still forgeable without a gateway |
 | Cross-tenant byte deduplication | identical image uploaded by different tenants | image BLOB uniqueness is `(tenant_id, sha256)`; no cross-tenant existence signal | `tests/test_visual_artifacts.py` | object-storage migration must preserve tenant-local namespaces |
 | Embedding leakage | image vector from another tenant enters ranking | artifact retrieval rows filter document tenant in SQL before cosine scoring | `tests/test_visual_artifacts.py` | approximate external indexes require payload-filter tests |
@@ -31,7 +33,8 @@ request + trusted tenant context
   -> tenant-filtered SQLite retrieval
   -> injection quarantine
   -> evidence threshold
-  -> optional model / offline fallback
+  -> bounded tenant-scoped image loading
+  -> optional text/vision model / offline locator fallback
   -> citations + redacted audit event
 ```
 

@@ -29,12 +29,17 @@ Non-goals: background workers, visual embeddings, VLM reasoning, Chroma/Qdrant, 
 - [ ] return page/slide/region visual citations;
 - [x] add 20 visual-only fixtures with 20 English and 20 Chinese queries;
 - [x] prove tenant isolation and tenant-local blob deduplication for image artifacts.
+- [x] route `/answer` between text/visual retrieval and enforce similarity-plus-margin abstention;
+- [x] return only model-loaded image evidence as answer citations and cap vision payload count/bytes.
 
 Current evidence: English text-to-image Hit@1 is 0.95 for CLIP-B/32 and 1.00 for Jina CLIP v1 versus 0.05
 for OCR-only. Both tested profiles score only 0.10 Chinese Hit@1, so the multilingual model gate remains open.
 
 Acceptance: a question whose answer exists only in a screenshot or diagram retrieves the correct artifact and
 returns a verifiable visual citation. OCR text alone must not be sufficient for every visual test.
+
+The text-free icon acceptance path now passes through real CLIP retrieval and `/answer`. Full page/region
+coordinates and real VLM chart reasoning remain open; the offline path deliberately returns only a locator.
 
 ## Gate 3 — Beta.1: parent-child hybrid retrieval
 

@@ -126,6 +126,9 @@ def search(
                 score=round(score, 6),
                 ocr_score=round(ocr_score, 6),
                 image_score=round(image_score, 6) if image_score is not None else None,
+                image_similarity=(
+                    round(image_scores[index], 6) if image_scores[index] is not None else None
+                ),
             )
         )
     ranked = sorted(results, key=lambda item: (-item.score, item.id))[: request.top_k]

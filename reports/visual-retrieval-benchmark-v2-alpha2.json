@@ -1,41 +1,50 @@
 {
   "benchmark": "visual-icons-v1",
-  "generated_at": "2026-09-06T08:55:58.028272+00:00",
+  "generated_at": "2026-09-06T12:29:41.764544+00:00",
   "cases": 20,
   "queries": 40,
+  "negative_queries": 20,
   "visual_only": true,
   "fixture": "generated 384x384 icons without text",
-  "ocr_index_20_images_ms": 13568.45,
+  "ocr_index_20_images_ms": 16783.431,
   "ocr_nonempty_images": 8,
   "models": [
     {
       "label": "qdrant_clip_b32",
       "image_model": "Qdrant/clip-ViT-B-32-vision",
       "text_model": "Qdrant/clip-ViT-B-32-text",
-      "cached_load_ms": 1407.235,
-      "index_20_images_ms": 410.448,
+      "cached_load_ms": 1580.741,
+      "index_20_images_ms": 430.679,
       "languages": {
         "english": {
           "image_only": {
             "hit_at_1": 0.95,
             "hit_at_5": 1.0,
             "mrr": 0.975,
-            "query_mean_ms": 12.122,
-            "query_p95_ms": 23.355
+            "query_mean_ms": 21.329,
+            "query_p95_ms": 37.905
           },
           "ocr_only": {
             "hit_at_1": 0.05,
             "hit_at_5": 0.25,
             "mrr": 0.1799,
-            "query_mean_ms": 0.079,
-            "query_p95_ms": 0.096
+            "query_mean_ms": 0.091,
+            "query_p95_ms": 0.119
           },
           "image_80_ocr_20": {
             "hit_at_1": 0.95,
             "hit_at_5": 1.0,
             "mrr": 0.975,
-            "query_mean_ms": 12.202,
-            "query_p95_ms": 23.429
+            "query_mean_ms": 21.42,
+            "query_p95_ms": 37.979
+          },
+          "similarity_calibration": {
+            "positive_expected_min": 0.304385,
+            "positive_expected_mean": 0.345987,
+            "positive_winner_margin_min": 0.002336,
+            "positive_winner_margin_mean": 0.04487,
+            "negative_max_mean": 0.230856,
+            "negative_max_max": 0.262298
           }
         },
         "chinese": {
@@ -43,22 +52,30 @@
             "hit_at_1": 0.1,
             "hit_at_5": 0.35,
             "mrr": 0.2265,
-            "query_mean_ms": 15.963,
-            "query_p95_ms": 32.137
+            "query_mean_ms": 9.181,
+            "query_p95_ms": 10.5
           },
           "ocr_only": {
             "hit_at_1": 0.05,
             "hit_at_5": 0.25,
             "mrr": 0.1799,
-            "query_mean_ms": 0.179,
-            "query_p95_ms": 0.278
+            "query_mean_ms": 0.177,
+            "query_p95_ms": 0.221
           },
           "image_80_ocr_20": {
             "hit_at_1": 0.1,
             "hit_at_5": 0.35,
             "mrr": 0.2265,
-            "query_mean_ms": 16.142,
-            "query_p95_ms": 32.298
+            "query_mean_ms": 9.358,
+            "query_p95_ms": 10.641
+          },
+          "similarity_calibration": {
+            "positive_expected_min": 0.199741,
+            "positive_expected_mean": 0.223746,
+            "positive_winner_margin_min": 0.000224,
+            "positive_winner_margin_mean": 0.004983,
+            "negative_max_mean": 0.242785,
+            "negative_max_max": 0.258185
           }
         }
       }
@@ -67,30 +84,38 @@
       "label": "jina_clip_v1",
       "image_model": "jinaai/jina-clip-v1",
       "text_model": "jinaai/jina-clip-v1",
-      "cached_load_ms": 1841.722,
-      "index_20_images_ms": 1428.047,
+      "cached_load_ms": 2008.758,
+      "index_20_images_ms": 1493.585,
       "languages": {
         "english": {
           "image_only": {
             "hit_at_1": 1.0,
             "hit_at_5": 1.0,
             "mrr": 1.0,
-            "query_mean_ms": 32.633,
-            "query_p95_ms": 81.631
+            "query_mean_ms": 31.643,
+            "query_p95_ms": 100.13
           },
           "ocr_only": {
             "hit_at_1": 0.05,
             "hit_at_5": 0.25,
             "mrr": 0.1799,
-            "query_mean_ms": 0.084,
-            "query_p95_ms": 0.114
+            "query_mean_ms": 0.086,
+            "query_p95_ms": 0.113
           },
           "image_80_ocr_20": {
             "hit_at_1": 1.0,
             "hit_at_5": 1.0,
             "mrr": 1.0,
-            "query_mean_ms": 32.717,
-            "query_p95_ms": 81.733
+            "query_mean_ms": 31.729,
+            "query_p95_ms": 100.201
+          },
+          "similarity_calibration": {
+            "positive_expected_min": 0.207697,
+            "positive_expected_mean": 0.280104,
+            "positive_winner_margin_min": 0.048603,
+            "positive_winner_margin_mean": 0.098449,
+            "negative_max_mean": 0.051166,
+            "negative_max_max": 0.145045
           }
         },
         "chinese": {
@@ -98,22 +123,30 @@
             "hit_at_1": 0.1,
             "hit_at_5": 0.55,
             "mrr": 0.2699,
-            "query_mean_ms": 12.199,
-            "query_p95_ms": 13.03
+            "query_mean_ms": 14.02,
+            "query_p95_ms": 17.21
           },
           "ocr_only": {
             "hit_at_1": 0.05,
             "hit_at_5": 0.25,
             "mrr": 0.1799,
-            "query_mean_ms": 0.18,
-            "query_p95_ms": 0.285
+            "query_mean_ms": 0.173,
+            "query_p95_ms": 0.234
           },
           "image_80_ocr_20": {
             "hit_at_1": 0.1,
             "hit_at_5": 0.55,
             "mrr": 0.2699,
-            "query_mean_ms": 12.379,
-            "query_p95_ms": 13.219
+            "query_mean_ms": 14.193,
+            "query_p95_ms": 17.37
+          },
+          "similarity_calibration": {
+            "positive_expected_min": 0.049473,
+            "positive_expected_mean": 0.083827,
+            "positive_winner_margin_min": 0.006745,
+            "positive_winner_margin_mean": 0.018361,
+            "negative_max_mean": 0.115199,
+            "negative_max_max": 0.136083
           }
         }
       }
@@ -122,6 +155,7 @@
   "limitations": [
     "Synthetic icons test cross-modal color/shape matching, not charts or clinical images.",
     "Model files were cached before timed load; network download is excluded.",
-    "Fusion weight 80/20 was fixed before evaluation and was not tuned on these cases."
+    "Fusion weight 80/20 was fixed before evaluation and was not tuned on these cases.",
+    "Negative queries calibrate abstention only against this small icon corpus."
   ]
 }

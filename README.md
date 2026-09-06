@@ -6,7 +6,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
-> **Claim boundary:** alpha.2 retrieves text-free images and returns stored image evidence. It does not yet claim chart/diagram reasoning or production Chinese cross-modal quality.
+> **Claim boundary:** alpha.2 routes visual questions, retrieves text-free images, and returns stored image evidence. It does not yet claim chart/diagram reasoning or production Chinese cross-modal quality.
 
 ## Alpha.2 capabilities
 
@@ -19,14 +19,15 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - tenant-local SHA-256 image BLOB deduplication with page/slide/shape placement metadata;
 - `GET /documents/{id}/artifacts`, tenant-scoped original bytes, and hash ETags;
 - optional paired CLIP image/text embeddings and `ocr`/`image`/`fusion` visual search;
+- automatic `text`/`visual` answer routing, calibrated visual abstention, and retrievable image citations;
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
 - cited extractive answers and evidence-threshold abstention;
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 38 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
-- reproducible local and Docker Compose startup.
+- request IDs, `Server-Timing`, request metrics, 44 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
+- reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)
 
@@ -91,7 +92,10 @@ The API binds only to `127.0.0.1:8000`; SQLite data lives in the named volume `m
 Offline extractive answers are the default. To use an OpenAI-compatible `/chat/completions` endpoint, copy `.env.example` to `.env` and configure `MODEL_API_KEY`, `MODEL_BASE_URL`, and `MODEL_NAME`. Never commit `.env`.
 
 To enable the local alpha visual profile, set `IMAGE_EMBEDDING_ENABLED=true`. The paired ONNX model files are
-downloaded to `MODEL_CACHE_DIR` on first use and are excluded from Git.
+downloaded to `MODEL_CACHE_DIR` on first use and are excluded from Git. External vision inference additionally
+requires `MODEL_VISION_ENABLED=true`; image count and aggregate raw bytes are capped by
+`MODEL_MAX_VISUAL_IMAGES` and `MODEL_MAX_VISUAL_BYTES`. The default `0.28` similarity and `0.002` margin are
+provisional Qdrant CLIP-B/32 values and must be recalibrated for another provider.
 
 ## Architecture
 

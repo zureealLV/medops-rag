@@ -31,9 +31,14 @@ class Settings:
     image_embedding_model: str = "Qdrant/clip-ViT-B-32-vision"
     image_text_embedding_model: str = "Qdrant/clip-ViT-B-32-text"
     model_cache_dir: Path = Path("data/models/fastembed")
+    visual_similarity_threshold: float = 0.28
+    visual_similarity_margin: float = 0.002
     model_api_key: str = ""
     model_base_url: str = ""
     model_name: str = ""
+    model_vision_enabled: bool = False
+    model_max_visual_images: int = 3
+    model_max_visual_bytes: int = 6_000_000
     model_timeout_seconds: float = 8.0
     model_max_retries: int = 1
 
@@ -59,9 +64,15 @@ class Settings:
                 "IMAGE_TEXT_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-text"
             ),
             model_cache_dir=Path(os.getenv("MODEL_CACHE_DIR", "data/models/fastembed")),
+            visual_similarity_threshold=float(os.getenv("VISUAL_SIMILARITY_THRESHOLD", "0.28")),
+            visual_similarity_margin=float(os.getenv("VISUAL_SIMILARITY_MARGIN", "0.002")),
             model_api_key=os.getenv("MODEL_API_KEY", ""),
             model_base_url=os.getenv("MODEL_BASE_URL", ""),
             model_name=os.getenv("MODEL_NAME", ""),
+            model_vision_enabled=os.getenv("MODEL_VISION_ENABLED", "false").lower()
+            in {"1", "true", "yes", "on"},
+            model_max_visual_images=int(os.getenv("MODEL_MAX_VISUAL_IMAGES", "3")),
+            model_max_visual_bytes=int(os.getenv("MODEL_MAX_VISUAL_BYTES", "6000000")),
             model_timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "8")),
             model_max_retries=int(os.getenv("MODEL_MAX_RETRIES", "1")),
         )

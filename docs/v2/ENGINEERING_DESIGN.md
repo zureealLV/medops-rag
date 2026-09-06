@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 — Engineering Design
 
-Status: `alpha.2` implementation in progress on `feat/multimodal-rag-v2`.
+Status: `alpha.2` implemented and published on `feat/multimodal-rag-v2`; beta work remains.
 
 ## 1. Product boundary
 
@@ -16,8 +16,9 @@ V2 must support two distinct meanings that are often incorrectly collapsed into 
    sufficient for this claim. The first image-evidence path is implemented in alpha.2; chart/VLM reasoning
    remains a beta goal.
 
-Alpha.2 can retrieve a text-free image and return its stored bytes as a visual citation. It still does not
-claim chart reasoning or visual question answering.
+Alpha.2 can route a visual question, retrieve a text-free image, return its stored bytes as a citation, and
+optionally send bounded image payloads to an OpenAI-compatible vision model. Without such a model it returns
+an evidence locator rather than inventing image content. It still does not claim chart reasoning.
 
 ## 2. Quality attributes
 
@@ -132,6 +133,10 @@ Alpha.2 separates an immutable image blob from its document placement:
   `GET /artifacts/{id}/content` returns tenant-scoped bytes with an ETag;
 - `POST /visual-search` supports `ocr`, `image`, and weighted `fusion` strategies.
 
+`POST /answer` deterministically routes explicit visual questions, requires raw cosine and winner-margin
+confidence, and returns text plus visual citations. Vision payloads are disabled by default and bounded by
+both image count and aggregate bytes.
+
 The local provider uses paired FastEmbed ONNX CLIP text/image towers. It is disabled by default because a
 cold install must not silently download hundreds of megabytes. Enabling `IMAGE_EMBEDDING_ENABLED=true`
 turns on image indexing and text-to-image queries.
@@ -191,14 +196,15 @@ The 20-image, 40-query text-free icon benchmark produced:
 
 | Profile | English Hit@1 | Chinese Hit@1 | 20-image index | warm query mean (EN) |
 | --- | ---: | ---: | ---: | ---: |
-| Qdrant CLIP-B/32 | 0.95 | 0.10 | 410.448 ms | 12.122 ms |
-| Jina CLIP v1 | 1.00 | 0.10 | 1428.047 ms | 32.633 ms |
-| OCR-only | 0.05 | 0.05 | 13568.450 ms | <0.2 ms after OCR |
+| Qdrant CLIP-B/32 | 0.95 | 0.10 | 430.679 ms | 21.329 ms |
+| Jina CLIP v1 | 1.00 | 0.10 | 1493.585 ms | 31.643 ms |
+| OCR-only | 0.05 | 0.05 | 16783.431 ms | <0.2 ms after OCR |
 
-Jina v1 gains five English Hit@1 points but takes ~3.5x the image-index time and ~2.7x the English query
-latency. Both fail Chinese cross-modal retrieval, so neither is allowed to become a Chinese production
-default. CLIP-B/32 is retained as the smaller local alpha profile; Jina CLIP v2 or a bilingual AltCLIP
-profile must be evaluated next. Model/license, memory, Chinese quality, and latency all belong to that gate.
+Jina v1 gains five English Hit@1 points and shows cleaner unrelated-query separation, but takes ~3.5x the
+image-index time, ~1.5x the mean query latency, and has a larger declared footprint. Both fail Chinese
+cross-modal retrieval, so neither is allowed to become a Chinese production default. CLIP-B/32 is retained
+as the smaller local alpha profile; Jina CLIP v2 or a bilingual AltCLIP profile must be evaluated next.
+Model/license, memory, Chinese quality, calibration, and latency all belong to that gate.
 
 ## 6. Current and planned data model
 
@@ -251,13 +257,16 @@ legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructiv
   - original tenant-scoped image bytes with content hash ETag.
 - `POST /visual-search`
   - OCR-only, paired text-to-image, or fused image evidence retrieval.
+- `POST /answer`
+  - explicit `auto`/`text`/`visual` profile and independent text/visual strategy controls;
+  - calibrated abstention, retrievable image citations, and optional bounded vision-model payloads.
 
 ### Planned
 
 - `POST /knowledge-bases/{kb_id}/ingestion-jobs` -> `202 + job_id`;
 - `GET /ingestion-jobs/{job_id}` -> state/progress/warnings;
 - `POST /search/compare` -> shadow multiple strategies without affecting answers;
-- `POST /answer` -> `retrieval_profile`, visual evidence, pipeline trace ID;
+- pipeline trace endpoint exposing stage timing and fallback decisions;
 - `POST /summary-jobs` -> map/reduce background summary with partial results.
 
 ## 8. Failure model
@@ -277,6 +286,8 @@ legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructiv
 
 - File extension selects the parser but canonical MIME and parser validation detect malformed containers.
 - Upload bytes and decoded image pixels have separate limits.
+- Vision-model transfer is opt-in and bounded by `MODEL_MAX_VISUAL_IMAGES` and
+  `MODEL_MAX_VISUAL_BYTES`; cited visual evidence is restricted to the loaded payload set.
 - Parser output is untrusted data and cannot select tools or change policies.
 - Tenant filtering remains in SQL before any chunk enters a model or ranking stage.
 - OCR/model caches live under `data/models/` and are excluded from Git.
@@ -301,6 +312,7 @@ legacy `chunks`. Parent/child chunks and jobs must be migrations, not destructiv
 - 20 text-free images with English and Chinese query sets (implemented);
 - artifact byte citations and PPTX shape bounding boxes (implemented; other parser regions remain);
 - image retrieval ablation against OCR-only baseline (implemented);
+- automatic visual answer routing, calibrated abstention, and visual citations (implemented);
 - multilingual model gate and chart/diagram evidence set (remaining).
 
 ### beta.1 — retrieval quality

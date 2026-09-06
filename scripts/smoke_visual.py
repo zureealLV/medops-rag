@@ -118,6 +118,20 @@ def main() -> None:
                 content = client.get(top["content_url"], headers=headers)
                 content.raise_for_status()
                 assert content.headers["content-type"] == "image/png"
+                answer = client.post(
+                    "/answer",
+                    headers=headers,
+                    json={
+                        "question": "Which image has the red triangle icon?",
+                        "knowledge_base_id": kb_id,
+                        "text_strategy": "keyword",
+                    },
+                )
+                answer.raise_for_status()
+                grounded = answer.json()
+                assert grounded["abstained"] is False
+                assert grounded["retrieval_profile"] == "visual"
+                assert grounded["visual_citations"][0]["source"] == "red-triangle.png"
                 print(
                     json.dumps(
                         {
@@ -128,6 +142,9 @@ def main() -> None:
                             "top_score": top["score"],
                             "visual_citation": top["content_url"],
                             "content_sha256": top["sha256"],
+                            "answer_profile": grounded["retrieval_profile"],
+                            "answer_provider": grounded["provider"],
+                            "answer_visual_source": grounded["visual_citations"][0]["source"],
                         },
                         ensure_ascii=False,
                         indent=2,

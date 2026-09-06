@@ -26,6 +26,7 @@ def grounded_answer(
     response.headers["X-MedOps-Retrieval-Ms"] = str(result.retrieval_ms)
     response.headers["X-MedOps-Model-Ms"] = str(result.model_ms)
     response.headers["X-MedOps-Token-Usage"] = str(result.token_usage)
+    response.headers["X-MedOps-Retrieval-Profile"] = result.retrieval_profile
     write_audit(
         settings.database_path,
         request_id=request_id,
@@ -39,6 +40,10 @@ def grounded_answer(
             "reason": result.reason,
             "documents": [citation.document_id for citation in result.citations],
             "chunks": [citation.chunk_id for citation in result.citations],
+            "artifacts": [citation.artifact_id for citation in result.visual_citations],
+            "retrieval_profile": result.retrieval_profile,
+            "text_strategy": data.text_strategy,
+            "visual_strategy": data.visual_strategy,
             "provider": result.provider,
         },
     )

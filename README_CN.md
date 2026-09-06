@@ -6,7 +6,7 @@
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
-> **能力边界：** Alpha.2 已能召回完全没有文字的图片并返回原始图片证据，但尚不能宣称理解图表数值、示意图关系，也未通过中文跨模态质量门禁。
+> **能力边界：** Alpha.2 已能路由视觉问题、召回完全没有文字的图片并返回原始图片证据，但尚不能宣称理解图表数值、示意图关系，也未通过中文跨模态质量门禁。
 
 ## Alpha.2 已实现
 
@@ -19,6 +19,7 @@
 - 同租户 SHA-256 图片 BLOB 去重，以及页码/幻灯片/形状位置元数据；
 - `GET /documents/{id}/artifacts`、租户隔离的原图读取与哈希 ETag；
 - 可选配对 CLIP 图文向量，以及 `ocr`/`image`/`fusion` 三种视觉检索；
+- `/answer` 自动区分文本/视觉问题，以相似度和候选差值双门禁拒答，并返回可读取的图片引用；
 - 哈希向量、关键词、BM25、加权及 RRF 五种可比较检索策略；
 - 带 `source`、`document_id`、`chunk_id` 的引用回答与低证据拒答；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
@@ -26,8 +27,8 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`、持久化请求指标；
-- 38 个 API/安全/解析器/迁移测试，以及可重复的摄取与检索基准；
-- 本地运行脚本和 Docker Compose。
+- 44 个 API/安全/解析器/迁移测试，以及可重复的摄取与检索基准；
+- 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
 
 ## Windows 快速启动
 
@@ -74,6 +75,10 @@ docker compose up --build
 服务只绑定 `127.0.0.1:8000`，SQLite 数据保存在 `medops_data` 命名卷。
 
 如需启用本地视觉向量，在 `.env` 中设置 `IMAGE_EMBEDDING_ENABLED=true`。首次使用会把配对 ONNX 模型下载到 `MODEL_CACHE_DIR`，模型目录不会进入 Git。
+
+如需把原图发给 OpenAI-compatible 视觉模型，还必须显式设置 `MODEL_VISION_ENABLED=true`；
+`MODEL_MAX_VISUAL_IMAGES` 与 `MODEL_MAX_VISUAL_BYTES` 分别限制图片数和原始字节总量。默认相似度
+`0.28`、候选差值 `0.002` 只按当前 Qdrant CLIP-B/32 小型基准校准，更换模型后必须重新评测。
 
 ## 建议学习顺序
 

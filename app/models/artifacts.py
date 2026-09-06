@@ -34,6 +34,7 @@ class VisualEvidence(DocumentArtifact):
     score: float
     ocr_score: float
     image_score: float | None = None
+    image_similarity: float | None = None
 
 
 class VisualSearchResponse(BaseModel):

@@ -1,31 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title description">
-  <title id="title">MedOps RAG V1 architecture</title>
-  <desc id="description">FastAPI routes call services, tenant-scoped SQLite repositories, hybrid retrieval, a model fallback and allowlisted tools with security and observability controls.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title description">
+  <title id="title">MedOps Multimodal RAG V2 Alpha.2 architecture</title>
+  <desc id="description">Tenant-scoped FastAPI ingestion persists normalized text and content-addressed image artifacts; queries route to text and visual retrieval, calibrated abstention, and bounded optional vision generation.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#66e3ff"/></marker>
     <style>
-      .box{fill:#161d2b;stroke:#66e3ff;stroke-width:2;rx:10}.security{fill:#251a32;stroke:#ff76c8;stroke-width:2;rx:10}
-      .title{fill:#f1f5ff;font:700 25px sans-serif}.label{fill:#e6ecff;font:600 17px sans-serif}.note{fill:#aab9d6;font:14px sans-serif}
-      .line{stroke:#66e3ff;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .box{fill:#161d2b;stroke:#66e3ff;stroke-width:2;rx:10}.visual{fill:#18233a;stroke:#9d8cff;stroke-width:2;rx:10}.security{fill:#251a32;stroke:#ff76c8;stroke-width:2;rx:10}.planned{fill:#1d2330;stroke:#77839b;stroke-width:2;stroke-dasharray:8 6;rx:10}
+      .title{fill:#f1f5ff;font:700 25px sans-serif}.lane{fill:#66e3ff;font:700 16px sans-serif}.label{fill:#e6ecff;font:600 16px sans-serif}.note{fill:#aab9d6;font:13px sans-serif}.small{fill:#93a4c3;font:12px sans-serif}
+      .line{stroke:#66e3ff;stroke-width:2;fill:none;marker-end:url(#arrow)}.vline{stroke:#9d8cff;stroke-width:2;fill:none;marker-end:url(#arrow)}
     </style>
   </defs>
-  <rect width="1200" height="620" fill="#0d111b"/>
-  <text x="600" y="44" text-anchor="middle" class="title">MedOps RAG V1 — auditable, tenant-scoped, offline-first</text>
-  <rect class="box" x="40" y="100" width="170" height="95"/><text class="label" x="125" y="138" text-anchor="middle">Client</text><text class="note" x="125" y="166" text-anchor="middle">Swagger / HTTP</text>
-  <rect class="box" x="260" y="100" width="185" height="95"/><text class="label" x="352" y="138" text-anchor="middle">FastAPI API</text><text class="note" x="352" y="166" text-anchor="middle">validation + DI</text>
-  <rect class="box" x="500" y="100" width="185" height="95"/><text class="label" x="592" y="138" text-anchor="middle">Services</text><text class="note" x="592" y="166" text-anchor="middle">use cases + policy</text>
-  <path class="line" d="M210 148 H255"/><path class="line" d="M445 148 H495"/>
-  <rect class="box" x="770" y="80" width="190" height="95"/><text class="label" x="865" y="118" text-anchor="middle">Repositories</text><text class="note" x="865" y="146" text-anchor="middle">parameterized SQL</text>
-  <rect class="box" x="1000" y="80" width="160" height="95"/><text class="label" x="1080" y="118" text-anchor="middle">SQLite</text><text class="note" x="1080" y="146" text-anchor="middle">docs + chunks</text>
-  <path class="line" d="M685 132 H765"/><path class="line" d="M960 128 H995"/>
-  <rect class="box" x="770" y="230" width="190" height="120"/><text class="label" x="865" y="268" text-anchor="middle">Hybrid Retrieval</text><text class="note" x="865" y="296" text-anchor="middle">keyword + vector</text><text class="note" x="865" y="322" text-anchor="middle">ranked Evidence[]</text>
-  <rect class="box" x="1000" y="230" width="160" height="120"/><text class="label" x="1080" y="268" text-anchor="middle">Answer</text><text class="note" x="1080" y="296" text-anchor="middle">optional model</text><text class="note" x="1080" y="322" text-anchor="middle">offline fallback</text>
-  <path class="line" d="M685 160 C720 160 720 290 765 290"/><path class="line" d="M960 290 H995"/>
-  <rect class="box" x="500" y="260" width="185" height="90"/><text class="label" x="592" y="298" text-anchor="middle">Read-only tools</text><text class="note" x="592" y="326" text-anchor="middle">three allowlisted</text>
-  <path class="line" d="M592 195 V255"/>
-  <rect class="security" x="260" y="430" width="700" height="125"/><text class="label" x="610" y="468" text-anchor="middle">Security controls</text><text class="note" x="610" y="500" text-anchor="middle">tenant filter before retrieval · injection quarantine · PII redaction · evidence threshold · tool validation</text><text class="note" x="610" y="530" text-anchor="middle">audit events · medical-advice denial · bounded timeout/retry/fallback</text>
-  <path class="line" d="M352 195 V425"/><path class="line" d="M592 350 V425"/><path class="line" d="M865 350 V425"/>
-  <rect class="box" x="1000" y="430" width="160" height="125"/><text class="label" x="1080" y="468" text-anchor="middle">Observability</text><text class="note" x="1080" y="498" text-anchor="middle">request ID</text><text class="note" x="1080" y="522" text-anchor="middle">latency + tokens</text>
-  <path class="line" d="M960 493 H995"/>
-  <text class="note" x="40" y="594">Synthetic data only · educational system · not medical advice · not production authentication</text>
+  <rect width="1400" height="820" fill="#0d111b"/>
+  <text x="700" y="42" text-anchor="middle" class="title">MedOps Multimodal RAG V2 Alpha.2 — evidence first, abstain by default</text>
+
+  <text x="35" y="87" class="lane">INGESTION</text>
+  <rect class="box" x="35" y="105" width="150" height="90"/><text class="label" x="110" y="140" text-anchor="middle">Upload API</text><text class="note" x="110" y="165" text-anchor="middle">bytes + pixel caps</text>
+  <rect class="box" x="225" y="105" width="190" height="90"/><text class="label" x="320" y="140" text-anchor="middle">Parser Registry</text><text class="note" x="320" y="163" text-anchor="middle">PDF · DOCX · PPTX</text><text class="note" x="320" y="181" text-anchor="middle">TXT · MD · raster</text>
+  <rect class="box" x="455" y="105" width="190" height="90"/><text class="label" x="550" y="140" text-anchor="middle">Normalized Elements</text><text class="note" x="550" y="164" text-anchor="middle">text · table · OCR</text><text class="small" x="550" y="182" text-anchor="middle">page / slide / heading</text>
+  <rect class="visual" x="685" y="105" width="190" height="90"/><text class="label" x="780" y="140" text-anchor="middle">Image Artifacts</text><text class="note" x="780" y="164" text-anchor="middle">tenant SHA-256 BLOB</text><text class="small" x="780" y="182" text-anchor="middle">placement + bbox</text>
+  <rect class="box" x="915" y="105" width="205" height="90"/><text class="label" x="1017" y="140" text-anchor="middle">Text Index</text><text class="note" x="1017" y="164" text-anchor="middle">chunks · BM25 · hash</text>
+  <rect class="visual" x="1160" y="105" width="205" height="90"/><text class="label" x="1262" y="140" text-anchor="middle">Visual Index</text><text class="note" x="1262" y="164" text-anchor="middle">paired CLIP vectors</text><text class="small" x="1262" y="182" text-anchor="middle">disabled by default</text>
+  <path class="line" d="M185 150 H220"/><path class="line" d="M415 150 H450"/><path class="line" d="M645 135 H680"/><path class="line" d="M645 170 C760 215 875 160 910 155"/><path class="vline" d="M875 150 H910 C1040 150 1070 150 1155 150"/>
+
+  <text x="35" y="260" class="lane">QUERY + ANSWER</text>
+  <rect class="box" x="35" y="280" width="150" height="100"/><text class="label" x="110" y="318" text-anchor="middle">Answer API</text><text class="note" x="110" y="344" text-anchor="middle">tenant / KB scope</text><text class="small" x="110" y="365" text-anchor="middle">request + audit ID</text>
+  <rect class="box" x="225" y="280" width="190" height="100"/><text class="label" x="320" y="318" text-anchor="middle">Query Router</text><text class="note" x="320" y="344" text-anchor="middle">auto · text · visual</text><text class="small" x="320" y="365" text-anchor="middle">explicit strategy controls</text>
+  <rect class="box" x="455" y="260" width="190" height="85"/><text class="label" x="550" y="294" text-anchor="middle">Text Retrieval</text><text class="note" x="550" y="320" text-anchor="middle">keyword / BM25 / RRF</text>
+  <rect class="visual" x="455" y="365" width="190" height="85"/><text class="label" x="550" y="399" text-anchor="middle">Visual Retrieval</text><text class="note" x="550" y="425" text-anchor="middle">OCR / image / fusion</text>
+  <rect class="security" x="700" y="280" width="215" height="135"/><text class="label" x="807" y="317" text-anchor="middle">Evidence Gate</text><text class="note" x="807" y="342" text-anchor="middle">injection quarantine</text><text class="note" x="807" y="365" text-anchor="middle">raw similarity ≥ 0.28</text><text class="note" x="807" y="388" text-anchor="middle">winner margin ≥ 0.002</text>
+  <rect class="visual" x="970" y="260" width="200" height="105"/><text class="label" x="1070" y="298" text-anchor="middle">Bounded Images</text><text class="note" x="1070" y="324" text-anchor="middle">tenant-scoped bytes</text><text class="small" x="1070" y="345" text-anchor="middle">max count + total size</text>
+  <rect class="box" x="970" y="390" width="200" height="105"/><text class="label" x="1070" y="428" text-anchor="middle">Generation</text><text class="note" x="1070" y="454" text-anchor="middle">optional vision model</text><text class="small" x="1070" y="475" text-anchor="middle">offline evidence locator</text>
+  <rect class="box" x="1215" y="315" width="150" height="120"/><text class="label" x="1290" y="350" text-anchor="middle">Response</text><text class="note" x="1290" y="375" text-anchor="middle">answer / abstain</text><text class="note" x="1290" y="398" text-anchor="middle">text citations</text><text class="note" x="1290" y="419" text-anchor="middle">visual citations</text>
+  <path class="line" d="M185 330 H220"/><path class="line" d="M415 315 H450"/><path class="vline" d="M415 345 C435 345 435 408 450 408"/><path class="line" d="M645 302 H695"/><path class="vline" d="M645 408 H695"/><path class="vline" d="M915 330 H965"/><path class="line" d="M915 382 C940 382 940 442 965 442"/><path class="vline" d="M1070 365 V385"/><path class="line" d="M1170 442 C1192 442 1192 375 1210 375"/>
+
+  <text x="35" y="545" class="lane">PERSISTENCE + CONTROL PLANE</text>
+  <rect class="box" x="35" y="565" width="250" height="100"/><text class="label" x="160" y="603" text-anchor="middle">SQLite Alpha Store</text><text class="note" x="160" y="629" text-anchor="middle">KB · docs · chunks · elements</text><text class="small" x="160" y="650" text-anchor="middle">artifact blobs + placements + audit</text>
+  <rect class="security" x="330" y="565" width="350" height="100"/><text class="label" x="505" y="600" text-anchor="middle">Security Boundary</text><text class="note" x="505" y="626" text-anchor="middle">SQL tenant filter before ranking/model</text><text class="small" x="505" y="649" text-anchor="middle">no write tools · untrusted evidence · PII-safe audit</text>
+  <rect class="box" x="725" y="565" width="270" height="100"/><text class="label" x="860" y="603" text-anchor="middle">Observability</text><text class="note" x="860" y="629" text-anchor="middle">request ID · Server-Timing</text><text class="small" x="860" y="650" text-anchor="middle">retrieval/model latency + provider</text>
+  <rect class="planned" x="1040" y="565" width="325" height="100"/><text class="label" x="1202" y="603" text-anchor="middle">Beta Work (not claimed)</text><text class="note" x="1202" y="629" text-anchor="middle">parent-child · vector DB · workers</text><text class="small" x="1202" y="650" text-anchor="middle">VLM chart reasoning · scale tests</text>
+  <path class="line" d="M160 560 V520 H780 V455"/><path class="line" d="M505 560 V460"/><path class="line" d="M860 560 V420"/>
+
+  <rect class="security" x="35" y="715" width="1330" height="60"/><text class="note" x="700" y="742" text-anchor="middle">Synthetic hospital IT data only · educational portfolio · not diagnosis · not production authentication</text><text class="small" x="700" y="762" text-anchor="middle">Measured limits are explicit: English icon retrieval works; Chinese cross-modal and chart reasoning remain open gates.</text>
 </svg>

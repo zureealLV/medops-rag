@@ -44,6 +44,18 @@ CASES = (
     ("cyan_network", "cyan connected network nodes", "青色互联网络节点图标"),
     ("green_check", "a green check mark icon", "绿色对勾图标"),
 )
+NEGATIVE_QUERIES = (
+    ("a photograph of a cat", "一张猫的照片"),
+    ("a medical xray image", "医学X光影像"),
+    ("a person using a laptop", "一个正在使用笔记本电脑的人"),
+    ("a hospital building", "医院建筑照片"),
+    ("a bowl of fruit", "一碗水果"),
+    ("a mountain landscape", "山脉风景照片"),
+    ("a car on a road", "道路上的汽车"),
+    ("an electrocardiogram chart", "心电图曲线"),
+    ("a nurse portrait", "护士肖像"),
+    ("a barcode label", "条形码标签"),
+)
 COLORS = {
     "red": "#e53935",
     "green": "#20a464",
@@ -234,6 +246,8 @@ def run(cache_dir: Path) -> dict[str, object]:
             fusion_ranks: list[int] = []
             image_latencies: list[float] = []
             ocr_latencies: list[float] = []
+            positive_similarities: list[float] = []
+            winner_margins: list[float] = []
             for expected, case in enumerate(CASES):
                 query = case[query_index]
                 started = time.perf_counter()
@@ -248,9 +262,18 @@ def run(cache_dir: Path) -> dict[str, object]:
                     0.8 * image_score + 0.2 * ocr_score
                     for image_score, ocr_score in zip(_scaled(image_scores), _scaled(ocr_scores), strict=True)
                 ]
+                ordered_image_scores = sorted(image_scores, reverse=True)
+                positive_similarities.append(image_scores[expected])
+                winner_margins.append(ordered_image_scores[0] - ordered_image_scores[1])
                 image_ranks.append(_rank(image_scores).index(expected) + 1)
                 ocr_ranks.append(_rank(ocr_scores).index(expected) + 1)
                 fusion_ranks.append(_rank(fusion_scores).index(expected) + 1)
+            negative_max_similarities: list[float] = []
+            for negative in NEGATIVE_QUERIES:
+                negative_vector = _normalize(next(text_model.query_embed(negative[query_index - 1])))
+                negative_max_similarities.append(
+                    max(float(np.dot(negative_vector, vector)) for vector in image_vectors)
+                )
             languages[language] = {
                 "image_only": _summary(image_ranks, image_latencies),
                 "ocr_only": _summary(ocr_ranks, ocr_latencies),
@@ -258,6 +281,14 @@ def run(cache_dir: Path) -> dict[str, object]:
                     fusion_ranks,
                     [left + right for left, right in zip(image_latencies, ocr_latencies, strict=True)],
                 ),
+                "similarity_calibration": {
+                    "positive_expected_min": round(min(positive_similarities), 6),
+                    "positive_expected_mean": round(statistics.fmean(positive_similarities), 6),
+                    "positive_winner_margin_min": round(min(winner_margins), 6),
+                    "positive_winner_margin_mean": round(statistics.fmean(winner_margins), 6),
+                    "negative_max_mean": round(statistics.fmean(negative_max_similarities), 6),
+                    "negative_max_max": round(max(negative_max_similarities), 6),
+                },
             }
         model_results.append(
             {
@@ -274,6 +305,7 @@ def run(cache_dir: Path) -> dict[str, object]:
         "generated_at": datetime.now(UTC).isoformat(),
         "cases": len(CASES),
         "queries": len(CASES) * 2,
+        "negative_queries": len(NEGATIVE_QUERIES) * 2,
         "visual_only": True,
         "fixture": "generated 384x384 icons without text",
         "ocr_index_20_images_ms": round(ocr_index_ms, 3),
@@ -283,6 +315,7 @@ def run(cache_dir: Path) -> dict[str, object]:
             "Synthetic icons test cross-modal color/shape matching, not charts or clinical images.",
             "Model files were cached before timed load; network download is excluded.",
             "Fusion weight 80/20 was fixed before evaluation and was not tuned on these cases.",
+            "Negative queries calibrate abstention only against this small icon corpus.",
         ],
     }
 
