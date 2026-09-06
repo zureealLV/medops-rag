@@ -9,6 +9,7 @@ from app.api.artifacts import router as artifacts_router
 from app.api.audit import router as audit_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
+from app.api.jobs import router as jobs_router
 from app.api.knowledge_bases import router as knowledge_bases_router
 from app.api.search import router as search_router
 from app.api.tools import router as tools_router
@@ -30,7 +31,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title="MedOps RAG",
-        version="2.0.0-alpha.2",
+        version="2.0.0-beta.2-dev",
         description=(
             "Auditable multimodal RAG for synthetic hospital IT operations knowledge. "
             "Not medical advice."
@@ -42,6 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         health_router,
         users_router,
         knowledge_bases_router,
+        jobs_router,
         documents_router,
         artifacts_router,
         search_router,

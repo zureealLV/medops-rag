@@ -135,6 +135,36 @@ CREATE TABLE IF NOT EXISTS child_chunks (
 );
 CREATE INDEX IF NOT EXISTS idx_child_chunks_tenant_kb
     ON child_chunks(tenant_id, knowledge_base_id);
+CREATE TABLE IF NOT EXISTS ingestion_jobs (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    knowledge_base_id INTEGER NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    declared_mime TEXT,
+    content BLOB,
+    content_sha256 TEXT NOT NULL,
+    state TEXT NOT NULL CHECK(state IN ('queued','running','succeeded','failed','partial','cancelled')),
+    progress INTEGER NOT NULL DEFAULT 0 CHECK(progress BETWEEN 0 AND 100),
+    attempt INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 3,
+    lease_owner TEXT,
+    lease_expires_at REAL,
+    document_id INTEGER,
+    error_code TEXT,
+    error_message TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TEXT,
+    completed_at TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE,
+    FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE SET NULL,
+    UNIQUE(tenant_id, idempotency_key)
+);
+CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_claim
+    ON ingestion_jobs(state, lease_expires_at, created_at);
+CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_tenant
+    ON ingestion_jobs(tenant_id, created_at);
 CREATE TABLE IF NOT EXISTS audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     request_id TEXT NOT NULL,

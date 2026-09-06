@@ -1,18 +1,20 @@
-# MedOps 多模态 RAG V2 Alpha.2
+# MedOps 多模态 RAG V2 Beta.2（开发中）
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 视觉基准](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Beta.1 父子块基准](docs/v2/BENCHMARK_REPORT_BETA1.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [向量库基准](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。Alpha.2 在多格式/OCR 链路上加入图片原始证据、CLIP 跨模态向量、视觉检索和可访问的图片引用。
+这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
 > **能力边界：** Alpha.2 已能路由视觉问题、召回完全没有文字的图片并返回原始图片证据，但尚不能宣称理解图表数值、示意图关系，也未通过中文跨模态质量门禁。
 
-## Alpha.2 已实现
+## 当前已实现
 
 - FastAPI 应用工厂、类型化 Router、依赖注入、统一错误与 OpenAPI；
 - SQLite 事务、外键、索引和重启持久化；
 - 知识库与文档 CRUD，基于 SHA-256 的同租户/知识库幂等上传；
+- 持久化异步摄取任务：租户级幂等键、Worker 租约、有限重试、取消与崩溃恢复；
+- 独立轮询 Worker，把解析、OCR、分块和 Embedding 从 API 进程剥离；
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP 解析与文本、表格、OCR 元素归一化；
 - 通过 `GET /documents/{id}/elements` 查询页码、幻灯片、标题和模态来源；
 - RapidOCR/ONNX Runtime 的扫描 PDF 条件式 OCR 与 Office 内嵌图片 OCR；
@@ -28,7 +30,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`、持久化请求指标；
-- 50 个 API/安全/解析器/迁移测试，以及可重复的摄取与检索基准；
+- 56 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
 - 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
 
 ## Windows 快速启动
@@ -52,6 +54,22 @@ X-Actor-ID: local-demo
 ```
 
 这里的租户 Header 代表“上游网关已经完成身份认证”的演示信任边界，**不等于生产级鉴权**。
+
+异步摄取示例：
+
+```powershell
+$headers = @{
+  "X-Tenant-ID" = "hospital-a"
+  "X-Actor-ID" = "local-demo"
+  "Idempotency-Key" = "demo-upload-0001"
+}
+"PACS 网关恢复：检查 DNS、TLS 与 DICOM 连通性。" | Set-Content .\demo-runbook.md
+Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/ingestion-jobs `
+  -Method Post -Headers $headers -Form @{ file = Get-Item .\demo-runbook.md }
+.\.venv\Scripts\python.exe .\scripts\ingestion_worker.py --once
+```
+
+首次接收返回 `202`；以相同键重放相同文件返回原任务和 `200`；相同键对应不同内容或知识库则返回 `409`。
 
 ## 测试与评测
 

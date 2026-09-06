@@ -1,18 +1,20 @@
-# MedOps Multimodal RAG V2 Alpha.2
+# MedOps Multimodal RAG V2 Beta.2 (in progress)
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Alpha.2 visual benchmark](docs/v2/BENCHMARK_REPORT_ALPHA2.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. Alpha.2 adds content-addressed image artifacts, optional paired CLIP embeddings, text-to-image retrieval, and retrievable visual citations to the multiformat/OCR pipeline.
+An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The current Beta.2 increment adds a persisted, leased ingestion queue and an isolated worker process to the multimodal retrieval foundation.
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
 > **Claim boundary:** alpha.2 routes visual questions, retrieves text-free images, and returns stored image evidence. It does not yet claim chart/diagram reasoning or production Chinese cross-modal quality.
 
-## Alpha.2 capabilities
+## Current capabilities
 
 - FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
 - SQLite transactions, foreign keys, indexes and restart persistence;
 - knowledge-base and document CRUD with SHA-256 idempotent uploads;
+- durable asynchronous ingestion jobs with tenant-scoped idempotency keys, leases, bounded retries, cancellation and crash recovery;
+- an isolated polling worker for parsing, OCR, chunking and embedding outside the API process;
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP parsing with native text, table, and OCR elements;
 - page/slide/heading provenance through `GET /documents/{id}/elements`;
 - conditional scanned-PDF OCR and embedded-image OCR through RapidOCR/ONNX Runtime;
@@ -27,7 +29,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 50 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 56 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)
@@ -63,6 +65,19 @@ Invoke-RestMethod http://127.0.0.1:8000/search -Method Post -Headers $headers `
 Invoke-RestMethod http://127.0.0.1:8000/answer -Method Post -Headers $headers `
   -ContentType "application/json" -Body '{"question":"PACS 健康检查失败如何排查？"}'
 ```
+
+Queue a document with an idempotency key, then run one worker iteration:
+
+```powershell
+$headers["Idempotency-Key"] = "demo-upload-0001"
+"PACS gateway recovery: verify DNS, TLS and DICOM reachability." | Set-Content .\demo-runbook.md
+Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/ingestion-jobs `
+  -Method Post -Headers $headers -Form @{ file = Get-Item .\demo-runbook.md }
+.\.venv\Scripts\python.exe .\scripts\ingestion_worker.py --once
+```
+
+The first accepted upload returns `202`; replaying the same key and payload returns the same job with `200`.
+Reusing the key for different bytes or a different knowledge base returns `409`.
 
 See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injection and denied-tool cases.
 

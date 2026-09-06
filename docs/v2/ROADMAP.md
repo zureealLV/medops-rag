@@ -62,13 +62,15 @@ latency increased from 13.628 ms to 19.702 ms. This validates reconstruction, no
 
 ## Gate 4 — Beta.2: asynchronous ingestion and summaries
 
-- [ ] persisted job state machine: queued/running/succeeded/failed/partial/cancelled;
-- [ ] idempotency keys, leases, bounded retries, timeouts, and crash recovery;
-- [ ] isolated worker for parsing/OCR/embedding;
+- [x] persisted single-file job states: queued/running/succeeded/failed/cancelled;
+- [ ] batch `partial` state and progress aggregation;
+- [x] tenant-scoped idempotency keys, fenced leases, three-attempt retry bound, and expired-lease recovery;
+- [x] isolated polling worker for parsing/OCR/chunking/embedding;
 - [ ] Map-Reduce multi-document summary with per-map and final citations;
 - [ ] partial result semantics and 30-second model timeout;
 - [ ] Redis/Celery versus database-backed worker benchmark before selection;
-- [ ] concurrency, restart, duplicate-delivery, and poison-document tests.
+- [x] lease restart, duplicate-delivery fencing, transient retry, cancellation and poison-document tests;
+- [ ] multi-process contention and worker-kill integration tests.
 
 Acceptance: kill the worker during OCR and Map-Reduce, restart it, and prove completed work is not duplicated
 and partial failures remain visible.
