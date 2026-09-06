@@ -11,6 +11,7 @@ from app.repositories import knowledge_bases
 from app.retrieval.chunking import split_text
 from app.retrieval.image_embeddings import provider_from_settings
 from app.retrieval.structure_chunking import build_parent_child_chunks
+from app.retrieval.text_embeddings import provider_from_settings as text_provider_from_settings
 
 
 def create(
@@ -26,7 +27,9 @@ def create(
         child_size=settings.child_chunk_size,
         child_overlap=settings.child_chunk_overlap,
     )
-    return repository.create(path, tenant_id, kb_id, data, chunks, parents)
+    return repository.create(
+        path, tenant_id, kb_id, data, chunks, parents, text_provider_from_settings(settings)
+    )
 
 
 def create_from_parsed(
@@ -59,6 +62,7 @@ def create_from_parsed(
             DocumentCreate(title=Path(parsed.filename).stem, content=content, source=parsed.filename),
             chunks,
             parents,
+            text_provider_from_settings(settings),
             parsed,
             artifact_embeddings,
             (
@@ -99,7 +103,15 @@ def update(
             child_size=settings.child_chunk_size,
             child_overlap=settings.child_chunk_overlap,
         )
-    return repository.update(path, tenant_id, document_id, data, chunks, parents)
+    return repository.update(
+        path,
+        tenant_id,
+        document_id,
+        data,
+        chunks,
+        parents,
+        text_provider_from_settings(settings),
+    )
 
 
 def delete(path: Path, tenant_id: str, document_id: int) -> bool:

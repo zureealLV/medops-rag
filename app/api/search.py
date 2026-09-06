@@ -18,7 +18,7 @@ def hybrid_search(
     settings: SettingsDep,
     request_id: RequestIdDep,
 ) -> SearchResponse:
-    result = search(settings.database_path, context.tenant_id, data)
+    result = search(settings.database_path, context.tenant_id, data, settings)
     if result is None:
         write_audit(
             settings.database_path,

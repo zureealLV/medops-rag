@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     chunk_index INTEGER NOT NULL,
     text TEXT NOT NULL,
     embedding_json TEXT NOT NULL,
+    embedding_model TEXT NOT NULL DEFAULT 'medops/hashing-256-v1',
     FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
     FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE,
     UNIQUE(document_id, chunk_index)
@@ -126,6 +127,7 @@ CREATE TABLE IF NOT EXISTS child_chunks (
     child_index INTEGER NOT NULL,
     text TEXT NOT NULL,
     embedding_json TEXT NOT NULL,
+    embedding_model TEXT NOT NULL DEFAULT 'medops/hashing-256-v1',
     FOREIGN KEY(parent_id) REFERENCES parent_chunks(id) ON DELETE CASCADE,
     FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
     FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE,
@@ -210,6 +212,13 @@ def initialize(path: Path) -> None:
         }
         if "artifact_sha256" not in element_columns:
             connection.execute("ALTER TABLE document_elements ADD COLUMN artifact_sha256 TEXT")
+        for table in ("chunks", "child_chunks"):
+            columns = {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
+            if "embedding_model" not in columns:
+                connection.execute(
+                    f"ALTER TABLE {table} ADD COLUMN embedding_model TEXT NOT NULL "
+                    "DEFAULT 'medops/hashing-256-v1'"
+                )
         connection.execute(
             """CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_ingest_dedup
                ON documents(tenant_id, knowledge_base_id, sha256) WHERE sha256 <> ''"""
@@ -229,9 +238,9 @@ def initialize(path: Path) -> None:
         connection.execute(
             """INSERT INTO child_chunks
                (parent_id, document_id, knowledge_base_id, tenant_id, child_index, text,
-                embedding_json)
+                embedding_json, embedding_model)
                SELECT p.id, c.document_id, c.knowledge_base_id, c.tenant_id, 0, c.text,
-                      c.embedding_json
+                      c.embedding_json, c.embedding_model
                FROM chunks c
                JOIN parent_chunks p
                  ON p.document_id = c.document_id AND p.parent_index = c.chunk_index

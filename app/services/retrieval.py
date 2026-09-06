@@ -5,13 +5,20 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+from app.config import Settings
 from app.models.retrieval import SearchRequest, SearchResponse
 from app.repositories.documents import retrieval_rows
 from app.repositories.knowledge_bases import get as get_kb
 from app.retrieval.hybrid import rank
+from app.retrieval.text_embeddings import provider_from_settings
 
 
-def search(path: Path, tenant_id: str, request: SearchRequest) -> SearchResponse | None:
+def search(
+    path: Path,
+    tenant_id: str,
+    request: SearchRequest,
+    settings: Settings | None = None,
+) -> SearchResponse | None:
     if request.knowledge_base_id is not None and get_kb(path, tenant_id, request.knowledge_base_id) is None:
         return None
     started = time.perf_counter()
@@ -23,6 +30,12 @@ def search(path: Path, tenant_id: str, request: SearchRequest) -> SearchResponse
         request.knowledge_base_id,
         parent_child=use_parent_child,
     )
+    scoring_strategy = "bm25" if use_parent_child else request.strategy
+    query_vector = None
+    if scoring_strategy in {"vector", "weighted", "rrf"}:
+        provider = provider_from_settings(settings)
+        rows = [row for row in rows if row["embedding_model"] == provider.model_name]
+        query_vector = provider.embed_query(request.query)
     results = rank(
         request.query,
         rows,
@@ -30,7 +43,8 @@ def search(path: Path, tenant_id: str, request: SearchRequest) -> SearchResponse
         # The current benchmark shows BM25 outperforming the hashing-vector baseline.
         # Parent/child retrieval therefore reconstructs context without smuggling in
         # an unvalidated dense model; beta will benchmark a real dense child index.
-        strategy=("bm25" if use_parent_child else request.strategy),
+        strategy=scoring_strategy,
+        query_vector=query_vector,
     )
     if use_parent_child:
         deduplicated = []

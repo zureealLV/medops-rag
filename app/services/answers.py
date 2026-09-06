@@ -130,6 +130,7 @@ def answer(
             top_k=request.top_k,
             strategy=request.text_strategy,
         ),
+        settings,
     )
     if text_result is None:
         return None

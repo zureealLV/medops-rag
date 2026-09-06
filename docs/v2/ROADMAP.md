@@ -46,7 +46,7 @@ coordinates and real VLM chart reasoning remain open; the offline path deliberat
 - [x] add parent/child chunk schema and additive migration;
 - [x] build structure-aware chunks from normalized elements;
 - [ ] freeze the V2 evaluation split and record dataset hashes;
-- [ ] implement pluggable hashing/MiniLM/BGE-M3-or-E5 embedding profiles;
+- [x] implement pluggable hashing/MiniLM embedding profiles with persisted model identity;
 - [ ] compare SQLite scan, Chroma, and Qdrant on 1k/10k/100k synthetic chunks;
 - [ ] select fusion method from held-out Hit@K/MRR/nDCG and filtered-query behavior;
 - [ ] enable BGE reranking only when quality gain justifies CPU/memory/latency;

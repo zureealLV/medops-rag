@@ -26,6 +26,8 @@ class Settings:
     parent_chunk_size: int = 1600
     child_chunk_size: int = 350
     child_chunk_overlap: int = 50
+    text_embedding_enabled: bool = False
+    text_embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     max_upload_bytes: int = 10_000_000
     max_image_pixels: int = 25_000_000
     ocr_enabled: bool = True
@@ -57,6 +59,12 @@ class Settings:
             parent_chunk_size=int(os.getenv("PARENT_CHUNK_SIZE", "1600")),
             child_chunk_size=int(os.getenv("CHILD_CHUNK_SIZE", "350")),
             child_chunk_overlap=int(os.getenv("CHILD_CHUNK_OVERLAP", "50")),
+            text_embedding_enabled=os.getenv("TEXT_EMBEDDING_ENABLED", "false").lower()
+            in {"1", "true", "yes", "on"},
+            text_embedding_model=os.getenv(
+                "TEXT_EMBEDDING_MODEL",
+                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+            ),
             max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", "10000000")),
             max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
             ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},

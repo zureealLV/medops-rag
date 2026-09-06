@@ -35,11 +35,12 @@ def rank(
     *,
     top_k: int,
     strategy: str = "weighted",
+    query_vector: list[float] | None = None,
 ) -> list[Evidence]:
     materialized = list(rows)
     if not materialized:
         return []
-    query_vector = embed(query)
+    query_vector = query_vector or embed(query)
     query_tokens = tokenize(query)
     corpus_tokens = [tokenize(row["text"]) for row in materialized]
     bm25_raw = [float(value) for value in BM25Okapi(corpus_tokens).get_scores(query_tokens)]
@@ -88,6 +89,7 @@ def rank(
                 page_start=row["page_start"] if "page_start" in row_keys else None,
                 page_end=row["page_end"] if "page_end" in row_keys else None,
                 heading=row["heading"] if "heading" in row_keys else None,
+                embedding_model=row["embedding_model"] if "embedding_model" in row_keys else None,
             )
         )
     return sorted(results, key=lambda item: (-item.score, item.chunk_id))[:top_k]

@@ -1,0 +1,8 @@
+{
+  "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "documents": 3,
+  "index_ms": 2094.785,
+  "query_ms": 63.082,
+  "top_source": "cert.md",
+  "top_cosine": 0.497208
+}

@@ -10,8 +10,8 @@ from app.db import transaction
 from app.ingestion.parsers import ParsedDocument, element_metadata_json
 from app.models.documents import Document, DocumentCreate, DocumentUpdate
 from app.repositories import artifacts as artifact_repository
-from app.retrieval.embeddings import embed
 from app.retrieval.structure_chunking import ParentChunkPlan
+from app.retrieval.text_embeddings import TextEmbeddingProvider
 
 
 def _model(row: sqlite3.Row) -> Document:
@@ -38,13 +38,24 @@ def _insert_chunks(
     kb_id: int,
     tenant_id: str,
     chunks: list[str],
+    embedding_provider: TextEmbeddingProvider,
 ) -> None:
+    vectors = embedding_provider.embed_documents(chunks)
     connection.executemany(
         """INSERT INTO chunks
-           (document_id, knowledge_base_id, tenant_id, chunk_index, text, embedding_json)
-           VALUES (?, ?, ?, ?, ?, ?)""",
+           (document_id, knowledge_base_id, tenant_id, chunk_index, text, embedding_json,
+            embedding_model)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
         [
-            (document_id, kb_id, tenant_id, index, text, json.dumps(embed(text)))
+            (
+                document_id,
+                kb_id,
+                tenant_id,
+                index,
+                text,
+                json.dumps(vectors[index]),
+                embedding_provider.model_name,
+            )
             for index, text in enumerate(chunks)
         ],
     )
@@ -56,6 +67,7 @@ def _insert_parent_child_chunks(
     kb_id: int,
     tenant_id: str,
     plans: list[ParentChunkPlan],
+    embedding_provider: TextEmbeddingProvider,
 ) -> None:
     for parent_index, plan in enumerate(plans):
         cursor = connection.execute(
@@ -77,11 +89,12 @@ def _insert_parent_child_chunks(
             ),
         )
         parent_id = int(cursor.lastrowid)
+        vectors = embedding_provider.embed_documents(list(plan.children))
         connection.executemany(
             """INSERT INTO child_chunks
                (parent_id, document_id, knowledge_base_id, tenant_id, child_index, text,
-                embedding_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                embedding_json, embedding_model)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             [
                 (
                     parent_id,
@@ -90,7 +103,8 @@ def _insert_parent_child_chunks(
                     tenant_id,
                     child_index,
                     text,
-                    json.dumps(embed(text)),
+                    json.dumps(vectors[child_index]),
+                    embedding_provider.model_name,
                 )
                 for child_index, text in enumerate(plan.children)
             ],
@@ -104,6 +118,7 @@ def create(
     data: DocumentCreate,
     chunks: list[str],
     parent_chunks: list[ParentChunkPlan],
+    text_embedding_provider: TextEmbeddingProvider,
     parsed: ParsedDocument | None = None,
     artifact_embeddings: dict[str, list[float]] | None = None,
     artifact_embedding_model: str | None = None,
@@ -155,8 +170,10 @@ def create(
                 embeddings=artifact_embeddings or {},
                 embedding_model=artifact_embedding_model,
             )
-        _insert_chunks(connection, document_id, kb_id, tenant_id, chunks)
-        _insert_parent_child_chunks(connection, document_id, kb_id, tenant_id, parent_chunks)
+        _insert_chunks(connection, document_id, kb_id, tenant_id, chunks, text_embedding_provider)
+        _insert_parent_child_chunks(
+            connection, document_id, kb_id, tenant_id, parent_chunks, text_embedding_provider
+        )
         row = connection.execute(
             DOCUMENT_SELECT + " WHERE d.id = ? GROUP BY d.id",
             (document_id,),
@@ -224,6 +241,7 @@ def update(
     data: DocumentUpdate,
     chunks: list[str] | None,
     parent_chunks: list[ParentChunkPlan] | None,
+    text_embedding_provider: TextEmbeddingProvider,
 ) -> Document | None:
     stored = get(path, tenant_id, document_id)
     if stored is None:
@@ -267,9 +285,16 @@ def update(
         if chunks is not None:
             connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
             connection.execute("DELETE FROM parent_chunks WHERE document_id = ?", (document_id,))
-            _insert_chunks(connection, document_id, stored.kb_id, tenant_id, chunks)
+            _insert_chunks(
+                connection, document_id, stored.kb_id, tenant_id, chunks, text_embedding_provider
+            )
             _insert_parent_child_chunks(
-                connection, document_id, stored.kb_id, tenant_id, parent_chunks or []
+                connection,
+                document_id,
+                stored.kb_id,
+                tenant_id,
+                parent_chunks or [],
+                text_embedding_provider,
             )
     return get(path, tenant_id, document_id)
 
@@ -294,14 +319,16 @@ def retrieval_rows(
 ) -> list[sqlite3.Row]:
     if parent_child:
         sql = """SELECT c.id, c.document_id, c.child_index AS chunk_index, c.text,
-                        c.embedding_json, d.source, p.id AS parent_id, p.text AS parent_text,
+                        c.embedding_json, c.embedding_model, d.source,
+                        p.id AS parent_id, p.text AS parent_text,
                         p.page_start, p.page_end, p.heading
                  FROM child_chunks c
                  JOIN parent_chunks p ON p.id = c.parent_id
                  JOIN documents d ON d.id = c.document_id
                  WHERE c.tenant_id = ?"""
     else:
-        sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json, d.source
+        sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json,
+                        c.embedding_model, d.source
                  FROM chunks c JOIN documents d ON d.id = c.document_id
                  WHERE c.tenant_id = ?"""
     params: list[object] = [tenant_id]

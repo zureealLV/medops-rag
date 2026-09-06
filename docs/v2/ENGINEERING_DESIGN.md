@@ -134,6 +134,11 @@ increased from 13.628 ms to 19.702 ms. See `docs/v2/BENCHMARK_REPORT_BETA1.md`.
 The child scorer remains BM25 because the current hashing-vector baseline has not earned a default role.
 This is parent-child retrieval, not yet a claim of production dense hybrid retrieval.
 
+The text embedding boundary now supports a deterministic hashing provider and an opt-in normalized FastEmbed
+provider. `chunks` and `child_chunks` persist `embedding_model`; vector-dependent searches select only rows
+matching the active model, preventing dimension/model mixing after configuration changes. The first real
+MiniLM smoke passed, while model selection still waits for the frozen difficult benchmark.
+
 ### 4.6 First-class image artifacts and visual retrieval
 
 Alpha.2 separates an immutable image blob from its document placement:

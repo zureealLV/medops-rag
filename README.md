@@ -27,7 +27,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 48 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 50 API/security/parser/migration tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)
@@ -101,6 +101,11 @@ downloaded to `MODEL_CACHE_DIR` on first use and are excluded from Git. External
 requires `MODEL_VISION_ENABLED=true`; image count and aggregate raw bytes are capped by
 `MODEL_MAX_VISUAL_IMAGES` and `MODEL_MAX_VISUAL_BYTES`. The default `0.28` similarity and `0.002` margin are
 provisional Qdrant CLIP-B/32 values and must be recalibrated for another provider.
+
+Set `TEXT_EMBEDDING_ENABLED=true` to persist/query normalized FastEmbed vectors. The current opt-in profile is
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; rows carry their model identity, so vectors
+from incompatible models are never scored together. A real local smoke retrieved the Chinese/English
+credential fixture first at cosine `0.497208` in `63.082 ms` after indexing three documents in `2094.785 ms`.
 
 ## Architecture
 

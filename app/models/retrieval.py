@@ -30,6 +30,7 @@ class Evidence(BaseModel):
     page_start: int | None = None
     page_end: int | None = None
     heading: str | None = None
+    embedding_model: str | None = None
 
 
 class SearchResponse(BaseModel):
