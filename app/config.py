@@ -22,6 +22,8 @@ class Settings:
     log_level: str = "INFO"
     auth_mode: str = "trusted_headers"
     retrieval_threshold: float = 0.20
+    retrieval_keyword_threshold: float = 0.28
+    retrieval_dense_threshold: float = 0.40
     chunk_size: int = 600
     chunk_overlap: int = 80
     parent_chunk_size: int = 1600
@@ -63,6 +65,10 @@ class Settings:
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             auth_mode=os.getenv("AUTH_MODE", "trusted_headers"),
             retrieval_threshold=float(os.getenv("RETRIEVAL_THRESHOLD", "0.20")),
+            retrieval_keyword_threshold=float(
+                os.getenv("RETRIEVAL_KEYWORD_THRESHOLD", "0.28")
+            ),
+            retrieval_dense_threshold=float(os.getenv("RETRIEVAL_DENSE_THRESHOLD", "0.40")),
             chunk_size=int(os.getenv("CHUNK_SIZE", "600")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "80")),
             parent_chunk_size=int(os.getenv("PARENT_CHUNK_SIZE", "1600")),

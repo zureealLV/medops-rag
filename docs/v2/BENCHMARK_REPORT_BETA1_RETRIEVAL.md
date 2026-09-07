@@ -20,6 +20,15 @@ RRF gains 3.34 Hit@1 percentage points over BM25 at roughly 130 ms mean CPU cost
 to RRF when a real dense provider is enabled. Without it, `auto` uses BM25 for normal corpora and the legacy
 weighted score for fewer than three rows because Okapi IDF can be non-positive in a one-row corpus.
 
-This dataset is template-generated and has one relevant document per query. It is a versioned regression
-gate, not evidence of production hospital quality. The negative set exposes raw score ranges but is not yet
-sufficient for a universal abstention threshold.
+## Evidence-admission calibration
+
+The release candidate also evaluates absolute evidence floors because BM25 and RRF final scores are
+normalized within each query: an irrelevant best row can otherwise receive `1.0`. With a keyword-overlap
+floor of `0.28` and a dense-cosine floor of `0.40`, both the BM25 path and the RRF path accepted all 120
+answerable cases and abstained on all 20 negatives. The earlier 30-case end-to-end suite consequently moved
+from 1/5 to 5/5 correct abstentions while preserving 25/25 retrieval and citation correctness.
+
+Reproduce this result with `evals/evaluate_confidence_thresholds.py`; raw evidence is
+`reports/confidence-calibration-v2.json`. This dataset is template-generated and has one relevant document
+per query. The thresholds are a versioned regression gate, not universal calibration or evidence of
+production hospital quality; a new corpus must recalibrate them.

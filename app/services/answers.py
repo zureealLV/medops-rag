@@ -32,6 +32,25 @@ def _visual_confident(evidence: list[VisualEvidence], settings: Settings) -> boo
     )
 
 
+def _text_confident(evidence: list[Evidence], strategy: str, settings: Settings) -> bool:
+    """Apply an absolute component floor when the final rank score is normalized.
+
+    BM25 and RRF scores are normalized within each request, so the best irrelevant
+    row can otherwise receive a misleading score of 1.0. The component floors were
+    calibrated on the frozen 120-positive/20-negative V2 set and remain configurable.
+    """
+    if not evidence or evidence[0].score < settings.retrieval_threshold:
+        return False
+    top = evidence[0]
+    lexical = top.keyword_score >= settings.retrieval_keyword_threshold
+    dense = top.vector_score >= settings.retrieval_dense_threshold
+    if strategy in {"keyword", "bm25", "parent_child"}:
+        return lexical
+    if strategy == "vector":
+        return dense
+    return lexical or dense
+
+
 def _visual_payloads(
     path: Path,
     tenant_id: str,
@@ -135,7 +154,7 @@ def answer(
     if text_result is None:
         return None
     safe_text = [item for item in text_result.results if not has_injection_signals(item.text)]
-    text_confident = bool(safe_text and safe_text[0].score >= settings.retrieval_threshold)
+    text_confident = _text_confident(safe_text, text_result.strategy, settings)
 
     visual_result = None
     needs_visual = resolved_profile == "visual" or (
