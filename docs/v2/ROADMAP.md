@@ -48,7 +48,7 @@ coordinates and real VLM chart reasoning remain open; the offline path deliberat
 - [x] freeze a 120-answerable/20-negative V2 evaluation set and record dataset hashes;
 - [x] implement pluggable hashing/MiniLM embedding profiles with persisted model identity;
 - [x] compare exact local scan, Chroma persistent, and Qdrant local at 1k/10k/100k;
-- [ ] benchmark Qdrant server with concurrent filtered load when Docker is available;
+- [x] benchmark Qdrant Server 1.19.0 with 400 concurrent tenant-filtered queries over 10k vectors;
 - [x] select BM25+MiniLM RRF for the opt-in dense profile from Hit@K/MRR/nDCG evidence;
 - [x] keep BGE reranking offline because +0.83 Hit@1 point costs about +952 ms mean latency;
 - [x] implement policy-gated template HyDE and compare it with rewrite/multi-query/no-transform baselines;

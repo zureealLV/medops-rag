@@ -22,6 +22,23 @@ Qdrant at scale but loses 6.2% Recall@10 at 100k. Qdrant itself warns local mode
 exact recall, but its embedded latency is unacceptable here.
 
 Decision: keep the exact local backend for the portfolio/local profile. Do not add a service merely for its
-name. Qdrant server remains the production-scale candidate because embedded local results cannot represent
-its server behavior; Docker/server filtered-load testing remains a release gate. Chroma is not selected due
-to the measured recall loss.
+name. Chroma is not selected due to the measured recall loss.
+
+## Qdrant server concurrency gate
+
+Date: 2026-09-07. Qdrant Server `1.19.0` (Docker image digest
+`sha256:057ee3a8da769fe7310dd3537b4dc7583bf87a95ce8ac43c0af5a46bc580d1fc`) and
+`qdrant-client 1.19.0` were tested over HTTP from Windows. The workload used 10,000 normalized 64-dimensional
+vectors split across 20 tenants, a keyword payload index, 400 Top-10 queries at concurrency 8, and
+`hnsw_ef=128`. Every request filtered on its query tenant. The raw report is
+`reports/qdrant-server-concurrent.json`; the reproducible driver is `evals/benchmark_qdrant_server.py`.
+
+| index | throughput | mean | p50 | p95 | p99 | Recall@10 | tenant violations |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 14.329 s | 77.959 query/s | 94.726 ms | 94.451 ms | 119.350 ms | 131.626 ms | 1.000 | 0 |
+
+This closes the server-mode release gate, but it is deliberately not a production-capacity claim: the test
+used one local Docker/WSL node, synthetic low-dimensional vectors, no replication, no network fault, and no
+concurrent ingestion. SQLite exact scan remains the shipped single-host default because it is simpler and
+already wins the measured portfolio workload. Qdrant server is now an evidence-backed scale-out option for a
+future workload that exceeds the local profile, not a dependency added for resume keyword density.
