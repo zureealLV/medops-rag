@@ -84,10 +84,16 @@ Each element has:
 - `text`: searchable normalized content;
 - `page_number`: PDF page or PPTX slide when known;
 - `heading`: nearest DOCX heading when known;
+- `bbox`: full PDF/raster page or PPTX shape coordinates with an explicit unit;
 - `metadata`: parser-specific data such as shape index, image dimensions, and OCR confidence.
 
 The rest of the application does not import PDF, DOCX, or PPTX object models. Replacing a parser therefore
 does not change retrieval or API contracts.
+
+`document_elements.bbox_json` is an additive migration. PDF coordinates use points, PPTX uses EMU and raster
+images use pixels. Visual artifacts and OCR elements share the same region, so `/answer` citations can be
+resolved back to exact stored bytes and a fixed-layout page/slide region. DOCX remains a flow-layout format:
+without rendering it, the parser deliberately returns no invented page or image coordinates.
 
 ### 4.2 Conditional OCR
 

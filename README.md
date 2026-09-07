@@ -18,7 +18,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - resumable multi-document Map-Reduce summary jobs with persisted per-document results, final citations,
   partial-failure visibility and a hard 30-second per-model-call timeout;
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP parsing with native text, table, and OCR elements;
-- page/slide/heading provenance through `GET /documents/{id}/elements`;
+- page/slide/heading provenance and fixed-layout bounding boxes through `GET /documents/{id}/elements`;
 - conditional scanned-PDF OCR and embedded-image OCR through RapidOCR/ONNX Runtime;
 - tenant-local SHA-256 image BLOB deduplication with page/slide/shape placement metadata;
 - `GET /documents/{id}/artifacts`, tenant-scoped original bytes, and hash ETags;
@@ -158,6 +158,8 @@ Read [`docs/v2/ENGINEERING_DESIGN.md`](docs/v2/ENGINEERING_DESIGN.md), then [`do
 ## Explicit limits
 
 - CLIP retrieves non-text images but does not reason over chart values or diagram relationships.
+- PDF, PPTX and raster sources expose fixed-layout regions; DOCX flow layout does not claim stable page or
+  image coordinates without a rendering engine.
 - The tested CLIP profiles failed the current Chinese retrieval gate and remain opt-in.
 - Hashing embeddings are lightweight and deterministic, not comparable to production embedding models.
 - The local HyDE profile is a deterministic hypothetical-document template, not an LLM-generated passage;

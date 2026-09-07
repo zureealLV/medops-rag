@@ -17,7 +17,7 @@
 - 独立轮询 Worker，把解析、OCR、分块和 Embedding 从 API 进程剥离；
 - 可恢复的多文档 Map-Reduce 摘要任务：逐文档结果持久化、最终引用、局部失败可见，并把单次模型调用硬限制在 30 秒内；
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP 解析与文本、表格、OCR 元素归一化；
-- 通过 `GET /documents/{id}/elements` 查询页码、幻灯片、标题和模态来源；
+- 通过 `GET /documents/{id}/elements` 查询页码、幻灯片、标题、模态来源及固定版式边界框；
 - RapidOCR/ONNX Runtime 的扫描 PDF 条件式 OCR 与 Office 内嵌图片 OCR；
 - 同租户 SHA-256 图片 BLOB 去重，以及页码/幻灯片/形状位置元数据；
 - `GET /documents/{id}/artifacts`、租户隔离的原图读取与哈希 ETag；
@@ -146,6 +146,7 @@ POST /answer
 ## 明确限制
 
 - CLIP 能召回无文字图片，但不能推理图表数值或示意图关系；
+- PDF、PPTX 与独立图片返回固定版式区域；未接入渲染引擎前，不宣称 DOCX 流式排版具有稳定页码或图片坐标；
 - 当前测试的两个 CLIP 配置均未通过中文跨模态门禁，默认保持关闭；
 - 哈希 Embedding 是低依赖教学实现，不等同于生产向量模型；
 - 本地 HyDE 是确定性假设文档模板，不是 LLM 生成结果；它显著拉低冻结基准，因此不会自动启用；

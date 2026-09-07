@@ -23,10 +23,10 @@ Non-goals: background workers, visual embeddings, VLM reasoning, Chroma/Qdrant, 
 
 - [x] add artifact storage with SHA-256, MIME, dimensions, and source location;
 - [x] persist rendered PDF/PPTX/DOCX/raster image bytes without duplicating identical tenant blobs;
-- [ ] add bounding boxes/shape coordinates to element provenance;
+- [x] persist element bounding boxes for raster, PDF and PPTX fixed-layout sources;
 - [x] implement `ImageEmbeddingProvider` with a disabled-by-default local ONNX profile;
 - [x] compare OCR-only, image-only, and fused image+text retrieval;
-- [ ] return page/slide/region visual citations;
+- [x] return page/slide/region visual citations for fixed-layout sources;
 - [x] add 20 visual-only fixtures with 20 English and 20 Chinese queries;
 - [x] prove tenant isolation and tenant-local blob deduplication for image artifacts.
 - [x] route `/answer` between text/visual retrieval and enforce similarity-plus-margin abstention;

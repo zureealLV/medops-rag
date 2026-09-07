@@ -52,4 +52,5 @@ class DocumentElement(BaseModel):
     page_number: int | None = None
     heading: str | None = None
     artifact_sha256: str | None = None
+    bbox: dict[str, str | int | float] | None = None
     metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)

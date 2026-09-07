@@ -39,6 +39,7 @@ class NormalizedElement:
     page_number: int | None = None
     heading: str | None = None
     artifact_sha256: str | None = None
+    bbox: dict[str, str | int | float] | None = None
     metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
 
 
@@ -140,6 +141,7 @@ def _ocr_image(
             text=ocr_text,
             page_number=page_number,
             artifact_sha256=digest,
+            bbox=bbox,
             metadata=details,
         ),
         artifact,
@@ -275,6 +277,13 @@ def _parse_pptx(
     warnings: list[str] = []
     for slide_number, slide in enumerate(presentation.slides, start=1):
         for shape_index, shape in enumerate(slide.shapes, start=1):
+            shape_bbox = {
+                "unit": "emu",
+                "x": int(shape.left),
+                "y": int(shape.top),
+                "width": int(shape.width),
+                "height": int(shape.height),
+            }
             if getattr(shape, "has_text_frame", False):
                 text = shape.text.strip()
                 if text:
@@ -283,6 +292,7 @@ def _parse_pptx(
                             modality="text",
                             text=text,
                             page_number=slide_number,
+                            bbox=shape_bbox,
                             metadata={"shape_index": shape_index},
                         )
                     )
@@ -298,18 +308,12 @@ def _parse_pptx(
                             modality="table",
                             text=text,
                             page_number=slide_number,
+                            bbox=shape_bbox,
                             metadata={"shape_index": shape_index},
                         )
                     )
             if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
                 try:
-                    bbox = {
-                        "unit": "emu",
-                        "x": int(shape.left),
-                        "y": int(shape.top),
-                        "width": int(shape.width),
-                        "height": int(shape.height),
-                    }
                     if not ocr:
                         artifacts.append(
                             _image_without_ocr(
@@ -317,7 +321,7 @@ def _parse_pptx(
                                 mime_type=shape.image.content_type,
                                 page_number=slide_number,
                                 max_image_pixels=max_image_pixels,
-                                bbox=bbox,
+                                bbox=shape_bbox,
                                 metadata={"container": "pptx", "shape_index": shape_index},
                             )
                         )
@@ -328,7 +332,7 @@ def _parse_pptx(
                         page_number=slide_number,
                         min_confidence=min_confidence,
                         max_image_pixels=max_image_pixels,
-                        bbox=bbox,
+                        bbox=shape_bbox,
                         metadata={"container": "pptx", "shape_index": shape_index},
                     )
                     artifacts.append(artifact)
@@ -366,6 +370,13 @@ def _parse_pdf(
     artifacts: list[ParsedArtifact] = []
     warnings: list[str] = []
     for page_number, page in enumerate(reader.pages, start=1):
+        page_bbox = {
+            "unit": "pdf-point",
+            "x": float(page.mediabox.left),
+            "y": float(page.mediabox.bottom),
+            "width": float(page.mediabox.width),
+            "height": float(page.mediabox.height),
+        }
         try:
             text = (page.extract_text() or "").strip()
         except Exception as exc:
@@ -377,6 +388,7 @@ def _parse_pdf(
                     modality="text",
                     text=text,
                     page_number=page_number,
+                    bbox=page_bbox,
                     metadata={"format": "pdf"},
                 )
             )
@@ -389,6 +401,7 @@ def _parse_pdf(
                     page_number=page_number,
                     min_confidence=min_confidence,
                     max_image_pixels=max_image_pixels,
+                    bbox=page_bbox,
                     metadata={"container": "pdf", "rendered_page": True},
                 )
                 artifacts.append(artifact)
@@ -409,12 +422,15 @@ def _parse_image(
     min_confidence: float,
     max_image_pixels: int,
 ) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
+    width, height = _validate_image(content, max_image_pixels)
+    image_bbox = {"unit": "pixel", "x": 0, "y": 0, "width": width, "height": height}
     if not ocr:
         artifact = _image_without_ocr(
             content,
             mime_type=mime_type,
             page_number=1,
             max_image_pixels=max_image_pixels,
+            bbox=image_bbox,
             metadata={"container": "image"},
         )
         return [], [], [artifact]
@@ -424,6 +440,7 @@ def _parse_image(
         page_number=1,
         min_confidence=min_confidence,
         max_image_pixels=max_image_pixels,
+        bbox=image_bbox,
         metadata={"container": "image"},
     )
     return (

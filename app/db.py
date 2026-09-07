@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS document_elements (
     page_number INTEGER,
     heading TEXT,
     artifact_sha256 TEXT,
+    bbox_json TEXT,
     metadata_json TEXT NOT NULL DEFAULT '{}',
     FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE,
     UNIQUE(document_id, element_index)
@@ -288,6 +289,8 @@ def initialize(path: Path) -> None:
         }
         if "artifact_sha256" not in element_columns:
             connection.execute("ALTER TABLE document_elements ADD COLUMN artifact_sha256 TEXT")
+        if "bbox_json" not in element_columns:
+            connection.execute("ALTER TABLE document_elements ADD COLUMN bbox_json TEXT")
         for table in ("chunks", "child_chunks"):
             columns = {row["name"] for row in connection.execute(f"PRAGMA table_info({table})")}
             if "embedding_model" not in columns:

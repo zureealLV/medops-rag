@@ -146,8 +146,8 @@ def create(
             connection.executemany(
                 """INSERT INTO document_elements
                    (document_id, element_index, modality, text, page_number, heading,
-                    artifact_sha256, metadata_json)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                    artifact_sha256, bbox_json, metadata_json)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 [
                     (
                         document_id,
@@ -157,6 +157,7 @@ def create(
                         element.page_number,
                         element.heading,
                         element.artifact_sha256,
+                        json.dumps(element.bbox, ensure_ascii=False) if element.bbox else None,
                         element_metadata_json(element),
                     )
                     for index, element in enumerate(parsed.elements)
@@ -216,7 +217,7 @@ def list_elements(path: Path, tenant_id: str, document_id: int) -> list[dict[str
     with transaction(path) as connection:
         rows = connection.execute(
             """SELECT element_index, modality, text, page_number, heading, artifact_sha256,
-                      metadata_json
+                      bbox_json, metadata_json
                FROM document_elements WHERE document_id = ? ORDER BY element_index""",
             (document_id,),
         ).fetchall()
@@ -228,6 +229,7 @@ def list_elements(path: Path, tenant_id: str, document_id: int) -> list[dict[str
             "page_number": row["page_number"],
             "heading": row["heading"],
             "artifact_sha256": row["artifact_sha256"],
+            "bbox": json.loads(row["bbox_json"]) if row["bbox_json"] else None,
             "metadata": json.loads(row["metadata_json"]),
         }
         for row in rows

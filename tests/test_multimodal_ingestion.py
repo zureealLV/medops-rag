@@ -116,6 +116,7 @@ def test_office_documents_preserve_text_tables_and_image_ocr(
         else:
             assert artifacts[0]["page_number"] == 1
             assert artifacts[0]["bbox"]["unit"] == "emu"
+            assert image_element["bbox"] == artifacts[0]["bbox"]
 
 
 def test_image_and_scanned_pdf_are_searchable_through_ocr(
@@ -134,6 +135,16 @@ def test_image_and_scanned_pdf_are_searchable_through_ocr(
         assert payload["parser"] in {"png", "pdf"}
         assert payload["element_count"] >= 1
         assert payload["artifact_count"] == 1
+        artifacts = client.get(
+            f"/documents/{payload['id']}/artifacts", headers=tenant_headers
+        ).json()
+        elements = client.get(
+            f"/documents/{payload['id']}/elements", headers=tenant_headers
+        ).json()
+        image_element = next(element for element in elements if element["modality"] == "image_ocr")
+        assert artifacts[0]["page_number"] == 1
+        assert artifacts[0]["bbox"] == image_element["bbox"]
+        assert artifacts[0]["bbox"]["unit"] == ("pdf-point" if filename.endswith(".pdf") else "pixel")
 
     search = client.post(
         "/search",
@@ -266,5 +277,6 @@ def test_v1_database_migrates_document_metadata_without_data_loss(tmp_path: Path
     }
     migrated.close()
     assert "artifact_sha256" in element_columns
+    assert "bbox_json" in element_columns
     assert artifact_tables == {"artifact_blobs", "document_artifacts"}
     assert {"chunks", "parent_chunks", "child_chunks"}.issubset(chunk_tables)

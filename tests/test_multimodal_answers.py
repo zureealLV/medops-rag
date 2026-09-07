@@ -105,6 +105,14 @@ def test_answer_routes_to_visual_evidence_and_returns_citation(tmp_path: Path, m
         assert payload["provider"] == "offline-visual-locator"
         assert response.headers["x-medops-retrieval-profile"] == "visual"
         assert payload["visual_citations"][0]["source"] == "panel-a.png"
+        assert payload["visual_citations"][0]["page_number"] == 1
+        assert payload["visual_citations"][0]["bbox"] == {
+            "unit": "pixel",
+            "x": 0,
+            "y": 0,
+            "width": 224,
+            "height": 224,
+        }
         assert "[visual:" in payload["answer"]
         citation = payload["visual_citations"][0]
         image = client.get(citation["content_url"], headers=headers)
