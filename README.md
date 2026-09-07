@@ -36,7 +36,8 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
 - request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 82 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
-- reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
+- a verified Docker Compose image with API, ingestion worker, summary worker, health checks and persistent
+  data/model volumes.
 
 ## Quick start (Windows / PowerShell)
 
@@ -135,6 +136,9 @@ docker compose up --build
 ```
 
 The API binds only to `127.0.0.1:8000`; SQLite data lives in the named volume `medops_data`.
+The selected exact local vector index is stored in that database; optional model files live in
+`medops_models`. The three-service stack was built and passed `scripts/compose_smoke.py` on Docker Engine
+29.1.3 / Compose 2.40.3. See [`docs/v2/DEPLOYMENT.md`](docs/v2/DEPLOYMENT.md).
 
 ## Optional model provider
 

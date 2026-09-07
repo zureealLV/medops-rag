@@ -2,7 +2,8 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DATABASE_URL=sqlite:///./data/runtime/medops.db
+    DATABASE_URL=sqlite:///./data/runtime/medops.db \
+    MODEL_CACHE_DIR=/app/data/models/fastembed
 
 WORKDIR /app
 COPY pyproject.toml README.md ./
@@ -11,7 +12,7 @@ COPY scripts ./scripts
 COPY sample_data ./sample_data
 RUN pip install --no-cache-dir . \
     && useradd --create-home --uid 10001 medops \
-    && mkdir -p /app/data/runtime \
+    && mkdir -p /app/data/runtime /app/data/models \
     && chown -R medops:medops /app
 
 USER medops

@@ -83,7 +83,7 @@ and partial failures remain visible.
 - [x] deterministic malformed-input fuzzing plus Office expansion, entry, ratio, path and macro abuse gates;
 - [x] raw-sample local profile for authenticated upload, parse/index, search, BGE rerank, and answer;
 - [x] tenant-scoped queue age/state, parser/OCR, index, retrieval, model, provider and fallback metrics;
-- [ ] Docker Compose for API, worker, selected vector index, and persistent volumes;
+- [x] verified Compose for API, ingestion/summary workers, selected SQLite exact index, and persistent volumes;
 - [ ] migration-from-v1 test and rollback instructions;
 - [ ] bilingual README, architecture diagram, threat model, demo, and benchmark reproduction;
 - [ ] release tag only after fresh-clone validation.

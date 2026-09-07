@@ -35,7 +35,7 @@
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
 - 82 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
-- 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
+- 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷。
 
 ## Windows 快速启动
 
@@ -123,6 +123,9 @@ docker compose up --build
 ```
 
 服务只绑定 `127.0.0.1:8000`，SQLite 数据保存在 `medops_data` 命名卷。
+已选的本地精确向量索引随 SQLite 一起持久化，可选模型缓存位于 `medops_models`。三服务镜像已在
+Docker Engine 29.1.3 / Compose 2.40.3 上构建，并通过 `scripts/compose_smoke.py` 跨进程烟测；详见
+[`docs/v2/DEPLOYMENT.md`](docs/v2/DEPLOYMENT.md)。
 
 如需启用本地视觉向量，在 `.env` 中设置 `IMAGE_EMBEDDING_ENABLED=true`。首次使用会把配对 ONNX 模型下载到 `MODEL_CACHE_DIR`，模型目录不会进入 Git。
 
