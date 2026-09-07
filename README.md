@@ -1,8 +1,8 @@
-# MedOps Multimodal RAG V2 Beta.2 (in progress)
+# MedOps Multimodal RAG V2.0 Release Candidate
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce summaries](docs/v2/BETA2_MAP_REDUCE.md) · [Queue benchmark](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Query-transform benchmark](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [Engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Migration/rollback](docs/v2/MIGRATION_AND_ROLLBACK.md) · [Performance](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The current Beta.2 increment adds a persisted, leased ingestion queue and an isolated worker process to the multimodal retrieval foundation.
+An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The V2.0 release candidate combines multimodal evidence, calibrated hybrid retrieval, durable ingestion and Map-Reduce workers, service-key RBAC, bounded hostile-file parsing, metrics, migration/rollback and a verified single-host Compose profile.
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
@@ -35,7 +35,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 84 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 85 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a verified Docker Compose image with API, ingestion worker, summary worker, health checks and persistent
   data/model volumes.
@@ -112,6 +112,17 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
+Run the release core (Ruff, 85 tests, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
+performance profile:
+
+```powershell
+.\scripts\reproduce_release.ps1
+.\scripts\reproduce_release.ps1 -Full
+```
+
+Individual runners remain available for focused investigation:
+
 ```powershell
 .\scripts\run_tests.ps1
 $env:PYTHONUTF8 = "1"
@@ -122,6 +133,8 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
 .\.venv\Scripts\python.exe .\evals\benchmark_query_transforms.py
+.\.venv\Scripts\python.exe .\evals\evaluate_confidence_thresholds.py
+.\.venv\Scripts\python.exe .\evals\benchmark_qdrant_server.py
 .\.venv\Scripts\python.exe .\evals\benchmark_v2_performance.py
 ```
 
@@ -129,6 +142,12 @@ See the [Alpha.2 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA2.md). CLIP-B/3
 
 The [parent-child benchmark](docs/v2/BENCHMARK_REPORT_BETA1.md) kept the linked action in returned context for
 50/50 questions versus 0/50 with fixed chunks, while mean local retrieval rose from 13.628 to 19.702 ms.
+
+Absolute evidence floors prevent per-query normalized BM25/RRF scores from turning the best irrelevant row
+into false confidence. On the frozen 120-positive/20-negative set, both BM25 and RRF admitted 120/120
+answerable cases and rejected 20/20 negatives. These synthetic-corpus thresholds must be recalibrated for a
+new domain. The Docker Qdrant Server 1.19.0 gate reached 77.959 query/s at concurrency 8 over 10k vectors,
+Recall@10 `1.0`, with zero tenant-filter violations; SQLite exact remains the simpler shipped default.
 
 ## Docker Compose
 

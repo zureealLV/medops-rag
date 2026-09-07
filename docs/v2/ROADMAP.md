@@ -85,5 +85,5 @@ and partial failures remain visible.
 - [x] tenant-scoped queue age/state, parser/OCR, index, retrieval, model, provider and fallback metrics;
 - [x] verified Compose for API, ingestion/summary workers, selected SQLite exact index, and persistent volumes;
 - [x] exact V1 fixture migration, schema versioning, integrity-checked backup and tested full rollback;
-- [ ] bilingual README, architecture diagram, threat model, demo, and benchmark reproduction;
+- [x] bilingual README, architecture diagram, threat model, demo, and benchmark reproduction;
 - [ ] release tag only after fresh-clone validation.

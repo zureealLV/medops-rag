@@ -1,7 +1,8 @@
 # MedOps Multimodal RAG V2 — Engineering Design
 
-Status: Beta.1 retrieval gates are frozen and Beta.2 durable ingestion plus resumable Map-Reduce summaries
-are implemented on `feat/multimodal-rag-v2`. Distributed queue selection remains open pending benchmarks.
+Status: V2 release candidate. Retrieval gates, durable ingestion, resumable Map-Reduce, API-key RBAC,
+parser resource limits, operational metrics, V1 rollback and the single-host Compose profile are implemented
+on `feat/multimodal-rag-v2` with versioned benchmark evidence.
 
 ## 1. Product boundary
 
@@ -33,13 +34,16 @@ an evidence locator rather than inventing image content. It still does not claim
 | Local reproducibility | Core OCR and retrieval work without an external API key | ONNX Runtime and deterministic tests |
 | Benchmarkability | Every retrieval choice is an explicit strategy and has a versioned report | `evals/benchmark_*.py` |
 | Security | Untrusted files are bounded by byte/pixel limits and tenant filtering occurs before ranking | negative/API/security tests |
+| Identity | Tenant, actor and role come from a revocable scrypt-hashed API credential in hardened mode | auth and spoofing tests |
+| Recoverability | Jobs use fenced leases; schema upgrade always has an integrity-checked rollback artifact | crash and migration tests |
+| Operations | Request, queue, parser/index, model and fallback facts are tenant-scoped and persisted | metrics endpoint tests |
 
 ## 3. Target architecture
 
 ```text
 Upload API
-  -> bounded streaming upload
-  -> signature/MIME validation
+  -> authenticated tenant + editor/admin authorization
+  -> bounded upload and Office/PDF/raster preflight
   -> ingestion_jobs (idempotency key, state, attempt, progress)
   -> parser registry
        text/markdown
@@ -71,6 +75,12 @@ Summary API
   -> persisted per-document map results
   -> reduce successful maps with final document citations
   -> succeeded / partial / failed terminal result
+
+Operations
+  -> tenant-scoped request/queue/pipeline metrics
+  -> salted API credentials and audit trail
+  -> backup-first schema v2 migration / full-file rollback
+  -> Compose: API + ingestion worker + summary worker + persistent volumes
 ```
 
 ## 4. Implemented components
@@ -102,6 +112,9 @@ without rendering it, the parser deliberately returns no invented page or image 
 - PDF uses native text extraction first. A page is rendered at 2x scale and OCR'd only when native text has
   fewer than 24 characters.
 - Image inputs are decoded and checked against `MAX_IMAGE_PIXELS` before OCR.
+- Office central directories are checked for entry count, per-entry/aggregate expansion, compression ratio,
+  traversal, encryption and macro payloads before `python-docx`/`python-pptx` decompress XML.
+- PDF page count and estimated render pixels are checked before OCR rendering.
 - `OCR_MIN_CONFIDENCE` filters low-confidence lines.
 
 This policy is data-driven: on the current CPU, native PDF steady-state median parsing was about **1.2 ms**,
@@ -137,9 +150,14 @@ It also exposes `query_transform=none|rewrite|multi_query|hyde`. `auto` resolves
 implementation is a deterministic hypothetical runbook template, not an external model claim. It remains off
 because it reduced frozen-set Hit@1 from 0.9917 to 0.7833; multi-query also failed to beat the simpler baseline.
 
-All results expose keyword, vector, and normalized BM25 component scores. Parent-child results additionally
+All results expose keyword, vector, and normalized BM25 component scores. Because per-query normalization can
+assign `1.0` to the best irrelevant row, answer admission also requires a calibrated absolute keyword
+(`0.28`) or dense-cosine (`0.40`) floor. On the frozen 120-positive/20-negative corpus, BM25 and RRF each
+accepted 120/120 positives and abstained on 20/20 negatives; these values are not transferable defaults for
+another domain. Parent-child results additionally
 expose the matched child, parent ID, heading, and page range. The default remains `weighted`
-for backward compatibility until a harder versioned corpus justifies a migration.
+only for one/two-row corpora where BM25 IDF is degenerate; normal `auto` retrieval resolves to BM25 unless
+the opt-in real text embedding profile is enabled, in which case it resolves to RRF.
 
 ### 4.5 Parent-child context reconstruction
 
@@ -212,10 +230,16 @@ bad**; it proves the current dataset cannot justify paying 124–1200 ms for the
 with paraphrases, ambiguous terms, distractors, tables, OCR noise, and visual questions is required before
 enabling dense retrieval/reranking by default.
 
-### 5.4 Storage: keep SQLite for the alpha, benchmark before adding Chroma/Qdrant
+### 5.4 Storage: SQLite exact scan selected for the V2 single-host profile
 
-The alpha corpus is small enough for exact in-process scoring and SQLite provenance. Adding a vector DB now
-would change operational complexity without improving this benchmark. The beta decision gate is:
+The versioned benchmark compared SQLite exact scan, Chroma persistent and Qdrant local at 1k, 10k and 100k
+vectors with tenant filters. Exact local search remains the selected release path because the portfolio
+deployment is single-host and its measured corpus is small; a vector service would add operations without a
+demonstrated product gain. A real Qdrant Server 1.19.0 Docker run over 10k vectors, 20 tenant partitions and
+400 Top-10 requests at concurrency 8 reached 77.959 query/s, p95 119.350 ms, Recall@10 1.0 and zero tenant
+filter violations. This validates a scale-out option but not replicated production capacity.
+
+The original decision gate was:
 
 1. build a versioned corpus with at least 1,000 chunks and tenant filters;
 2. compare SQLite exact scan, Chroma, and Qdrant local/server mode;
@@ -273,8 +297,9 @@ ingestion_jobs
   error_code, created_at, started_at, completed_at
 ```
 
-The schema now contains `documents`, `document_elements`, `artifact_blobs`, `document_artifacts`, legacy
-`chunks`, and additive `parent_chunks`/`child_chunks`. Job tables remain future additive migrations.
+The schema now also contains `api_credentials`, `ingestion_jobs`, `summary_jobs`,
+`summary_map_results`, `request_metrics`, `pipeline_metrics` and `schema_metadata`. Legacy V1 chunks are
+preserved and backfilled into compatible parent/child rows.
 
 ## 7. API evolution
 
@@ -298,13 +323,10 @@ The schema now contains `documents`, `document_elements`, `artifact_blobs`, `doc
   - explicit `auto`/`text`/`visual` profile and independent text/visual strategy controls;
   - calibrated abstention, retrievable image citations, and optional bounded vision-model payloads.
 
-### Planned
-
-- `POST /knowledge-bases/{kb_id}/ingestion-jobs` -> `202 + job_id`;
-- `GET /ingestion-jobs/{job_id}` -> state/progress/warnings;
-- `POST /search/compare` -> shadow multiple strategies without affecting answers;
-- pipeline trace endpoint exposing stage timing and fallback decisions;
-- `POST /summary-jobs` -> map/reduce background summary with partial results.
+Additional implemented surfaces include durable ingestion/summary job create, poll and cancel routes,
+`GET /auth/whoami`, and admin-only `GET /system/metrics`. A shadow search-comparison endpoint remains a
+non-release experiment because the versioned offline runners already compare strategies without multiplying
+production request cost.
 
 ## 8. Failure model
 
@@ -322,14 +344,15 @@ The schema now contains `documents`, `document_elements`, `artifact_blobs`, `doc
 ## 9. Security controls
 
 - File extension selects the parser but canonical MIME and parser validation detect malformed containers.
-- Upload bytes and decoded image pixels have separate limits.
+- Upload bytes, archive expansion, PDF pages/renders and decoded image pixels have separate limits.
 - Vision-model transfer is opt-in and bounded by `MODEL_MAX_VISUAL_IMAGES` and
   `MODEL_MAX_VISUAL_BYTES`; cited visual evidence is restricted to the loaded payload set.
 - Parser output is untrusted data and cannot select tools or change policies.
-- Tenant filtering remains in SQL before any chunk enters a model or ranking stage.
+- Hardened mode resolves tenant/actor/role from a salted scrypt API-key hash and ignores identity headers;
+  tenant filtering still remains in SQL before any chunk enters a model or ranking stage.
 - OCR/model caches live under `data/models/` and are excluded from Git.
-- Production worker design must use no secrets, restricted network, CPU/memory/time limits, and disposable
-  work directories for hostile document parsing.
+- Compose workers run non-root with a read-only root filesystem, all capabilities dropped, a PID limit and
+  bounded `/tmp`; multi-tenant hostile parsing still warrants stronger per-job sandboxing at higher assurance.
 
 ## 10. Release gates
 
@@ -352,7 +375,7 @@ The schema now contains `documents`, `document_elements`, `artifact_blobs`, `doc
 - automatic visual answer routing, calibrated abstention, and visual citations (implemented);
 - multilingual model gate and chart/diagram evidence set (remaining).
 
-### beta.1 — retrieval quality
+### beta.1 — retrieval quality (implemented)
 
 - parent-child schema, structure-aware packing, and BM25 child retrieval (implemented foundation);
 - versioned V2 benchmark with at least 100 questions and adversarial distractors;
@@ -360,16 +383,17 @@ The schema now contains `documents`, `document_elements`, `artifact_blobs`, `doc
 - conditional HyDE only if the held-out set shows a justified gain;
 - calibrated abstention and failure taxonomy.
 
-### beta.2 — asynchronous workloads
+### beta.2 — asynchronous workloads (implemented)
 
 - persisted ingestion and summary state machines;
 - worker isolation, retry, timeout, idempotency, partial completion;
 - Map-Reduce multi-document summaries with citations;
 - crash/restart recovery tests.
 
-### v2.0 — release
+### v2.0 — release candidate
 
-- authenticated identity boundary rather than a demo tenant header;
-- load, security, parser-fuzz, and migration tests;
-- Docker startup including selected index/worker services;
-- reproducible benchmark command and published limitations.
+- authenticated API-key identity boundary plus retained trusted-gateway demo mode (implemented);
+- performance, security, parser-fuzz and migration/rollback tests (implemented);
+- verified Docker startup with selected exact index and both worker services (implemented);
+- one-command core benchmark reproduction and published limitations (implemented);
+- immutable release tag only after fresh-clone validation (pending).

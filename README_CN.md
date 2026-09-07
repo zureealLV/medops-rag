@@ -1,8 +1,8 @@
-# MedOps 多模态 RAG V2 Beta.2（开发中）
+# MedOps 多模态 RAG V2.0 发布候选版
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
+这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。V2.0 发布候选版整合了多模态证据、校准后的混合检索、持久化摄取与 Map-Reduce Worker、服务密钥 RBAC、恶意文件资源门禁、指标、迁移/回滚，以及经过真实验证的单机 Compose 配置。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
@@ -34,7 +34,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 84 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
+- 85 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷。
 
@@ -98,6 +98,16 @@ Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/summary-jobs `
 
 ## 测试与评测
 
+一条命令执行发布核心门禁（Ruff、85 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
+`-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
+
+```powershell
+.\scripts\reproduce_release.ps1
+.\scripts\reproduce_release.ps1 -Full
+```
+
+以下 Runner 可用于单项排查：
+
 ```powershell
 .\scripts\run_tests.ps1
 $env:PYTHONUTF8 = "1"
@@ -108,6 +118,8 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
 .\.venv\Scripts\python.exe .\evals\benchmark_query_transforms.py
+.\.venv\Scripts\python.exe .\evals\evaluate_confidence_thresholds.py
+.\.venv\Scripts\python.exe .\evals\benchmark_qdrant_server.py
 .\.venv\Scripts\python.exe .\evals\benchmark_v2_performance.py
 ```
 
@@ -116,6 +128,11 @@ $env:PYTHONUTF8 = "1"
 父子块实测见 [`docs/v2/BENCHMARK_REPORT_BETA1.md`](docs/v2/BENCHMARK_REPORT_BETA1.md)：50 个问题中，
 父块恢复让关联操作出现在返回上下文的比例从 0/50 提升到 50/50，本机平均检索耗时由
 13.628 ms 增至 19.702 ms。
+
+绝对证据门限避免 BM25/RRF 的逐查询归一化把“最不差的无关结果”伪装成 `1.0` 置信度。在冻结的
+120 正例/20 负例集合上，BM25 与 RRF 均接收 120/120 个可回答问题并拒绝 20/20 个负例；更换领域
+必须重新校准，不能照搬数字。Docker Qdrant Server 1.19.0 门禁在 10k 向量、并发 8 下达到
+`77.959 query/s`、Recall@10 `1.0` 且跨租户命中为 0；发布配置仍选择更简单的 SQLite 精确检索。
 
 ## Docker Compose
 
