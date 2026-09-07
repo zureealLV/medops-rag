@@ -31,7 +31,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 63 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 64 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)

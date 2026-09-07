@@ -3,9 +3,12 @@
 import os
 import subprocess
 import sys
+import time
+from io import BytesIO
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from PIL import Image, ImageDraw, ImageFont
 
 from app.config import Settings
 from app.main import create_app
@@ -17,6 +20,15 @@ from app.services.ingestion_jobs import process_next
 def _client(tmp_path: Path):
     settings = Settings(database_path=tmp_path / "jobs.db")
     return settings, TestClient(create_app(settings))
+
+
+def _ocr_image() -> bytes:
+    image = Image.new("RGB", (1000, 220), "white")
+    font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 52)
+    ImageDraw.Draw(image).text((30, 70), "PACS PORT 104 HEALTH CHECK", font=font, fill="black")
+    output = BytesIO()
+    image.save(output, format="PNG")
+    return output.getvalue()
 
 
 def test_ingestion_job_processes_once_and_reuses_idempotency_key(tmp_path: Path):
@@ -196,4 +208,57 @@ def test_worker_cli_processes_persisted_job_in_separate_process(tmp_path: Path):
         assert result.returncode == 0, result.stderr
         succeeded = client.get(f"/ingestion-jobs/{job['id']}", headers=headers).json()
         assert succeeded["state"] == "succeeded"
+        assert succeeded["document_id"] is not None
+
+
+def test_killed_worker_during_blocking_ocr_stage_is_recovered(tmp_path: Path):
+    settings, client = _client(tmp_path)
+    headers = {
+        "X-Tenant-ID": "hospital-a",
+        "X-Actor-ID": "tester",
+        "Idempotency-Key": "upload-key-killed-ocr",
+    }
+    root = Path(__file__).parents[1]
+    marker = tmp_path / "parser-entered.txt"
+    with client:
+        kb = client.post("/knowledge-bases", headers=headers, json={"name": "OCR recovery"}).json()
+        job = client.post(
+            f"/knowledge-bases/{kb['id']}/ingestion-jobs",
+            headers=headers,
+            files={"file": ("pacs-check.png", _ocr_image(), "image/png")},
+        ).json()
+        environment = os.environ.copy()
+        environment["INGESTION_TEST_DB"] = str(settings.database_path)
+        environment["INGESTION_TEST_MARKER"] = str(marker)
+        code = (
+            "import os,time; from pathlib import Path; from app.config import Settings; "
+            "from app.services import ingestion_jobs as service; "
+            "marker=Path(os.environ['INGESTION_TEST_MARKER']); "
+            "service.parse_bytes=lambda *a,**k:(marker.write_text('entered'),time.sleep(60))[1]; "
+            "path=Path(os.environ['INGESTION_TEST_DB']); "
+            "service.process_next(path,Settings(database_path=path),'killed-ocr-worker',0.1)"
+        )
+        killed = subprocess.Popen([sys.executable, "-c", code], cwd=root, env=environment)
+        deadline = time.time() + 10
+        while not marker.exists() and time.time() < deadline:
+            time.sleep(0.05)
+        assert marker.exists(), "worker did not enter the blocking parser stage"
+        killed.kill()
+        killed.wait(timeout=10)
+        time.sleep(0.2)
+
+        environment["DATABASE_URL"] = f"sqlite:///{settings.database_path}"
+        recovered = subprocess.run(
+            [sys.executable, "scripts/ingestion_worker.py", "--once"],
+            cwd=root,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        assert recovered.returncode == 0, recovered.stderr
+        succeeded = client.get(f"/ingestion-jobs/{job['id']}", headers=headers).json()
+        assert succeeded["state"] == "succeeded"
+        assert succeeded["attempt"] == 2
         assert succeeded["document_id"] is not None

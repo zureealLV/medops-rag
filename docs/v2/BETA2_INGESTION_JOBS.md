@@ -56,6 +56,8 @@ document boundary** for the same tenant, knowledge base and bytes.
 6. unsupported poison documents failing without a document row;
 7. a transient worker exception requeueing once and then succeeding.
 8. the worker CLI consuming a persisted job in a separate Python process.
+9. killing a worker inside a blocking OCR/parser stage, then reclaiming its expired lease and completing real
+   image OCR in a new worker process.
 
 ## Explicit limits
 

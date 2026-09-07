@@ -71,7 +71,7 @@ latency increased from 13.628 ms to 19.702 ms. This validates reconstruction, no
 - [x] benchmark real Redis/Celery against the database-backed worker and select SQLite for single-host V2;
 - [x] lease restart, duplicate-delivery fencing, transient retry, cancellation and poison-document tests;
 - [x] multi-process contention and abrupt worker-exit recovery tests for summary jobs;
-- [ ] abrupt worker-exit integration test during OCR.
+- [x] abrupt worker-exit integration test during a blocking OCR/parser stage.
 
 Acceptance: kill the worker during OCR and Map-Reduce, restart it, and prove completed work is not duplicated
 and partial failures remain visible.
