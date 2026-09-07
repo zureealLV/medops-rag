@@ -50,6 +50,9 @@ def _wait_job(path: str, timeout: float = 30.0) -> dict[str, object]:
 def main() -> None:
     status, health = _request("GET", "/health")
     assert status == 200 and health["status"] == "ok", health
+    with urllib.request.urlopen(f"{BASE_URL}/ui/", timeout=5) as response:
+        console = response.read().decode("utf-8")
+        assert response.status == 200 and "MedOps Control Plane" in console
     nonce = uuid.uuid4().hex[:12]
     status, kb = _request("POST", "/knowledge-bases", body={"name": f"Compose smoke {nonce}"})
     assert status == 201, kb
@@ -87,7 +90,7 @@ def main() -> None:
     summary = _wait_job(f"/summary-jobs/{summary['id']}")
     assert summary["state"] == "succeeded", summary
     assert f"[document:{ingestion['document_id']}]" in str(summary["summary"])
-    print("Compose API + ingestion worker + summary worker smoke: PASS")
+    print("Compose Web console + API + ingestion worker + summary worker smoke: PASS")
 
 
 if __name__ == "__main__":

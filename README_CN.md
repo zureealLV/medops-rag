@@ -1,8 +1,8 @@
-# MedOps 多模态 RAG V2.0
+# MedOps 多模态 RAG V2.1
 
-[English README](README.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。V2.0 整合了多模态证据、校准后的混合检索、持久化摄取与 Map-Reduce Worker、服务密钥 RBAC、恶意文件资源门禁、指标、迁移/回滚，以及经过真实验证的单机 Compose 配置。
+这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。V2.1 在 V2.0 的多模态证据、校准混合检索、持久化摄取与 Map-Reduce Worker、服务密钥 RBAC、恶意文件资源门禁、指标、迁移/回滚和单机 Compose 配置之上，补齐了第一方浏览器控制台。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
@@ -10,6 +10,7 @@
 
 ## 当前已实现
 
+- 无需 Node 构建链的响应式 Web 控制台：知识空间、同步演示上传、带引用问答、健康状态和租户指标；
 - FastAPI 应用工厂、类型化 Router、依赖注入、统一错误与 OpenAPI；
 - SQLite 事务、外键、索引和重启持久化；
 - 知识库与文档 CRUD，基于 SHA-256 的同租户/知识库幂等上传；
@@ -34,7 +35,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 85 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
+- 86 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷。
 
@@ -51,7 +52,7 @@ python -m venv .venv
 .\.venv\Scripts\fastapi.exe dev
 ```
 
-打开 `http://127.0.0.1:8000/docs`。除健康检查外，请在 Swagger 或请求中加入：
+打开 `http://127.0.0.1:8000/` 查看 Web 控制台，或打开 `http://127.0.0.1:8000/docs` 使用 Swagger。控制台默认使用以下本地演示信任边界 Header：
 
 ```text
 X-Tenant-ID: hospital-a
@@ -98,7 +99,7 @@ Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/summary-jobs `
 
 ## 测试与评测
 
-一条命令执行发布核心门禁（Ruff、85 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
+一条命令执行发布核心门禁（Ruff、86 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell

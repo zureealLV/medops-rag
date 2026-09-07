@@ -1,8 +1,11 @@
 """FastAPI application factory."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.answers import router as answers_router
 from app.api.artifacts import router as artifacts_router
@@ -23,6 +26,8 @@ from app.exceptions import install_exception_handlers
 from app.logging import configure_logging
 from app.observability import install_observability
 
+WEB_ROOT = Path(__file__).resolve().parents[1] / "web"
+
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     resolved = settings or Settings.from_env()
@@ -34,7 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title="MedOps RAG",
-        version="2.0.0",
+        version="2.1.0",
         description=(
             "Auditable multimodal RAG for synthetic hospital IT operations knowledge. "
             "Not medical advice."
@@ -58,6 +63,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         audit_router,
     ):
         application.include_router(router)
+    application.mount("/ui", StaticFiles(directory=WEB_ROOT, html=True), name="ui")
+
+    @application.get("/", include_in_schema=False)
+    def web_console() -> RedirectResponse:
+        return RedirectResponse(url="/ui/")
+
     install_exception_handlers(application)
     install_observability(application)
     configure_logging(resolved.log_level)

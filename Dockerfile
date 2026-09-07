@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY app ./app
+COPY web ./web
 COPY scripts ./scripts
 COPY sample_data ./sample_data
 RUN pip install --no-cache-dir . \

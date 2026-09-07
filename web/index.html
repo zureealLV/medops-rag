@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#071318">
+  <title>MedOps Control Plane</title>
+  <link rel="icon" href="/ui/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/ui/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="MedOps 首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><strong>MEDOPS</strong><small>RAG CONTROL PLANE</small></span>
+      </a>
+      <nav class="nav" aria-label="控制台导航">
+        <button class="nav-item active" data-view="overview"><span>01</span>总览</button>
+        <button class="nav-item" data-view="answer"><span>02</span>证据问答</button>
+        <button class="nav-item" data-view="documents"><span>03</span>知识文档</button>
+        <button class="nav-item" data-view="operations"><span>04</span>运行状态</button>
+      </nav>
+      <div class="side-note">
+        <span class="eyebrow">SAFETY BOUNDARY</span>
+        <p>仅使用合成医院 IT 运维资料，不提供医疗建议。</p>
+      </div>
+      <a class="docs-link" href="/docs" target="_blank" rel="noreferrer">API 文档 <span>↗</span></a>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">TENANT-SCOPED / AUDITABLE / LOCAL-FIRST</p><h1 id="page-title">系统总览</h1></div>
+        <div class="top-actions">
+          <div class="health-pill" id="health-pill"><span></span><b>正在连接</b></div>
+          <button class="icon-button" id="settings-button" aria-label="连接设置"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path></svg></button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-overview">
+        <div class="hero panel">
+          <div class="hero-copy">
+            <span class="eyebrow">MEDOPS MULTIMODAL RAG V2.1</span>
+            <h2>让每个答案都能<br><em>回到原始证据。</em></h2>
+            <p>多格式摄取、租户隔离、可恢复任务与受控拒答，统一在一个本地运行面中。</p>
+            <div class="hero-actions"><button class="primary" data-go="answer">开始提问 <span>→</span></button><button class="secondary" data-go="documents">查看语料</button></div>
+          </div>
+          <div class="signal-map" aria-hidden="true">
+            <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+            <div class="signal-core"><span>RAG</span><small>grounded</small></div>
+            <span class="node node-a">PARSE</span><span class="node node-b">RETRIEVE</span><span class="node node-c">CITE</span><span class="node node-d">ABSTAIN</span>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <article class="stat-card"><span>知识库</span><strong id="stat-kbs">—</strong><small>当前租户</small></article>
+          <article class="stat-card"><span>文档</span><strong id="stat-docs">—</strong><small>可检索资料</small></article>
+          <article class="stat-card"><span>24H 请求</span><strong id="stat-requests">—</strong><small id="stat-errors">等待指标</small></article>
+          <article class="stat-card accent"><span>服务版本</span><strong id="stat-version">2.1.0</strong><small>web console enabled</small></article>
+        </div>
+        <div class="two-column">
+          <section class="panel compact-panel">
+            <div class="panel-heading"><div><span class="eyebrow">KNOWLEDGE BASES</span><h3>当前知识空间</h3></div><button class="text-button" data-go="documents">管理 →</button></div>
+            <div id="kb-overview" class="list-stack skeleton-box"></div>
+          </section>
+          <section class="panel compact-panel">
+            <div class="panel-heading"><div><span class="eyebrow">PIPELINE</span><h3>受控回答链路</h3></div></div>
+            <ol class="pipeline"><li><b>01</b><span>租户身份与权限</span><i>BOUND</i></li><li><b>02</b><span>BM25 / RRF 证据检索</span><i>RANKED</i></li><li><b>03</b><span>注入隔离与置信门禁</span><i>GUARDED</i></li><li><b>04</b><span>引用回答或明确拒答</span><i>CITED</i></li></ol>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-answer">
+        <div class="workspace-grid">
+          <section class="panel query-panel">
+            <div class="panel-heading"><div><span class="eyebrow">GROUNDED ANSWER</span><h3>向知识库提问</h3></div><span class="shortcut">Ctrl ↵</span></div>
+            <label class="field"><span>知识库</span><select id="answer-kb"></select></label>
+            <label class="field"><span>问题</span><textarea id="question" rows="7">LIS 接口连续超时时，第一步应该检查什么？</textarea></label>
+            <div class="field-row">
+              <label class="field"><span>检索策略</span><select id="text-strategy"><option value="auto">Auto</option><option value="bm25">BM25</option><option value="rrf">RRF</option><option value="parent_child">Parent-child</option><option value="keyword">Keyword</option></select></label>
+              <label class="field"><span>证据类型</span><select id="retrieval-profile"><option value="auto">自动路由</option><option value="text">文本</option><option value="visual">视觉</option></select></label>
+            </div>
+            <button class="primary wide" id="ask-button"><span class="button-label">生成带引用回答</span><span>→</span></button>
+            <p class="hint">试试越界问题：“明天合肥会不会下雨？” 系统应明确拒答。</p>
+          </section>
+          <section class="panel result-panel" id="answer-result"><div class="empty-state"><div class="empty-glyph">⌬</div><h3>等待问题</h3><p>回答、证据引用和检索轨迹将在这里出现。</p></div></section>
+        </div>
+      </section>
+
+      <section class="view" id="view-documents">
+        <div class="section-actions"><div><p class="eyebrow">TENANT KNOWLEDGE</p><h2>知识库与文档</h2></div><button class="primary" id="new-kb-button">＋ 新建知识库</button></div>
+        <div class="documents-layout">
+          <section class="panel kb-panel"><div class="panel-heading"><h3>知识库</h3><span id="kb-count" class="count">0</span></div><div id="kb-list" class="kb-list"></div></section>
+          <section class="panel docs-panel">
+            <div class="panel-heading"><div><span class="eyebrow" id="active-kb-label">SELECTED SPACE</span><h3 id="active-kb-name">请选择知识库</h3></div><label class="upload-button">上传文件<input id="file-input" type="file" multiple accept=".txt,.md,.pdf,.docx,.pptx,.png,.jpg,.jpeg,.webp"></label></div>
+            <div class="drop-zone" id="drop-zone"><b>拖放资料到这里</b><span>TXT / MD / PDF / DOCX / PPTX / PNG / JPEG / WebP，单文件 ≤ 10 MB</span></div>
+            <div class="table-wrap"><table><thead><tr><th>文档</th><th>来源</th><th>切片 / 证据</th><th>摄取状态</th></tr></thead><tbody id="documents-body"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-operations">
+        <div class="section-actions"><div><p class="eyebrow">OBSERVABILITY / 24 HOURS</p><h2>运行状态</h2></div><button class="secondary" id="refresh-metrics">刷新指标</button></div>
+        <div class="ops-grid">
+          <article class="metric panel"><span>请求总量</span><strong id="metric-requests">—</strong><small>tenant scoped</small></article>
+          <article class="metric panel"><span>P95 延迟</span><strong id="metric-p95">—</strong><small>milliseconds</small></article>
+          <article class="metric panel"><span>拒答次数</span><strong id="metric-abstained">—</strong><small>evidence guarded</small></article>
+          <article class="metric panel"><span>Fallback</span><strong id="metric-fallback">—</strong><small>provider fallback</small></article>
+        </div>
+        <div class="two-column ops-columns">
+          <section class="panel compact-panel"><div class="panel-heading"><div><span class="eyebrow">QUEUE STATE</span><h3>后台任务</h3></div></div><div id="queue-state" class="queue-state"></div></section>
+          <section class="panel compact-panel"><div class="panel-heading"><div><span class="eyebrow">ACTIVITY</span><h3>本次会话</h3></div></div><div id="activity-log" class="activity-log"></div></section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="settings-dialog"><form method="dialog" class="dialog-card" id="settings-form">
+    <div class="dialog-heading"><div><span class="eyebrow">CONNECTION PROFILE</span><h2>连接设置</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
+    <label class="field"><span>认证模式</span><select id="auth-mode"><option value="trusted_headers">本地可信 Header</option><option value="api_key">Bearer API Key</option></select></label>
+    <div id="trusted-fields"><label class="field"><span>Tenant ID</span><input id="tenant-id" value="hospital-a" maxlength="64"></label><label class="field"><span>Actor ID</span><input id="actor-id" value="zureealLV" maxlength="80"></label></div>
+    <label class="field hidden" id="api-key-field"><span>API Key</span><input id="api-key" type="password" placeholder="mops_prefix.secret" autocomplete="off"></label>
+    <div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button value="default" class="primary">保存并连接</button></div>
+  </form></dialog>
+
+  <dialog id="kb-dialog"><form method="dialog" class="dialog-card" id="kb-form">
+    <div class="dialog-heading"><div><span class="eyebrow">NEW SPACE</span><h2>新建知识库</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
+    <label class="field"><span>名称</span><input id="new-kb-name" required maxlength="120" placeholder="例如：网络与接口运行手册"></label>
+    <label class="field"><span>说明</span><textarea id="new-kb-description" rows="3" maxlength="500" placeholder="可选说明"></textarea></label>
+    <div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button value="default" class="primary">创建</button></div>
+  </form></dialog>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script src="/ui/app.js" defer></script>
+</body>
+</html>
