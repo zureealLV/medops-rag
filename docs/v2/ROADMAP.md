@@ -86,4 +86,4 @@ and partial failures remain visible.
 - [x] verified Compose for API, ingestion/summary workers, selected SQLite exact index, and persistent volumes;
 - [x] exact V1 fixture migration, schema versioning, integrity-checked backup and tested full rollback;
 - [x] bilingual README, architecture diagram, threat model, demo, and benchmark reproduction;
-- [ ] release tag only after fresh-clone validation.
+- [x] release tag only after fresh-clone validation.

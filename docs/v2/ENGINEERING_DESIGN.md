@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 — Engineering Design
 
-Status: V2 release candidate. Retrieval gates, durable ingestion, resumable Map-Reduce, API-key RBAC,
+Status: V2.0. Retrieval gates, durable ingestion, resumable Map-Reduce, API-key RBAC,
 parser resource limits, operational metrics, V1 rollback and the single-host Compose profile are implemented
 on `feat/multimodal-rag-v2` with versioned benchmark evidence.
 
@@ -390,10 +390,10 @@ production request cost.
 - Map-Reduce multi-document summaries with citations;
 - crash/restart recovery tests.
 
-### v2.0 — release candidate
+### v2.0 — released
 
 - authenticated API-key identity boundary plus retained trusted-gateway demo mode (implemented);
 - performance, security, parser-fuzz and migration/rollback tests (implemented);
 - verified Docker startup with selected exact index and both worker services (implemented);
 - one-command core benchmark reproduction and published limitations (implemented);
-- immutable release tag only after fresh-clone validation (pending).
+- immutable release tag after clean remote-clone validation.

@@ -34,7 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title="MedOps RAG",
-        version="2.0.0-beta.2-dev",
+        version="2.0.0",
         description=(
             "Auditable multimodal RAG for synthetic hospital IT operations knowledge. "
             "Not medical advice."

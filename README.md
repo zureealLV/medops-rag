@@ -1,8 +1,8 @@
-# MedOps Multimodal RAG V2.0 Release Candidate
+# MedOps Multimodal RAG V2.0
 
 [中文说明](README_CN.md) · [Engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Migration/rollback](docs/v2/MIGRATION_AND_ROLLBACK.md) · [Performance](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The V2.0 release candidate combines multimodal evidence, calibrated hybrid retrieval, durable ingestion and Map-Reduce workers, service-key RBAC, bounded hostile-file parsing, metrics, migration/rollback and a verified single-host Compose profile.
+An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. V2.0 combines multimodal evidence, calibrated hybrid retrieval, durable ingestion and Map-Reduce workers, service-key RBAC, bounded hostile-file parsing, metrics, migration/rollback and a verified single-host Compose profile.
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 

@@ -1,8 +1,8 @@
-# MedOps 多模态 RAG V2.0 发布候选版
+# MedOps 多模态 RAG V2.0
 
 [English README](README.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。V2.0 发布候选版整合了多模态证据、校准后的混合检索、持久化摄取与 Map-Reduce Worker、服务密钥 RBAC、恶意文件资源门禁、指标、迁移/回滚，以及经过真实验证的单机 Compose 配置。
+这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。V2.0 整合了多模态证据、校准后的混合检索、持久化摄取与 Map-Reduce Worker、服务密钥 RBAC、恶意文件资源门禁、指标、迁移/回滚，以及经过真实验证的单机 Compose 配置。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
