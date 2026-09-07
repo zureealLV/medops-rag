@@ -8,6 +8,11 @@ from contextlib import contextmanager
 from pathlib import Path
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS schema_metadata (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id TEXT NOT NULL,
@@ -364,3 +369,9 @@ def initialize(path: Path) -> None:
                    SELECT 1 FROM child_chunks cc WHERE cc.parent_id = p.id
                )"""
         )
+        connection.execute(
+            """INSERT INTO schema_metadata(key,value,updated_at)
+               VALUES ('schema_version','2',CURRENT_TIMESTAMP)
+               ON CONFLICT(key) DO UPDATE SET value='2',updated_at=CURRENT_TIMESTAMP"""
+        )
+        connection.execute("PRAGMA user_version = 2")

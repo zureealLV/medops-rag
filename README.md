@@ -35,7 +35,8 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 82 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 84 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
+- backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a verified Docker Compose image with API, ingestion worker, summary worker, health checks and persistent
   data/model volumes.
 

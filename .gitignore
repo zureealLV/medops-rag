@@ -19,6 +19,7 @@ venv/
 *.db
 *.sqlite
 *.sqlite3
+*.bak
 data/runtime/
 data/models/
 uploads/
