@@ -10,6 +10,7 @@ from app.models.retrieval import SearchRequest, SearchResponse
 from app.repositories.documents import retrieval_rows
 from app.repositories.knowledge_bases import get as get_kb
 from app.retrieval.hybrid import rank
+from app.retrieval.query_transform import transform_queries
 from app.retrieval.text_embeddings import provider_from_settings
 
 
@@ -39,21 +40,39 @@ def search(
             # preserve a meaningful score there instead of normalizing to zero.
             resolved_strategy = "weighted" if len(rows) < 3 else "bm25"
     scoring_strategy = "bm25" if use_parent_child else resolved_strategy
-    query_vector = None
+    resolved_transform, queries = transform_queries(request.query, request.query_transform, settings)
     if scoring_strategy in {"vector", "weighted", "rrf"}:
         provider = provider_from_settings(settings)
         rows = [row for row in rows if row["embedding_model"] == provider.model_name]
-        query_vector = provider.embed_query(request.query)
-    results = rank(
-        request.query,
-        rows,
-        top_k=(len(rows) if use_parent_child else request.top_k),
-        # The current benchmark shows BM25 outperforming the hashing-vector baseline.
-        # Parent/child retrieval therefore reconstructs context without smuggling in
-        # an unvalidated dense model; beta will benchmark a real dense child index.
-        strategy=scoring_strategy,
-        query_vector=query_vector,
-    )
+    else:
+        provider = None
+    ranking_limit = len(rows) if use_parent_child or len(queries) > 1 else request.top_k
+    rankings = [
+        rank(
+            query,
+            rows,
+            top_k=ranking_limit,
+            strategy=scoring_strategy,
+            query_vector=provider.embed_query(query) if provider else None,
+        )
+        for query in queries
+    ]
+    if len(rankings) == 1:
+        results = rankings[0]
+    else:
+        by_chunk = {item.chunk_id: item for items in rankings for item in items}
+        fused = {chunk_id: 0.0 for chunk_id in by_chunk}
+        for items in rankings:
+            for result_rank, item in enumerate(items, start=1):
+                fused[item.chunk_id] += 1.0 / (60 + result_rank)
+        maximum = max(fused.values(), default=1.0)
+        results = sorted(
+            (
+                item.model_copy(update={"score": round(fused[chunk_id] / maximum, 6)})
+                for chunk_id, item in by_chunk.items()
+            ),
+            key=lambda item: (-item.score, item.chunk_id),
+        )[:ranking_limit]
     if use_parent_child:
         deduplicated = []
         seen_parent_ids: set[int] = set()
@@ -70,4 +89,6 @@ def search(
         strategy=resolved_strategy,
         results=results,
         retrieval_ms=round((time.perf_counter() - started) * 1000, 3),
+        query_transform=resolved_transform,
+        transformed_queries=queries,
     )

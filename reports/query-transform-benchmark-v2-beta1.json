@@ -1,0 +1,80 @@
+{
+  "benchmark": "medops-v2-query-transforms-v1",
+  "generated_at": "2026-09-07T13:52:23.282475+08:00",
+  "documents": 20,
+  "answerable_questions": 120,
+  "dense_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+  "fastembed_version": "0.7.4",
+  "dataset_sha256": {
+    "v2_retrieval_documents.jsonl": "f8c422ad6003e96d699591d69733c332ab61d9cc66f812894867aec5267b3861",
+    "v2_retrieval_cases.jsonl": "a53e04fc336d73c1a14c77d2bc5f2e3323919064c432cfb935822377d14d069c"
+  },
+  "results": {
+    "none": {
+      "hit_at_1": 0.9917,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9944,
+      "ndcg_at_5": 0.9958,
+      "mean_ms": 67.233,
+      "p95_ms": 85.291,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "paraphrase": 1.0,
+        "choice": 0.95,
+        "distractor": 1.0
+      }
+    },
+    "rewrite": {
+      "hit_at_1": 0.9917,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9958,
+      "ndcg_at_5": 0.9969,
+      "mean_ms": 58.14,
+      "p95_ms": 70.809,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "paraphrase": 0.975,
+        "choice": 1.0,
+        "distractor": 1.0
+      }
+    },
+    "multi_query": {
+      "hit_at_1": 0.9833,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9917,
+      "ndcg_at_5": 0.9938,
+      "mean_ms": 125.985,
+      "p95_ms": 157.61,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "paraphrase": 0.975,
+        "choice": 0.95,
+        "distractor": 1.0
+      }
+    },
+    "hyde": {
+      "hit_at_1": 0.7833,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.8875,
+      "ndcg_at_5": 0.9168,
+      "mean_ms": 112.298,
+      "p95_ms": 128.067,
+      "hit_at_1_by_category": {
+        "exact": 0.85,
+        "paraphrase": 0.85,
+        "choice": 0.65,
+        "distractor": 0.65
+      }
+    }
+  },
+  "policy": "Keep query transformation disabled by default unless a transform wins held-out quality without an unacceptable latency increase. Template HyDE is not an LLM-generated claim.",
+  "limitations": [
+    "Synthetic operations corpus with one relevant document per question.",
+    "HyDE uses the committed deterministic template, not an external language model.",
+    "Cached model load and document indexing time are excluded."
+  ]
+}

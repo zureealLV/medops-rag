@@ -1,6 +1,6 @@
 # MedOps 多模态 RAG V2 Beta.2（开发中）
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [向量库基准](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
 
@@ -24,6 +24,7 @@
 - 可选配对 CLIP 图文向量，以及 `ocr`/`image`/`fusion` 三种视觉检索；
 - `/answer` 自动区分文本/视觉问题，以相似度和候选差值双门禁拒答，并返回可读取的图片引用；
 - 哈希向量、关键词、BM25、加权及 RRF 五种可比较检索策略；
+- 显式 Rewrite、Multi-query、确定性模板 HyDE，以及受策略开关约束的自动 HyDE；
 - 可选的结构感知 `parent_child` 检索：小块命中，大块恢复回答上下文；
 - 带 `source`、`document_id`、`chunk_id` 的引用回答与低证据拒答；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
@@ -31,7 +32,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`、持久化请求指标；
-- 64 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
+- 67 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
 - 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
 
 ## Windows 快速启动
@@ -93,6 +94,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_semantic_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
+.\.venv\Scripts\python.exe .\evals\benchmark_query_transforms.py
 ```
 
 详细数据见 [`docs/v2/BENCHMARK_REPORT_ALPHA2.md`](docs/v2/BENCHMARK_REPORT_ALPHA2.md)。20 张无文字图标上，CLIP-B/32 英文 Hit@1 为 0.95，OCR-only 只有 0.05；但中文 Hit@1 仅 0.10，因此图片向量保持显式开启，不能冒充合格的中文生产方案。
@@ -119,6 +121,10 @@ docker compose up --build
 不同维度/模型的向量混算。本机 MiniLM 中英混合冒烟中，目标文档以余弦 `0.497208` 排名第一，
 查询 `63.082 ms`，三文档首次建索引 `2094.785 ms`；它仍是可选配置，不凭一次冒烟升级成默认。
 
+查询转换同样不默认开启：冻结集上，无转换与 Rewrite 的 Hit@1 均为 `0.9917`，Multi-query 降为
+`0.9833`，确定性模板 HyDE 更降至 `0.7833`。可通过 `query_transform` 显式实验；自动 HyDE 还需
+设置 `HYDE_AUTO_ENABLED=true`。
+
 真实 WSL2 Redis 7.0.15 上，Celery 5.6.3 的无操作任务吞吐中位数为 `480.528 tasks/s`，SQLite
 租约队列为 `347.085 tasks/s`。单机配置仍选择 SQLite：这点传输差值远小于 OCR/模型耗时，而
 Celery 仍不能替代进度、局部结果和引用所需的领域表。详见[任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md)。
@@ -142,6 +148,7 @@ POST /answer
 - CLIP 能召回无文字图片，但不能推理图表数值或示意图关系；
 - 当前测试的两个 CLIP 配置均未通过中文跨模态门禁，默认保持关闭；
 - 哈希 Embedding 是低依赖教学实现，不等同于生产向量模型；
+- 本地 HyDE 是确定性假设文档模板，不是 LLM 生成结果；它显著拉低冻结基准，因此不会自动启用；
 - Prompt Injection 检测只是启发式纵深防御，不能宣称完全阻断；
 - 租户 Header 是演示边界，真实部署必须接入认证与授权；
 - SQLite 和进程内检索面向本地案例，不面向医院级流量；

@@ -51,7 +51,8 @@ coordinates and real VLM chart reasoning remain open; the offline path deliberat
 - [ ] benchmark Qdrant server with concurrent filtered load when Docker is available;
 - [x] select BM25+MiniLM RRF for the opt-in dense profile from Hit@K/MRR/nDCG evidence;
 - [x] keep BGE reranking offline because +0.83 Hit@1 point costs about +952 ms mean latency;
-- [ ] implement HyDE behind a query policy and compare against rewrite/multi-query/no-transform baselines.
+- [x] implement policy-gated template HyDE and compare it with rewrite/multi-query/no-transform baselines;
+- [x] keep transformation off by default: HyDE dropped Hit@1 from 0.9917 to 0.7833.
 
 Acceptance: the selected default wins on the held-out set under a documented latency/memory budget. A more
 complex pipeline that ties a simpler one does not win.

@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 RetrievalStrategy = Literal["auto", "keyword", "vector", "weighted", "bm25", "rrf", "parent_child"]
+QueryTransform = Literal["auto", "none", "rewrite", "multi_query", "hyde"]
 
 
 class SearchRequest(BaseModel):
@@ -12,6 +13,7 @@ class SearchRequest(BaseModel):
     knowledge_base_id: int | None = Field(default=None, ge=1)
     top_k: int = Field(default=5, ge=1, le=10)
     strategy: RetrievalStrategy = "auto"
+    query_transform: QueryTransform = "auto"
 
 
 class Evidence(BaseModel):
@@ -38,3 +40,5 @@ class SearchResponse(BaseModel):
     strategy: RetrievalStrategy
     results: list[Evidence]
     retrieval_ms: float
+    query_transform: QueryTransform = "none"
+    transformed_queries: list[str] = Field(default_factory=list)

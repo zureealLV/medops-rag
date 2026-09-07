@@ -22,3 +22,9 @@ This directory will contain the reproducible offline RAG evaluation dataset, run
 ```
 
 The generated JSON report is written to `reports/generated/evaluation.json` and is intentionally ignored by Git.
+
+## Query transforms
+
+Run `benchmark_query_transforms.py` to compare unchanged queries, deterministic rewrite, multi-query fusion,
+and the template-HyDE experiment against the frozen Beta.1 corpus. It writes the versioned raw report to
+`reports/query-transform-benchmark-v2-beta1.json`.

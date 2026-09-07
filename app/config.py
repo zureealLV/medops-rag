@@ -28,6 +28,7 @@ class Settings:
     child_chunk_overlap: int = 50
     text_embedding_enabled: bool = False
     text_embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    hyde_auto_enabled: bool = False
     max_upload_bytes: int = 10_000_000
     max_image_pixels: int = 25_000_000
     ocr_enabled: bool = True
@@ -66,6 +67,8 @@ class Settings:
                 "TEXT_EMBEDDING_MODEL",
                 "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
             ),
+            hyde_auto_enabled=os.getenv("HYDE_AUTO_ENABLED", "false").lower()
+            in {"1", "true", "yes", "on"},
             max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", "10000000")),
             max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
             ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},

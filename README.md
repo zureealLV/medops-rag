@@ -1,6 +1,6 @@
 # MedOps Multimodal RAG V2 Beta.2 (in progress)
 
-[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce summaries](docs/v2/BETA2_MAP_REDUCE.md) · [Queue benchmark](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Vector-store benchmark](docs/v2/BENCHMARK_REPORT_VECTOR_STORES.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [V2 engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Durable ingestion jobs](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce summaries](docs/v2/BETA2_MAP_REDUCE.md) · [Queue benchmark](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 retrieval benchmark](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [Query-transform benchmark](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. The current Beta.2 increment adds a persisted, leased ingestion queue and an isolated worker process to the multimodal retrieval foundation.
 
@@ -25,13 +25,14 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - optional paired CLIP image/text embeddings and `ocr`/`image`/`fusion` visual search;
 - automatic `text`/`visual` answer routing, calibrated visual abstention, and retrievable image citations;
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
+- explicit rewrite, multi-query and deterministic template-HyDE transformations with policy-gated auto HyDE;
 - opt-in structure-aware `parent_child` retrieval that matches small children and reconstructs parent context;
 - cited extractive answers and evidence-threshold abstention;
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, request metrics, 64 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, request metrics, 67 API/security/parser/migration/job tests and repeatable ingestion/retrieval benchmarks;
 - reproducible local startup and a Docker Compose definition (Docker runtime was unavailable for this milestone's verification).
 
 ## Quick start (Windows / PowerShell)
@@ -104,6 +105,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_semantic_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
+.\.venv\Scripts\python.exe .\evals\benchmark_query_transforms.py
 ```
 
 See the [Alpha.2 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA2.md). CLIP-B/32 reached 0.95 English Hit@1 on 20 text-free icons versus 0.05 for OCR-only, but only 0.10 Chinese Hit@1. Image embeddings therefore remain opt-in until a multilingual profile passes the Chinese gate.
@@ -137,6 +139,11 @@ credential fixture first at cosine `0.497208` in `63.082 ms` after indexing thre
 On the frozen 120-question set, BM25 scored 0.9583 Hit@1, MiniLM 0.9417, RRF 0.9917, and RRF+BGE 1.0000.
 The BGE stage remains offline because its 0.83-point gain raised mean latency from 130.244 to 1082.388 ms.
 
+Query transformation also remains disabled by default. On the same frozen set, no-transform and rewrite both
+reached 0.9917 Hit@1, multi-query fell to 0.9833, and deterministic template-HyDE fell to 0.7833. Explicit
+experiments remain available through `query_transform`; automatic HyDE additionally requires
+`HYDE_AUTO_ENABLED=true`.
+
 On a real Redis 7.0.15 broker in WSL2, Celery 5.6.3 processed no-op transport tasks at a median 480.528
 tasks/s versus 347.085 tasks/s for the SQLite lease loop. SQLite remains selected for the single-host profile:
 the measured transport delta is tiny beside OCR/model latency, while Celery still needs the same domain tables
@@ -153,6 +160,8 @@ Read [`docs/v2/ENGINEERING_DESIGN.md`](docs/v2/ENGINEERING_DESIGN.md), then [`do
 - CLIP retrieves non-text images but does not reason over chart values or diagram relationships.
 - The tested CLIP profiles failed the current Chinese retrieval gate and remain opt-in.
 - Hashing embeddings are lightweight and deterministic, not comparable to production embedding models.
+- The local HyDE profile is a deterministic hypothetical-document template, not an LLM-generated passage;
+  it materially hurt the frozen benchmark and is not enabled automatically.
 - Prompt-injection detection is heuristic defense-in-depth, not a complete solution.
 - The tenant header is a demo boundary; production deployments require authenticated identity and authorization.
 - SQLite and in-process retrieval target a local demonstration, not hospital-scale traffic.

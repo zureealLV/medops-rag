@@ -126,6 +126,11 @@ while making byte uploads idempotent.
 - `rrf`: rank fusion of BM25 and the hashing-vector baseline.
 - `parent_child`: BM25 scores smaller persisted children and returns their structure-aware parent context.
 
+It also exposes `query_transform=none|rewrite|multi_query|hyde`. `auto` resolves to `none` unless
+`HYDE_AUTO_ENABLED=true` and the query policy identifies a long explanatory question. The committed HyDE
+implementation is a deterministic hypothetical runbook template, not an external model claim. It remains off
+because it reduced frozen-set Hit@1 from 0.9917 to 0.7833; multi-query also failed to beat the simpler baseline.
+
 All results expose keyword, vector, and normalized BM25 component scores. Parent-child results additionally
 expose the matched child, parent ID, heading, and page range. The default remains `weighted`
 for backward compatibility until a harder versioned corpus justifies a migration.
