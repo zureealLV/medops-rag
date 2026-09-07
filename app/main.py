@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from app.api.answers import router as answers_router
 from app.api.artifacts import router as artifacts_router
 from app.api.audit import router as audit_router
+from app.api.auth import router as auth_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
 from app.api.jobs import router as jobs_router
@@ -42,6 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.settings = resolved
     for router in (
         health_router,
+        auth_router,
         users_router,
         knowledge_bases_router,
         jobs_router,

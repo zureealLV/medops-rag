@@ -16,6 +16,20 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
+CREATE TABLE IF NOT EXISTS api_credentials (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    key_prefix TEXT NOT NULL UNIQUE,
+    secret_hash BLOB NOT NULL,
+    salt BLOB NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('viewer', 'editor', 'admin')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TEXT,
+    revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_api_credentials_tenant
+    ON api_credentials(tenant_id, revoked_at);
 CREATE TABLE IF NOT EXISTS knowledge_bases (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id TEXT NOT NULL,

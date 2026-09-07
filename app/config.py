@@ -20,6 +20,7 @@ class Settings:
     database_path: Path
     app_env: str = "development"
     log_level: str = "INFO"
+    auth_mode: str = "trusted_headers"
     retrieval_threshold: float = 0.20
     chunk_size: int = 600
     chunk_overlap: int = 80
@@ -55,6 +56,7 @@ class Settings:
             database_path=_database_path(os.getenv("DATABASE_URL", "sqlite:///./data/runtime/medops.db")),
             app_env=os.getenv("APP_ENV", "development"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
+            auth_mode=os.getenv("AUTH_MODE", "trusted_headers"),
             retrieval_threshold=float(os.getenv("RETRIEVAL_THRESHOLD", "0.20")),
             chunk_size=int(os.getenv("CHUNK_SIZE", "600")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "80")),

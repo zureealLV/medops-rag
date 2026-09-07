@@ -17,6 +17,7 @@ class AppError(Exception):
     code: str
     message: str
     details: dict[str, Any] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
 
 
 def install_exception_handlers(app: FastAPI) -> None:
@@ -25,6 +26,7 @@ def install_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content={"code": exc.code, "message": exc.message, "details": exc.details},
+            headers=exc.headers,
         )
 
     @app.exception_handler(RequestValidationError)

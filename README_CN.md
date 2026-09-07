@@ -1,6 +1,6 @@
 # MedOps 多模态 RAG V2 Beta.2（开发中）
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
 
@@ -29,6 +29,7 @@
 - 带 `source`、`document_id`、`chunk_id` 的引用回答与低证据拒答；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
 - 在 SQL 检索阶段执行租户过滤，其他租户内容不会先进入模型再过滤；
+- 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`、持久化请求指标；
@@ -55,7 +56,17 @@ X-Tenant-ID: hospital-a
 X-Actor-ID: local-demo
 ```
 
-这里的租户 Header 代表“上游网关已经完成身份认证”的演示信任边界，**不等于生产级鉴权**。
+这里的租户 Header 是方便本地演示的信任边界。若要让服务自身鉴权，先创建管理员 Key，再切换模式：
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\manage_api_keys.py create `
+  --tenant hospital-a --name local-admin --role admin
+$env:AUTH_MODE = "api_key"
+$headers = @{ Authorization = "Bearer <只显示一次的-key>" }
+```
+
+`api_key` 模式从数据库中的哈希凭据解析租户、身份与角色，忽略伪造的 `X-Tenant-ID` 与
+`X-Actor-ID`。完整边界见 [`docs/v2/AUTHORIZATION.md`](docs/v2/AUTHORIZATION.md)。
 
 异步摄取示例：
 
@@ -151,6 +162,6 @@ POST /answer
 - 哈希 Embedding 是低依赖教学实现，不等同于生产向量模型；
 - 本地 HyDE 是确定性假设文档模板，不是 LLM 生成结果；它显著拉低冻结基准，因此不会自动启用；
 - Prompt Injection 检测只是启发式纵深防御，不能宣称完全阻断；
-- 租户 Header 是演示边界，真实部署必须接入认证与授权；
+- `trusted_headers` 仍是演示边界；API Key 模式已有认证授权，但公网部署仍需网关 TLS、限流与密钥管理；
 - SQLite 和进程内检索面向本地案例，不面向医院级流量；
 - 语料全部为合成资料，评测集规模有限。

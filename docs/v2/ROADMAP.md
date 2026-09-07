@@ -79,7 +79,7 @@ and partial failures remain visible.
 
 ## Gate 5 — V2.0: release hardening
 
-- [ ] authenticated user identity and authorization policy;
+- [x] hashed API-key identity, immediate revocation, tenant binding, and viewer/editor/admin authorization;
 - [ ] parser fuzzing and decompression-bomb/archive abuse cases;
 - [ ] performance profile for upload, index, search, rerank, and answer;
 - [ ] observability for job queue, parser/OCR, retrieval stages, model calls, and fallback;

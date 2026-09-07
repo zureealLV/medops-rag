@@ -22,4 +22,5 @@ def test_user_validation_and_not_found(client: TestClient, tenant_headers: dict[
 
 def test_tenant_header_required(client: TestClient):
     response = client.get("/users/1")
-    assert response.status_code == 422
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_tenant"
