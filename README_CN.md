@@ -107,6 +107,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
 .\.venv\Scripts\python.exe .\evals\benchmark_query_transforms.py
+.\.venv\Scripts\python.exe .\evals\benchmark_v2_performance.py
 ```
 
 详细数据见 [`docs/v2/BENCHMARK_REPORT_ALPHA2.md`](docs/v2/BENCHMARK_REPORT_ALPHA2.md)。20 张无文字图标上，CLIP-B/32 英文 Hit@1 为 0.95，OCR-only 只有 0.05；但中文 Hit@1 仅 0.10，因此图片向量保持显式开启，不能冒充合格的中文生产方案。
@@ -140,6 +141,11 @@ docker compose up --build
 真实 WSL2 Redis 7.0.15 上，Celery 5.6.3 的无操作任务吞吐中位数为 `480.528 tasks/s`，SQLite
 租约队列为 `347.085 tasks/s`。单机配置仍选择 SQLite：这点传输差值远小于 OCR/模型耗时，而
 Celery 仍不能替代进度、局部结果和引用所需的领域表。详见[任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md)。
+
+[V2 硬化性能剖面](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md)实测：包含 API Key scrypt 校验的 BM25
+搜索为 `56.127 ms` 均值 / `76.903 ms` p95，离线回答为 `73.866 ms` 均值 / `81.472 ms` p95；
+缓存 BGE 对 Top-10 单独重排仍需 `369.715 ms` 均值，因此不进入默认在线路径。逐请求原始样本保存在
+`reports/v2-performance-profile.json`，不是只留一张漂亮表格。
 
 ## 建议学习顺序
 

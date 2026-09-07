@@ -28,3 +28,9 @@ The generated JSON report is written to `reports/generated/evaluation.json` and 
 Run `benchmark_query_transforms.py` to compare unchanged queries, deterministic rewrite, multi-query fusion,
 and the template-HyDE experiment against the frozen Beta.1 corpus. It writes the versioned raw report to
 `reports/query-transform-benchmark-v2-beta1.json`.
+
+## Hardened V2 performance profile
+
+`benchmark_v2_performance.py` measures raw per-call latency for API-key-authenticated upload acceptance,
+worker parse/index stages, auto/BM25 search, BGE Top-10 reranking and offline answers. It writes
+`reports/v2-performance-profile.json`; model files must already be cached for a network-independent run.

@@ -120,6 +120,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_visual_retrieval.py
 .\.venv\Scripts\python.exe .\evals\benchmark_parent_child.py
 .\.venv\Scripts\python.exe .\evals\benchmark_query_transforms.py
+.\.venv\Scripts\python.exe .\evals\benchmark_v2_performance.py
 ```
 
 See the [Alpha.2 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA2.md). CLIP-B/32 reached 0.95 English Hit@1 on 20 text-free icons versus 0.05 for OCR-only, but only 0.10 Chinese Hit@1. Image embeddings therefore remain opt-in until a multilingual profile passes the Chinese gate.
@@ -162,6 +163,11 @@ On a real Redis 7.0.15 broker in WSL2, Celery 5.6.3 processed no-op transport ta
 tasks/s versus 347.085 tasks/s for the SQLite lease loop. SQLite remains selected for the single-host profile:
 the measured transport delta is tiny beside OCR/model latency, while Celery still needs the same domain tables
 for progress, partial maps and citations. See the [queue benchmark](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md).
+
+The hardened single-host [performance profile](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) measured authenticated
+BM25 search at `56.127 ms` mean / `76.903 ms` p95 and offline answer at `73.866 ms` mean / `81.472 ms` p95.
+Cached BGE Top-10 reranking alone averaged `369.715 ms` and remains outside the default online path. Raw
+per-request samples are committed in `reports/v2-performance-profile.json`.
 
 ## Architecture
 
