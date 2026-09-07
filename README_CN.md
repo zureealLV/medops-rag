@@ -1,6 +1,6 @@
 # MedOps 多模态 RAG V2 Beta.2（开发中）
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
 
@@ -33,8 +33,8 @@
 - 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
-- 请求 ID、`Server-Timing`、持久化请求指标；
-- 80 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
+- 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
+- 82 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
 - 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
 
 ## Windows 快速启动

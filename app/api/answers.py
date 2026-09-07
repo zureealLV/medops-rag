@@ -27,6 +27,7 @@ def grounded_answer(
     response.headers["X-MedOps-Model-Ms"] = str(result.model_ms)
     response.headers["X-MedOps-Token-Usage"] = str(result.token_usage)
     response.headers["X-MedOps-Retrieval-Profile"] = result.retrieval_profile
+    response.headers["X-MedOps-Provider"] = result.provider
     write_audit(
         settings.database_path,
         request_id=request_id,

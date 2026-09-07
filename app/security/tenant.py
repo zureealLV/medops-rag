@@ -38,7 +38,12 @@ def _unauthorized(message: str = "A valid Bearer API key is required") -> AppErr
 def _authorize(context: RequestContext, method: str, path: str) -> None:
     if context.auth_mode != "api_key" or context.role == "admin":
         return
-    if path == "/users" or path.startswith("/users/") or path.startswith("/audit-logs"):
+    if (
+        path == "/users"
+        or path.startswith("/users/")
+        or path.startswith("/audit-logs")
+        or path.startswith("/system/metrics")
+    ):
         raise AppError(403, "permission_denied", "This endpoint requires the admin role")
     if context.role == "editor":
         return
@@ -81,4 +86,5 @@ def tenant_context(
     else:
         raise AppError(500, "invalid_auth_configuration", "AUTH_MODE is not supported")
     _authorize(context, request.method, request.url.path)
+    request.state.tenant_id = context.tenant_id
     return context

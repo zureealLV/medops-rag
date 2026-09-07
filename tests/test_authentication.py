@@ -83,6 +83,7 @@ def test_roles_tenant_isolation_revocation_and_hash_only_storage(tmp_path: Path)
         )
 
         assert client.get("/knowledge-bases", headers=_headers(viewer_token)).status_code == 200
+        assert client.get("/system/metrics", headers=_headers(viewer_token)).status_code == 403
         search = client.post(
             "/search",
             headers=_headers(viewer_token),

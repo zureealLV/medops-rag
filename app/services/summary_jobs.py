@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from app.agents.summaries import SummaryCallError, map_document, reduce_maps
 from app.config import Settings
 from app.exceptions import AppError
 from app.models.summaries import SummaryJob, SummaryJobCreate
+from app.observability import record_pipeline_metric
 from app.repositories import documents as document_repository
 from app.repositories import summary_jobs as repository
 from app.repositories.knowledge_bases import get as get_kb
@@ -83,6 +85,7 @@ def process_next(
                     error_message="Document was deleted or moved after the job was queued",
                 )
             else:
+                map_started = time.perf_counter()
                 try:
                     summary, provider, tokens = map_document(claimed["question"], document, settings)
                     saved = repository.save_map(
@@ -94,6 +97,17 @@ def process_next(
                         summary=summary,
                         provider=provider,
                         token_usage=tokens,
+                    )
+                    record_pipeline_metric(
+                        path,
+                        tenant_id=claimed["tenant_id"],
+                        job_id=job_id,
+                        pipeline="summary",
+                        stage="map_model",
+                        outcome="ok",
+                        duration_ms=(time.perf_counter() - map_started) * 1000,
+                        provider=provider,
+                        details={"document_id": document.id, "token_usage": tokens},
                     )
                 except SummaryCallError as exc:
                     saved = repository.save_map(
@@ -107,6 +121,16 @@ def process_next(
                         token_usage=0,
                         error_code=exc.code,
                         error_message=exc.message,
+                    )
+                    record_pipeline_metric(
+                        path,
+                        tenant_id=claimed["tenant_id"],
+                        job_id=job_id,
+                        pipeline="summary",
+                        stage="map_model",
+                        outcome="error",
+                        duration_ms=(time.perf_counter() - map_started) * 1000,
+                        details={"document_id": document.id, "error_code": exc.code},
                     )
             if not saved:
                 return job_id
@@ -131,10 +155,32 @@ def process_next(
                 "No document summary completed successfully",
             )
             return job_id
+        reduce_started = time.perf_counter()
         try:
             final, provider, reduce_tokens = reduce_maps(claimed["question"], maps, settings)
             final = _with_citations(final, maps)
+            record_pipeline_metric(
+                path,
+                tenant_id=claimed["tenant_id"],
+                job_id=job_id,
+                pipeline="summary",
+                stage="reduce_model",
+                outcome="ok",
+                duration_ms=(time.perf_counter() - reduce_started) * 1000,
+                provider=provider,
+                details={"map_count": len(maps), "token_usage": reduce_tokens},
+            )
         except SummaryCallError as exc:
+            record_pipeline_metric(
+                path,
+                tenant_id=claimed["tenant_id"],
+                job_id=job_id,
+                pipeline="summary",
+                stage="reduce_model",
+                outcome="error",
+                duration_ms=(time.perf_counter() - reduce_started) * 1000,
+                details={"map_count": len(maps), "error_code": exc.code},
+            )
             repository.finish(
                 path,
                 job_id,

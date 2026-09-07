@@ -82,7 +82,7 @@ and partial failures remain visible.
 - [x] hashed API-key identity, immediate revocation, tenant binding, and viewer/editor/admin authorization;
 - [x] deterministic malformed-input fuzzing plus Office expansion, entry, ratio, path and macro abuse gates;
 - [ ] performance profile for upload, index, search, rerank, and answer;
-- [ ] observability for job queue, parser/OCR, retrieval stages, model calls, and fallback;
+- [x] tenant-scoped queue age/state, parser/OCR, index, retrieval, model, provider and fallback metrics;
 - [ ] Docker Compose for API, worker, selected vector index, and persistent volumes;
 - [ ] migration-from-v1 test and rollback instructions;
 - [ ] bilingual README, architecture diagram, threat model, demo, and benchmark reproduction;

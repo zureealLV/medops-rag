@@ -241,6 +241,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_tenant ON audit_logs(tenant_id, created_at)
 CREATE TABLE IF NOT EXISTS request_metrics (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     request_id TEXT NOT NULL,
+    tenant_id TEXT,
     path TEXT NOT NULL,
     status_code INTEGER NOT NULL,
     latency_ms REAL NOT NULL,
@@ -249,8 +250,24 @@ CREATE TABLE IF NOT EXISTS request_metrics (
     retrieval_ms REAL NOT NULL DEFAULT 0,
     model_ms REAL NOT NULL DEFAULT 0,
     token_usage INTEGER NOT NULL DEFAULT 0,
+    provider TEXT,
+    retrieval_profile TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS pipeline_metrics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT NOT NULL,
+    job_id TEXT NOT NULL,
+    pipeline TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    outcome TEXT NOT NULL CHECK(outcome IN ('ok', 'error')),
+    duration_ms REAL NOT NULL,
+    provider TEXT,
+    details_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_pipeline_metrics_tenant_time
+    ON pipeline_metrics(tenant_id, created_at);
 """
 
 
@@ -285,6 +302,12 @@ def initialize(path: Path) -> None:
             connection.execute(
                 "ALTER TABLE request_metrics ADD COLUMN token_usage INTEGER NOT NULL DEFAULT 0"
             )
+        if "provider" not in columns:
+            connection.execute("ALTER TABLE request_metrics ADD COLUMN provider TEXT")
+        if "retrieval_profile" not in columns:
+                connection.execute("ALTER TABLE request_metrics ADD COLUMN retrieval_profile TEXT")
+        if "tenant_id" not in columns:
+            connection.execute("ALTER TABLE request_metrics ADD COLUMN tenant_id TEXT")
         document_columns = {row["name"] for row in connection.execute("PRAGMA table_info(documents)")}
         migrations = {
             "mime_type": "ALTER TABLE documents ADD COLUMN mime_type TEXT NOT NULL DEFAULT 'text/plain'",

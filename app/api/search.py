@@ -1,6 +1,6 @@
 """Hybrid-search HTTP endpoint."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from app.api.deps import RequestIdDep, SettingsDep, TenantContext
 from app.exceptions import AppError
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/search", tags=["retrieval"])
 @router.post("")
 def hybrid_search(
     data: SearchRequest,
+    response: Response,
     context: TenantContext,
     settings: SettingsDep,
     request_id: RequestIdDep,
@@ -31,6 +32,8 @@ def hybrid_search(
             details={"reason": "knowledge_base_not_found"},
         )
         raise AppError(404, "knowledge_base_not_found", "Knowledge base not found")
+    response.headers["X-MedOps-Retrieval-Ms"] = str(result.retrieval_ms)
+    response.headers["X-MedOps-Retrieval-Profile"] = "text"
     write_audit(
         settings.database_path,
         request_id=request_id,

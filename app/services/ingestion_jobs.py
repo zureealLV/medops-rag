@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from app.config import Settings
 from app.exceptions import AppError
 from app.ingestion import parse_bytes
 from app.models.jobs import IngestionJob
+from app.observability import record_pipeline_metric
 from app.repositories import ingestion_jobs as repository
 from app.repositories.knowledge_bases import get as get_kb
 from app.services.documents import create_from_parsed
@@ -35,6 +37,9 @@ def process_next(
     claimed = repository.claim(path, worker_id, lease_seconds, now)
     if claimed is None:
         return None
+    job_id = str(claimed["id"])
+    stage = "parse_ocr"
+    started = time.perf_counter()
     try:
         content = claimed["content"]
         if content is None:
@@ -52,14 +57,57 @@ def process_next(
             max_archive_compression_ratio=settings.max_archive_compression_ratio,
             max_pdf_pages=settings.max_pdf_pages,
         )
+        record_pipeline_metric(
+            path,
+            tenant_id=claimed["tenant_id"],
+            job_id=job_id,
+            pipeline="ingestion",
+            stage=stage,
+            outcome="ok",
+            duration_ms=(time.perf_counter() - started) * 1000,
+            provider=parsed.parser,
+            details={"artifact_count": len(parsed.artifacts), "warning_count": len(parsed.warnings)},
+        )
+        stage = "persist_index"
+        started = time.perf_counter()
         document, _ = create_from_parsed(
             path, settings, claimed["tenant_id"], claimed["knowledge_base_id"], parsed
         )
         if document is None:
             raise AppError(404, "knowledge_base_not_found", "Knowledge base not found")
+        record_pipeline_metric(
+            path,
+            tenant_id=claimed["tenant_id"],
+            job_id=job_id,
+            pipeline="ingestion",
+            stage=stage,
+            outcome="ok",
+            duration_ms=(time.perf_counter() - started) * 1000,
+            details={"document_id": document.id},
+        )
         repository.succeed(path, claimed["id"], worker_id, document.id)
     except AppError as exc:
+        record_pipeline_metric(
+            path,
+            tenant_id=claimed["tenant_id"],
+            job_id=job_id,
+            pipeline="ingestion",
+            stage=stage,
+            outcome="error",
+            duration_ms=(time.perf_counter() - started) * 1000,
+            details={"error_code": exc.code},
+        )
         repository.fail(path, claimed["id"], worker_id, exc.code, exc.message, retryable=False)
     except Exception as exc:
+        record_pipeline_metric(
+            path,
+            tenant_id=claimed["tenant_id"],
+            job_id=job_id,
+            pipeline="ingestion",
+            stage=stage,
+            outcome="error",
+            duration_ms=(time.perf_counter() - started) * 1000,
+            details={"error_code": "worker_error"},
+        )
         repository.fail(path, claimed["id"], worker_id, "worker_error", str(exc)[:500], retryable=True)
-    return str(claimed["id"])
+    return job_id
