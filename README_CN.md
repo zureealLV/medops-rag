@@ -1,6 +1,6 @@
 # MedOps 多模态 RAG V2 Beta.2（开发中）
 
-[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [V2 工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [持久化摄取任务](docs/v2/BETA2_INGESTION_JOBS.md) · [Map-Reduce 摘要](docs/v2/BETA2_MAP_REDUCE.md) · [任务队列基准](docs/v2/BENCHMARK_REPORT_JOB_QUEUES.md) · [Beta.1 检索基准](docs/v2/BENCHMARK_REPORT_BETA1_RETRIEVAL.md) · [查询转换基准](docs/v2/BENCHMARK_REPORT_QUERY_TRANSFORMS.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。当前 Beta.2 增量在多模态检索基础上加入持久化租约队列与独立摄取 Worker。
 
@@ -17,6 +17,7 @@
 - 独立轮询 Worker，把解析、OCR、分块和 Embedding 从 API 进程剥离；
 - 可恢复的多文档 Map-Reduce 摘要任务：逐文档结果持久化、最终引用、局部失败可见，并把单次模型调用硬限制在 30 秒内；
 - TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP 解析与文本、表格、OCR 元素归一化；
+- Office 解压前条目/膨胀/压缩比门禁、危险路径与宏拒绝、PDF 页数/渲染限制，以及确定性畸形输入回归集；
 - 通过 `GET /documents/{id}/elements` 查询页码、幻灯片、标题、模态来源及固定版式边界框；
 - RapidOCR/ONNX Runtime 的扫描 PDF 条件式 OCR 与 Office 内嵌图片 OCR；
 - 同租户 SHA-256 图片 BLOB 去重，以及页码/幻灯片/形状位置元数据；
@@ -33,7 +34,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`、持久化请求指标；
-- 67 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
+- 80 个 API/安全/解析器/迁移/任务队列测试，以及可重复的摄取与检索基准；
 - 已验证的本地运行脚本和 Docker Compose 定义（本轮主机的 Docker 引擎未运行，未冒充已构建验证）。
 
 ## Windows 快速启动

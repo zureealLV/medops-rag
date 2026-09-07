@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+import zipfile
 from dataclasses import dataclass, field
 from functools import lru_cache
 from io import BytesIO
@@ -177,6 +178,50 @@ def _decode_text(content: bytes) -> str:
         raise AppError(400, "invalid_encoding", "Text documents must use UTF-8") from exc
 
 
+def _preflight_office_archive(
+    content: bytes,
+    *,
+    kind: str,
+    max_entries: int,
+    max_uncompressed_bytes: int,
+    max_entry_bytes: int,
+    max_compression_ratio: float,
+) -> None:
+    """Inspect ZIP metadata before any Office XML or media is decompressed."""
+    try:
+        with zipfile.ZipFile(BytesIO(content)) as archive:
+            entries = archive.infolist()
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise AppError(400, f"invalid_{kind}", f"{kind.upper()} package cannot be parsed") from exc
+    if len(entries) > max_entries:
+        raise AppError(413, "archive_limit_exceeded", "Office package contains too many entries")
+
+    total_uncompressed = 0
+    for entry in entries:
+        normalized = entry.filename.replace("\\", "/")
+        path_parts = normalized.split("/")
+        if (
+            not normalized
+            or normalized.startswith("/")
+            or "\x00" in normalized
+            or any(part == ".." for part in path_parts)
+        ):
+            raise AppError(400, "unsafe_archive", "Office package contains an unsafe entry path")
+        if entry.flag_bits & 0x1:
+            raise AppError(400, "unsafe_archive", "Encrypted Office entries are not accepted")
+        if normalized.lower().endswith("vbaproject.bin"):
+            raise AppError(400, "unsafe_archive", "Macro-enabled Office packages are not accepted")
+        if entry.file_size > max_entry_bytes:
+            raise AppError(413, "archive_limit_exceeded", "Office package entry is too large")
+        total_uncompressed += entry.file_size
+        if total_uncompressed > max_uncompressed_bytes:
+            raise AppError(413, "archive_limit_exceeded", "Office package expands beyond the limit")
+        compressed_size = max(entry.compress_size, 1)
+        ratio = entry.file_size / compressed_size
+        if entry.file_size >= 1_000_000 and ratio > max_compression_ratio:
+            raise AppError(413, "archive_limit_exceeded", "Office package compression ratio is unsafe")
+
+
 def _parse_text(
     content: bytes, suffix: str
 ) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
@@ -190,10 +235,26 @@ def _parse_text(
 
 
 def _parse_docx(
-    content: bytes, *, ocr: bool, min_confidence: float, max_image_pixels: int
+    content: bytes,
+    *,
+    ocr: bool,
+    min_confidence: float,
+    max_image_pixels: int,
+    max_archive_entries: int,
+    max_archive_uncompressed_bytes: int,
+    max_archive_entry_bytes: int,
+    max_archive_compression_ratio: float,
 ) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     from docx import Document as WordDocument
 
+    _preflight_office_archive(
+        content,
+        kind="docx",
+        max_entries=max_archive_entries,
+        max_uncompressed_bytes=max_archive_uncompressed_bytes,
+        max_entry_bytes=max_archive_entry_bytes,
+        max_compression_ratio=max_archive_compression_ratio,
+    )
     try:
         document = WordDocument(BytesIO(content))
     except Exception as exc:
@@ -263,11 +324,27 @@ def _parse_docx(
 
 
 def _parse_pptx(
-    content: bytes, *, ocr: bool, min_confidence: float, max_image_pixels: int
+    content: bytes,
+    *,
+    ocr: bool,
+    min_confidence: float,
+    max_image_pixels: int,
+    max_archive_entries: int,
+    max_archive_uncompressed_bytes: int,
+    max_archive_entry_bytes: int,
+    max_archive_compression_ratio: float,
 ) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     from pptx import Presentation
     from pptx.enum.shapes import MSO_SHAPE_TYPE
 
+    _preflight_office_archive(
+        content,
+        kind="pptx",
+        max_entries=max_archive_entries,
+        max_uncompressed_bytes=max_archive_uncompressed_bytes,
+        max_entry_bytes=max_archive_entry_bytes,
+        max_compression_ratio=max_archive_compression_ratio,
+    )
     try:
         presentation = Presentation(BytesIO(content))
     except Exception as exc:
@@ -358,7 +435,12 @@ def _render_pdf_page(content: bytes, page_index: int) -> bytes:
 
 
 def _parse_pdf(
-    content: bytes, *, ocr: bool, min_confidence: float, max_image_pixels: int
+    content: bytes,
+    *,
+    ocr: bool,
+    min_confidence: float,
+    max_image_pixels: int,
+    max_pdf_pages: int,
 ) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
     from pypdf import PdfReader
 
@@ -366,6 +448,8 @@ def _parse_pdf(
         reader = PdfReader(BytesIO(content))
     except Exception as exc:
         raise AppError(400, "invalid_pdf", "PDF cannot be parsed") from exc
+    if len(reader.pages) > max_pdf_pages:
+        raise AppError(413, "pdf_page_limit_exceeded", f"PDF exceeds {max_pdf_pages} pages")
     elements: list[NormalizedElement] = []
     artifacts: list[ParsedArtifact] = []
     warnings: list[str] = []
@@ -394,6 +478,13 @@ def _parse_pdf(
             )
         if ocr and len(text) < 24:
             try:
+                estimated_pixels = int(float(page.mediabox.width) * float(page.mediabox.height) * 4)
+                if estimated_pixels > max_image_pixels:
+                    raise AppError(
+                        413,
+                        "pdf_render_too_large",
+                        f"Rendered PDF page exceeds {max_image_pixels} pixels",
+                    )
                 rendered = _render_pdf_page(content, page_number - 1)
                 element, artifact = _ocr_image(
                     rendered,
@@ -409,6 +500,8 @@ def _parse_pdf(
                     elements.append(element)
                 elif not text:
                     warnings.append(f"pdf page {page_number} produced no OCR text")
+            except AppError:
+                raise
             except Exception as exc:
                 warnings.append(f"pdf page {page_number} OCR failed: {type(exc).__name__}")
     return elements, warnings, artifacts
@@ -458,6 +551,11 @@ def parse_bytes(
     ocr_enabled: bool = True,
     ocr_min_confidence: float = 0.50,
     max_image_pixels: int = 25_000_000,
+    max_archive_entries: int = 2_048,
+    max_archive_uncompressed_bytes: int = 50_000_000,
+    max_archive_entry_bytes: int = 20_000_000,
+    max_archive_compression_ratio: float = 200.0,
+    max_pdf_pages: int = 200,
 ) -> ParsedDocument:
     safe_name = Path(filename).name or "upload"
     suffix = Path(safe_name).suffix.lower()
@@ -476,6 +574,10 @@ def parse_bytes(
             ocr=ocr_enabled,
             min_confidence=ocr_min_confidence,
             max_image_pixels=max_image_pixels,
+            max_archive_entries=max_archive_entries,
+            max_archive_uncompressed_bytes=max_archive_uncompressed_bytes,
+            max_archive_entry_bytes=max_archive_entry_bytes,
+            max_archive_compression_ratio=max_archive_compression_ratio,
         )
     elif suffix == ".pptx":
         elements, warnings, artifacts = _parse_pptx(
@@ -483,6 +585,10 @@ def parse_bytes(
             ocr=ocr_enabled,
             min_confidence=ocr_min_confidence,
             max_image_pixels=max_image_pixels,
+            max_archive_entries=max_archive_entries,
+            max_archive_uncompressed_bytes=max_archive_uncompressed_bytes,
+            max_archive_entry_bytes=max_archive_entry_bytes,
+            max_archive_compression_ratio=max_archive_compression_ratio,
         )
     elif suffix == ".pdf":
         elements, warnings, artifacts = _parse_pdf(
@@ -490,6 +596,7 @@ def parse_bytes(
             ocr=ocr_enabled,
             min_confidence=ocr_min_confidence,
             max_image_pixels=max_image_pixels,
+            max_pdf_pages=max_pdf_pages,
         )
     else:
         elements, warnings, artifacts = _parse_image(

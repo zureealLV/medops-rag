@@ -80,7 +80,7 @@ and partial failures remain visible.
 ## Gate 5 — V2.0: release hardening
 
 - [x] hashed API-key identity, immediate revocation, tenant binding, and viewer/editor/admin authorization;
-- [ ] parser fuzzing and decompression-bomb/archive abuse cases;
+- [x] deterministic malformed-input fuzzing plus Office expansion, entry, ratio, path and macro abuse gates;
 - [ ] performance profile for upload, index, search, rerank, and answer;
 - [ ] observability for job queue, parser/OCR, retrieval stages, model calls, and fallback;
 - [ ] Docker Compose for API, worker, selected vector index, and persistent volumes;

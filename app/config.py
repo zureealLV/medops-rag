@@ -32,6 +32,11 @@ class Settings:
     hyde_auto_enabled: bool = False
     max_upload_bytes: int = 10_000_000
     max_image_pixels: int = 25_000_000
+    max_archive_entries: int = 2_048
+    max_archive_uncompressed_bytes: int = 50_000_000
+    max_archive_entry_bytes: int = 20_000_000
+    max_archive_compression_ratio: float = 200.0
+    max_pdf_pages: int = 200
     ocr_enabled: bool = True
     ocr_min_confidence: float = 0.50
     image_embedding_enabled: bool = False
@@ -73,6 +78,15 @@ class Settings:
             in {"1", "true", "yes", "on"},
             max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", "10000000")),
             max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
+            max_archive_entries=int(os.getenv("MAX_ARCHIVE_ENTRIES", "2048")),
+            max_archive_uncompressed_bytes=int(
+                os.getenv("MAX_ARCHIVE_UNCOMPRESSED_BYTES", "50000000")
+            ),
+            max_archive_entry_bytes=int(os.getenv("MAX_ARCHIVE_ENTRY_BYTES", "20000000")),
+            max_archive_compression_ratio=float(
+                os.getenv("MAX_ARCHIVE_COMPRESSION_RATIO", "200")
+            ),
+            max_pdf_pages=int(os.getenv("MAX_PDF_PAGES", "200")),
             ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},
             ocr_min_confidence=float(os.getenv("OCR_MIN_CONFIDENCE", "0.50")),
             image_embedding_enabled=os.getenv("IMAGE_EMBEDDING_ENABLED", "false").lower()

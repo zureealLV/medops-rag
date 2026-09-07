@@ -46,6 +46,11 @@ def process_next(
             ocr_enabled=settings.ocr_enabled,
             ocr_min_confidence=settings.ocr_min_confidence,
             max_image_pixels=settings.max_image_pixels,
+            max_archive_entries=settings.max_archive_entries,
+            max_archive_uncompressed_bytes=settings.max_archive_uncompressed_bytes,
+            max_archive_entry_bytes=settings.max_archive_entry_bytes,
+            max_archive_compression_ratio=settings.max_archive_compression_ratio,
+            max_pdf_pages=settings.max_pdf_pages,
         )
         document, _ = create_from_parsed(
             path, settings, claimed["tenant_id"], claimed["knowledge_base_id"], parsed

@@ -57,6 +57,11 @@ def upload_document(
         ocr_enabled=settings.ocr_enabled,
         ocr_min_confidence=settings.ocr_min_confidence,
         max_image_pixels=settings.max_image_pixels,
+        max_archive_entries=settings.max_archive_entries,
+        max_archive_uncompressed_bytes=settings.max_archive_uncompressed_bytes,
+        max_archive_entry_bytes=settings.max_archive_entry_bytes,
+        max_archive_compression_ratio=settings.max_archive_compression_ratio,
+        max_pdf_pages=settings.max_pdf_pages,
     )
     result, deduplicated = service.create_from_parsed(
         settings.database_path, settings, context.tenant_id, kb_id, parsed
