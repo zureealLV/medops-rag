@@ -113,7 +113,7 @@ def test_answer_routes_to_visual_evidence_and_returns_citation(tmp_path: Path, m
             "width": 224,
             "height": 224,
         }
-        assert "[图像1]" in payload["answer"]
+        assert "[图像" not in payload["answer"]
         assert "[visual:" not in payload["answer"]
         citation = payload["visual_citations"][0]
         image = client.get(citation["content_url"], headers=headers)

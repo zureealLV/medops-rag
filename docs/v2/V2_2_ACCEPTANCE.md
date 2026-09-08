@@ -6,7 +6,7 @@
 - the former synthetic IT-operations corpus remains available only through `--profile operations` or `--profile all`;
 - CSV, JSON and JSONL exports join the existing text, Office, PDF and image parser surface;
 - a read-only SQLite table exporter requires an explicit table, selected columns and output path;
-- answer text uses `[来源N]` and `[图像N]`; raw document/chunk locators and retrieval scores remain machine-facing only;
+- answer text contains no inline citation markers; numbered source/image cards below the answer carry the user-facing provenance while raw locators and scores remain machine-facing only;
 - the browser console uses a bright white/teal visual system and prefers a medical knowledge base on first load;
 - a synthetic eight-format import pack supports repeatable local verification.
 

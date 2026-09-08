@@ -17,25 +17,17 @@ from app.services import artifacts as artifact_service
 from app.services.retrieval import search as text_search
 
 
-def _humanize_citation_markers(
-    answer_text: str,
-    text_evidence: list[Evidence],
-    visual_evidence: list[VisualEvidence],
-) -> str:
-    """Replace model-facing locators with stable labels intended for end users."""
-    result = answer_text
-    for index, item in enumerate(text_evidence, start=1):
-        label = f"[来源{index}]"
-        result = result.replace(f"[source:{index}]", label)
-        result = result.replace(f"[{item.document_id}:{item.chunk_id}]", label)
-    for index, item in enumerate(visual_evidence, start=1):
-        label = f"[图像{index}]"
-        result = result.replace(f"[image:{index}]", label)
-        result = result.replace(f"[visual:{item.id}]", label)
-
-    result = re.sub(r"\[(?:\d+:\d+|source:\d+)\]", "[来源]", result, flags=re.I)
-    result = re.sub(r"\[(?:visual:\d+|image:\d+)\]", "[图像]", result, flags=re.I)
-    return result
+def _strip_inline_citation_markers(answer_text: str) -> str:
+    """Keep the answer natural; structured citation cards are rendered separately."""
+    result = re.sub(
+        r"\s*\[(?:\d+:\d+|source:\d+|visual:\d+|image:\d+|来源\d+|图像\d+)\]",
+        "",
+        answer_text,
+        flags=re.I,
+    )
+    result = re.sub(r"[ \t]+([，。！？；：,.!?;:])", r"\1", result)
+    result = re.sub(r"[ \t]{2,}", " ", result)
+    return result.strip()
 
 
 def _visual_confident(evidence: list[VisualEvidence], settings: Settings) -> bool:
@@ -257,11 +249,7 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
         settings,
         payloads,
     )
-    response_text = _humanize_citation_markers(
-        response_text,
-        answer_text_evidence,
-        payload_evidence,
-    )
+    response_text = _strip_inline_citation_markers(response_text)
     return _response(
         answer_text=response_text,
         text_evidence=answer_text_evidence,

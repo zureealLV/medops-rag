@@ -31,7 +31,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic healthcare 
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
 - explicit rewrite, multi-query and deterministic template-HyDE transformations with policy-gated auto HyDE;
 - opt-in structure-aware `parent_child` retrieval that matches small children and reconstructs parent context;
-- cited extractive answers and evidence-threshold abstention, with human-readable `[来源N]` and `[图像N]` labels instead of internal row/chunk locators;
+- cited extractive answers and evidence-threshold abstention, with natural answer text and numbered source/image cards below it instead of inline implementation locators;
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;

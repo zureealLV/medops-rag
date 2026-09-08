@@ -28,7 +28,7 @@
 - 哈希向量、关键词、BM25、加权及 RRF 五种可比较检索策略；
 - 显式 Rewrite、Multi-query、确定性模板 HyDE，以及受策略开关约束的自动 HyDE；
 - 可选的结构感知 `parent_child` 检索：小块命中，大块恢复回答上下文；
-- API 保留 `source`、`document_id`、`chunk_id` 的结构化溯源，界面回答只显示 `[来源N]` / `[图像N]`，不暴露内部行号或匹配分数；
+- API 保留 `source`、`document_id`、`chunk_id` 的结构化溯源；正文不再插入来源标记，仅在下方来源卡片显示编号，也不暴露内部行号或匹配分数；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
 - 在 SQL 检索阶段执行租户过滤，其他租户内容不会先进入模型再过滤；
 - 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；

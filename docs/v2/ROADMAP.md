@@ -99,12 +99,12 @@ and partial failures remain visible.
 - [x] replace the default IT-operations seed with separated clinical and medical-device knowledge bases;
 - [x] add educational FDA/CDC/WHO/MedlinePlus-derived material with source URL and access date;
 - [x] accept reviewed CSV, JSON and JSONL exports and provide a read-only SQLite table bridge;
-- [x] keep provenance IDs in the API while replacing raw `[document:chunk]` markers with `[来源N]` and `[图像N]` in answers;
+- [x] keep provenance IDs in the API while removing inline citation markers and rendering numbered source/image cards below answers;
 - [x] remove raw retrieval scores from the browser and align source cards with numbered answer labels;
 - [x] ship and visually inspect a synthetic multiformat test pack;
 - [x] replace the muted dark console with a bright white/teal clinical theme.
 
-Acceptance: a fresh seed answers a medical-device question with a numbered source, structured exports are searchable, all supplied formats ingest, and the browser never exposes internal locator or score syntax.
+Acceptance: a fresh seed answers a medical-device question with numbered source cards below natural answer text, structured exports are searchable, all supplied formats ingest, and the browser never exposes internal locator or score syntax.
 
 ## Gate 8 — V2.3: governed connectors and domain evaluation
 

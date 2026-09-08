@@ -33,5 +33,5 @@ def test_medical_device_question_uses_domain_corpus(tmp_path: Path):
     assert result is not None
     assert result.abstained is False
     assert result.citations[0].source == "pulse_oximeter_basics.md"
-    assert "[来源1]" in result.answer
+    assert "[来源" not in result.answer
     assert "[" + str(result.citations[0].document_id) + ":" not in result.answer
