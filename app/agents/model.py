@@ -24,6 +24,14 @@ def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
             sentence = sentence.strip(" #-\t")
             if len(sentence) < 8:
                 continue
+            # Source pages often contain FAQ headings. Repeating a matched
+            # question is not an answer, even when its lexical overlap is high.
+            if sentence.endswith(("?", "？")):
+                continue
+            if sentence.lower().startswith(
+                ("source:", "topic url:", "bulk feed generated:", "safety:")
+            ):
+                continue
             overlap = len(query_tokens.intersection(tokenize(sentence)))
             candidates.append((overlap, sentence, item))
     candidates.sort(key=lambda value: value[0], reverse=True)

@@ -22,6 +22,7 @@ venv/
 *.bak
 data/runtime/
 data/models/
+data/external/
 uploads/
 vector_store/
 

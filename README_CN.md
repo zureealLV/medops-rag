@@ -2,7 +2,7 @@
 
 [English README](README.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**合成医疗知识与医疗器械资料**的可审计、多租户多模态 RAG 知识助手。V2.2 加入明亮临床风 Web 控制台、人类可读引用、医疗领域起始语料、CSV/JSON/JSONL 结构化摄取，以及经过显式导出的 SQLite 数据桥；V2.1 的多模态证据、混合检索、持久化 Worker、RBAC、安全解析门禁和 Compose 配置继续保留。
+这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户多模态 RAG 知识助手。V2.2 加入明亮临床风 Web 控制台、人类可读引用、医疗领域起始语料、NLM MedlinePlus 官方全量数据导入、CSV/JSON/JSONL 结构化摄取，以及经过显式导出的 SQLite 数据桥；V2.1 的多模态证据、混合检索、持久化 Worker、RBAC、安全解析门禁和 Compose 配置继续保留。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
@@ -29,13 +29,14 @@
 - 显式 Rewrite、Multi-query、确定性模板 HyDE，以及受策略开关约束的自动 HyDE；
 - 可选的结构感知 `parent_child` 检索：小块命中，大块恢复回答上下文；
 - API 保留 `source`、`document_id`、`chunk_id` 的结构化溯源；正文不再插入来源标记，仅在下方来源卡片显示编号，也不暴露内部行号或匹配分数；
+- 可复现下载并导入 NLM 官方 MedlinePlus 健康主题全量 XML，每个主题保留 URL、主题 ID、语言、MeSH 与来源清单；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
 - 在 SQL 检索阶段执行租户过滤，其他租户内容不会先进入模型再过滤；
 - 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 92 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
+- 94 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；
 - 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
@@ -50,8 +51,13 @@ cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
+.\.venv\Scripts\python.exe -m scripts.import_medlineplus
 .\.venv\Scripts\fastapi.exe dev
 ```
+
+MedlinePlus 命令会导入完整英文公开健康主题库。数据源比较、许可边界、
+西班牙文导入方式与测试问题见
+[`docs/v2/PUBLIC_MEDICAL_CORPORA.md`](docs/v2/PUBLIC_MEDICAL_CORPORA.md)。
 
 打开 `http://127.0.0.1:8000/` 查看 Web 控制台，或打开 `http://127.0.0.1:8000/docs` 使用 Swagger。控制台默认使用以下本地演示信任边界 Header：
 
