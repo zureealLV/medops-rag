@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import Settings
 from app.models.retrieval import SearchRequest, SearchResponse
-from app.repositories.documents import retrieval_rows
+from app.repositories.documents import lexical_candidate_rows, retrieval_rows
 from app.repositories.knowledge_bases import get as get_kb
 from app.retrieval.hybrid import rank
 from app.retrieval.query_transform import transform_queries
@@ -26,12 +26,28 @@ def search(
     # Tenant filtering happens in SQL, before any chunk can enter ranking or a model prompt.
     resolved_strategy = request.strategy
     use_parent_child = resolved_strategy == "parent_child"
-    rows = retrieval_rows(
-        path,
-        tenant_id,
-        request.knowledge_base_id,
-        parent_child=use_parent_child,
+    use_lexical_index = not use_parent_child and (
+        resolved_strategy in {"keyword", "bm25"}
+        or (resolved_strategy == "auto" and not (settings and settings.text_embedding_enabled))
     )
+    rows = (
+        lexical_candidate_rows(
+            path,
+            tenant_id,
+            request.knowledge_base_id,
+            request.query,
+            limit=max(800, request.top_k * 100),
+        )
+        if use_lexical_index
+        else None
+    )
+    if rows is None or not rows:
+        rows = retrieval_rows(
+            path,
+            tenant_id,
+            request.knowledge_base_id,
+            parent_child=use_parent_child,
+        )
     if resolved_strategy == "auto":
         if settings and settings.text_embedding_enabled:
             resolved_strategy = "rrf"

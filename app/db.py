@@ -298,6 +298,40 @@ def transaction(path: Path) -> Iterator[sqlite3.Connection]:
 def initialize(path: Path) -> None:
     with transaction(path) as connection:
         connection.executescript(SCHEMA)
+        fts_exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='chunks_fts'"
+        ).fetchone()
+        try:
+            connection.execute(
+                """CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(
+                       text, tenant_id UNINDEXED, knowledge_base_id UNINDEXED,
+                       content='chunks', content_rowid='id', tokenize='trigram'
+                   )"""
+            )
+            connection.executescript(
+                """
+                CREATE TRIGGER IF NOT EXISTS chunks_fts_insert AFTER INSERT ON chunks BEGIN
+                    INSERT INTO chunks_fts(rowid,text,tenant_id,knowledge_base_id)
+                    VALUES (new.id,new.text,new.tenant_id,new.knowledge_base_id);
+                END;
+                CREATE TRIGGER IF NOT EXISTS chunks_fts_delete AFTER DELETE ON chunks BEGIN
+                    INSERT INTO chunks_fts(chunks_fts,rowid,text,tenant_id,knowledge_base_id)
+                    VALUES ('delete',old.id,old.text,old.tenant_id,old.knowledge_base_id);
+                END;
+                CREATE TRIGGER IF NOT EXISTS chunks_fts_update AFTER UPDATE ON chunks BEGIN
+                    INSERT INTO chunks_fts(chunks_fts,rowid,text,tenant_id,knowledge_base_id)
+                    VALUES ('delete',old.id,old.text,old.tenant_id,old.knowledge_base_id);
+                    INSERT INTO chunks_fts(rowid,text,tenant_id,knowledge_base_id)
+                    VALUES (new.id,new.text,new.tenant_id,new.knowledge_base_id);
+                END;
+                """
+            )
+            if fts_exists is None:
+                connection.execute("INSERT INTO chunks_fts(chunks_fts) VALUES ('rebuild')")
+        except sqlite3.OperationalError:
+            # Keep SQLite builds without FTS5 usable. Retrieval falls back to
+            # the existing in-process BM25 path in that environment.
+            pass
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(request_metrics)")}
         if "retrieval_ms" not in columns:
             connection.execute("ALTER TABLE request_metrics ADD COLUMN retrieval_ms REAL NOT NULL DEFAULT 0")
@@ -371,7 +405,7 @@ def initialize(path: Path) -> None:
         )
         connection.execute(
             """INSERT INTO schema_metadata(key,value,updated_at)
-               VALUES ('schema_version','2',CURRENT_TIMESTAMP)
-               ON CONFLICT(key) DO UPDATE SET value='2',updated_at=CURRENT_TIMESTAMP"""
+               VALUES ('schema_version','3',CURRENT_TIMESTAMP)
+               ON CONFLICT(key) DO UPDATE SET value='3',updated_at=CURRENT_TIMESTAMP"""
         )
-        connection.execute("PRAGMA user_version = 2")
+        connection.execute("PRAGMA user_version = 3")

@@ -106,7 +106,17 @@ and partial failures remain visible.
 
 Acceptance: a fresh seed answers a medical-device question with numbered source cards below natural answer text, structured exports are searchable, all supplied formats ingest, and the browser never exposes internal locator or score syntax.
 
-## Gate 8 — V2.3: governed connectors and domain evaluation
+## Gate 8 — V2.3: Chinese-first public corpus and indexed retrieval
+
+- [x] import 12,000 Chinese medical knowledge-graph QA records and 3,000 Chinese medical encyclopedia QA records from immutable Huatuo-26M revisions;
+- [x] record source repositories, revisions, row locators, declared license, counts and local SHA-256 values;
+- [x] make Chinese the majority of the validated external-corpus record count and prefer the Chinese knowledge base in a fresh browser session;
+- [x] add tenant-scoped SQLite FTS5 trigram candidate recall before BM25 to keep the larger Chinese corpus responsive;
+- [x] add Chinese retrieval regressions, idempotent-import tests, runtime questions and an explicit research-only provenance boundary.
+
+Acceptance: the default Huatuo import is idempotent at 15,000 records, the local database contains more Chinese than English external records, documented Chinese questions return their paired answers with source cards, and the full automated test suite passes.
+
+## Gate 9 — V2.4: governed connectors and domain evaluation
 
 - [ ] introduce connector contracts for approved snapshots from PostgreSQL/MySQL/object storage;
 - [ ] add schema mapping, allow-listed columns, de-identification reports and lineage manifests;
@@ -114,14 +124,14 @@ Acceptance: a fresh seed answers a medical-device question with numbered source 
 - [ ] calibrate retrieval and abstention thresholds against that domain set;
 - [ ] add manufacturer-document versioning, supersession and expiry workflows.
 
-## Gate 9 — V2.4: production-shaped platform
+## Gate 10 — V2.5: production-shaped platform
 
 - [ ] move metadata to PostgreSQL, artifacts to object storage and dense retrieval to a server Qdrant profile;
 - [ ] integrate OIDC/SSO, secret management, gateway TLS, rate limits and immutable audit export;
 - [ ] run backup/restore, load, failover and security tests in the target deployment environment;
 - [ ] add observability dashboards and operational SLOs backed by measured traffic.
 
-## Gate 10 — V3.0 final candidate
+## Gate 11 — V3.0 final candidate
 
 - [ ] obtain domain-owner sign-off for corpus rights, medical-device accuracy and user-facing safety language;
 - [ ] pass the frozen domain evaluation, red-team, accessibility and disaster-recovery gates;

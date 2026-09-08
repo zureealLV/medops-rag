@@ -123,7 +123,8 @@ async function loadKnowledgeBases() {
   const kbs = await api("/knowledge-bases");
   state.knowledgeBases = Array.isArray(kbs) ? kbs : [];
   if (!state.knowledgeBases.some((kb) => kb.id === state.activeKbId)) {
-    const preferred = state.knowledgeBases.find((kb) => /MedlinePlus/.test(kb.name))
+    const preferred = state.knowledgeBases.find((kb) => /华佗中文医学/.test(kb.name))
+      ?? state.knowledgeBases.find((kb) => /MedlinePlus/.test(kb.name))
       ?? state.knowledgeBases.find((kb) => /器械/.test(kb.name))
       ?? state.knowledgeBases.find((kb) => /医疗|医学/.test(kb.name));
     state.activeKbId = preferred?.id ?? state.knowledgeBases[0]?.id ?? null;

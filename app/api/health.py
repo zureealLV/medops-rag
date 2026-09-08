@@ -12,4 +12,4 @@ router = APIRouter(tags=["health"])
 def health_check(settings: SettingsDep) -> dict[str, str]:
     with transaction(settings.database_path) as connection:
         connection.execute("SELECT 1").fetchone()
-    return {"status": "ok", "version": "2.2.0", "database": "ok"}
+    return {"status": "ok", "version": "2.3.0", "database": "ok"}

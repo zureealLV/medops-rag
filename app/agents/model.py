@@ -17,6 +17,13 @@ from app.retrieval.embeddings import tokenize
 def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
     if not evidence:
         return ""
+    structured = re.search(
+        r"## 数据集答案\s*(.+?)(?=\n\s*## |\Z)", evidence[0].text, flags=re.DOTALL
+    )
+    if structured:
+        answer = " ".join(structured.group(1).split())
+        if answer:
+            return f"{answer[:800]} [source:1]"
     query_tokens = set(tokenize(question))
     candidates: list[tuple[int, str, Evidence]] = []
     for item in evidence[:3]:
@@ -29,7 +36,19 @@ def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
             if sentence.endswith(("?", "？")):
                 continue
             if sentence.lower().startswith(
-                ("source:", "topic url:", "bulk feed generated:", "safety:")
+                (
+                    "source:",
+                    "topic url:",
+                    "bulk feed generated:",
+                    "safety:",
+                    "数据集：",
+                    "hugging face 仓库：",
+                    "固定版本：",
+                    "原始文件：",
+                    "许可证标记：",
+                    "证据说明：",
+                    "安全说明：",
+                )
             ):
                 continue
             overlap = len(query_tokens.intersection(tokenize(sentence)))

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 
@@ -12,6 +13,9 @@ from app.models.documents import Document, DocumentCreate, DocumentUpdate
 from app.repositories import artifacts as artifact_repository
 from app.retrieval.structure_chunking import ParentChunkPlan
 from app.retrieval.text_embeddings import TextEmbeddingProvider
+
+CJK_RUN = re.compile(r"[\u4e00-\u9fff]+")
+ASCII_WORD = re.compile(r"[A-Za-z0-9_+-]{3,}")
 
 
 def _model(row: sqlite3.Row) -> Document:
@@ -339,3 +343,45 @@ def retrieval_rows(
         params.append(kb_id)
     with transaction(path) as connection:
         return list(connection.execute(sql, params).fetchall())
+
+
+def lexical_candidate_rows(
+    path: Path,
+    tenant_id: str,
+    kb_id: int | None,
+    query: str,
+    *,
+    limit: int = 800,
+) -> list[sqlite3.Row] | None:
+    """Use the optional trigram FTS index to bound in-process BM25 work.
+
+    ``None`` means FTS is unavailable and callers should use the full scan.
+    An empty list is a valid indexed result and callers may choose a recall
+    preserving fallback.
+    """
+    terms: list[str] = []
+    for run in CJK_RUN.findall(query):
+        if len(run) >= 3:
+            terms.extend(run[index : index + 3] for index in range(len(run) - 2))
+    terms.extend(ASCII_WORD.findall(query.lower()))
+    unique_terms = list(dict.fromkeys(term for term in terms if '"' not in term))[:48]
+    if not unique_terms:
+        return []
+    expression = " OR ".join(f'"{term}"' for term in unique_terms)
+    sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json,
+                    c.embedding_model, d.source
+             FROM chunks_fts
+             JOIN chunks c ON c.id = chunks_fts.rowid
+             JOIN documents d ON d.id = c.document_id
+             WHERE chunks_fts MATCH ? AND c.tenant_id = ?"""
+    params: list[object] = [expression, tenant_id]
+    if kb_id is not None:
+        sql += " AND c.knowledge_base_id = ?"
+        params.append(kb_id)
+    sql += " ORDER BY bm25(chunks_fts), c.id LIMIT ?"
+    params.append(max(10, min(limit, 5_000)))
+    try:
+        with transaction(path) as connection:
+            return list(connection.execute(sql, params).fetchall())
+    except sqlite3.OperationalError:
+        return None
