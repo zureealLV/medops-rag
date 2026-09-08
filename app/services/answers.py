@@ -11,7 +11,7 @@ from app.models.answers import AnswerRequest, AnswerResponse, Citation, VisualCi
 from app.models.artifacts import VisualEvidence, VisualSearchRequest
 from app.models.retrieval import Evidence, SearchRequest
 from app.retrieval.query_routing import ResolvedProfile, route_query
-from app.security.policies import is_medical_advice_request
+from app.security.policies import is_medical_advice_request, is_supported_domain_query
 from app.security.prompt_injection import has_injection_signals
 from app.services import artifacts as artifact_service
 from app.services.retrieval import search as text_search
@@ -145,6 +145,19 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
             resolved_profile=resolved_profile,
             abstained=True,
             reason="medical_advice_denied",
+            provider="policy",
+            retrieval_ms=0,
+        )
+    if resolved_profile == "text" and not is_supported_domain_query(request.question):
+        return _response(
+            answer_text="当前知识库没有足够的医疗或医疗器械证据回答这个问题。",
+            text_evidence=[],
+            all_text_evidence=[],
+            visual_evidence=[],
+            all_visual_evidence=[],
+            resolved_profile=resolved_profile,
+            abstained=True,
+            reason="insufficient_evidence",
             provider="policy",
             retrieval_ms=0,
         )

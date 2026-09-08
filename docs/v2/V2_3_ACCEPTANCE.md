@@ -19,6 +19,7 @@
 $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
+.\.venv\Scripts\python.exe -m evals.run_chinese_corpus_eval
 .\scripts\run_tests.ps1
 ```
 
@@ -26,6 +27,9 @@ The second import must report `created=0 updated=0 skipped=15000`. Runtime
 acceptance requires `/health` to report V2.3.0 and the three documented Chinese
 questions to return cited, non-abstained answers from knowledge base 6 in the
 validated local snapshot.
+
+Validated result on 2026-09-08: 10/10 answer-and-citation cases, 4/4
+abstention/safety cases, 269.625 ms median retrieval and 387.117 ms p95.
 
 ## Safety and quality boundary
 

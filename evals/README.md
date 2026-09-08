@@ -23,6 +23,20 @@ This directory will contain the reproducible offline RAG evaluation dataset, run
 
 The generated JSON report is written to `reports/generated/evaluation.json` and is intentionally ignored by Git.
 
+## Installed Chinese corpus gate
+
+After running `python -m scripts.import_huatuo`, execute the frozen Chinese
+answer/citation, abstention and latency gate against the local database:
+
+```powershell
+.\.venv\Scripts\python.exe -m evals.run_chinese_corpus_eval
+```
+
+The 14 cases cover ten exact Chinese medical records, two unrelated questions
+and two patient-specific advice refusals. The command fails if any expected
+answer/source/refusal is wrong or retrieval p95 exceeds 1,000 ms. Its generated
+report is written to `reports/generated/chinese_corpus_evaluation.json`.
+
 ## Query transforms
 
 Run `benchmark_query_transforms.py` to compare unchanged queries, deterministic rewrite, multi-query fusion,

@@ -40,6 +40,11 @@ This is a local functional benchmark, not a cross-machine service-level
 guarantee. FTS narrows candidates; the existing BM25 and evidence-threshold
 logic still makes the final retrieval decision.
 
+The frozen 14-case Chinese acceptance gate produced 100% answer-and-citation
+accuracy on ten exact medical cases, 100% correct abstention on two unrelated
+questions and two patient-specific advice requests, 269.625 ms median retrieval
+and 387.117 ms p95. The gate limit is 1,000 ms p95 on this local profile.
+
 ## Verification
 
 ```text

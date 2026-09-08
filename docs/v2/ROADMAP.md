@@ -113,6 +113,7 @@ Acceptance: a fresh seed answers a medical-device question with numbered source 
 - [x] make Chinese the majority of the validated external-corpus record count and prefer the Chinese knowledge base in a fresh browser session;
 - [x] add tenant-scoped SQLite FTS5 trigram candidate recall before BM25 to keep the larger Chinese corpus responsive;
 - [x] add Chinese retrieval regressions, idempotent-import tests, runtime questions and an explicit research-only provenance boundary.
+- [x] freeze and pass a Chinese answer/citation, out-of-domain abstention, medical-advice refusal and p95 latency gate.
 
 Acceptance: the default Huatuo import is idempotent at 15,000 records, the local database contains more Chinese than English external records, documented Chinese questions return their paired answers with source cards, and the full automated test suite passes.
 
