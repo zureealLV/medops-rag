@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from app.agents.model import generate
@@ -16,19 +17,37 @@ from app.services import artifacts as artifact_service
 from app.services.retrieval import search as text_search
 
 
+def _humanize_citation_markers(
+    answer_text: str,
+    text_evidence: list[Evidence],
+    visual_evidence: list[VisualEvidence],
+) -> str:
+    """Replace model-facing locators with stable labels intended for end users."""
+    result = answer_text
+    for index, item in enumerate(text_evidence, start=1):
+        label = f"[来源{index}]"
+        result = result.replace(f"[source:{index}]", label)
+        result = result.replace(f"[{item.document_id}:{item.chunk_id}]", label)
+    for index, item in enumerate(visual_evidence, start=1):
+        label = f"[图像{index}]"
+        result = result.replace(f"[image:{index}]", label)
+        result = result.replace(f"[visual:{item.id}]", label)
+
+    result = re.sub(r"\[(?:\d+:\d+|source:\d+)\]", "[来源]", result, flags=re.I)
+    result = re.sub(r"\[(?:visual:\d+|image:\d+)\]", "[图像]", result, flags=re.I)
+    return result
+
+
 def _visual_confident(evidence: list[VisualEvidence], settings: Settings) -> bool:
     if not evidence or evidence[0].image_similarity is None:
         return False
     top = float(evidence[0].image_similarity)
     other_scores = [
-        float(item.image_similarity)
-        for item in evidence[1:]
-        if item.image_similarity is not None
+        float(item.image_similarity) for item in evidence[1:] if item.image_similarity is not None
     ]
     runner_up = max(other_scores, default=-1.0)
     return (
-        top >= settings.visual_similarity_threshold
-        and top - runner_up >= settings.visual_similarity_margin
+        top >= settings.visual_similarity_threshold and top - runner_up >= settings.visual_similarity_margin
     )
 
 
@@ -122,13 +141,11 @@ def _response(
     )
 
 
-def answer(
-    path: Path, settings: Settings, tenant_id: str, request: AnswerRequest
-) -> AnswerResponse | None:
+def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerRequest) -> AnswerResponse | None:
     resolved_profile = route_query(request.question, request.retrieval_profile)
     if is_medical_advice_request(request.question):
         return _response(
-            answer_text="该系统只回答医院信息化运维问题，不提供诊断、处方或治疗建议。",
+            answer_text="该系统只提供医疗知识与医疗器械资料检索，不提供个体诊断、处方或治疗建议。",
             text_evidence=[],
             all_text_evidence=[],
             visual_evidence=[],
@@ -158,9 +175,7 @@ def answer(
 
     visual_result = None
     needs_visual = resolved_profile == "visual" or (
-        request.retrieval_profile == "auto"
-        and not text_confident
-        and settings.image_embedding_enabled
+        request.retrieval_profile == "auto" and not text_confident and settings.image_embedding_enabled
     )
     if needs_visual:
         visual_result = artifact_service.search(
@@ -211,8 +226,7 @@ def answer(
             abstained=True,
             reason="unsafe_evidence" if unsafe else insufficient_reason,
             provider="policy",
-            retrieval_ms=text_result.retrieval_ms
-            + (visual_result.retrieval_ms if visual_result else 0.0),
+            retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
         )
 
     payloads = _visual_payloads(
@@ -233,19 +247,24 @@ def answer(
             abstained=True,
             reason="visual_payload_unavailable",
             provider="policy",
-            retrieval_ms=text_result.retrieval_ms
-            + (visual_result.retrieval_ms if visual_result else 0.0),
+            retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
         )
     payload_evidence = [item for item, _ in payloads]
+    answer_text_evidence = accepted_text[:3]
     response_text, provider, model_ms, token_usage = generate(
         request.question,
-        accepted_text,
+        answer_text_evidence,
         settings,
         payloads,
     )
+    response_text = _humanize_citation_markers(
+        response_text,
+        answer_text_evidence,
+        payload_evidence,
+    )
     return _response(
         answer_text=response_text,
-        text_evidence=accepted_text,
+        text_evidence=answer_text_evidence,
         all_text_evidence=text_result.results,
         visual_evidence=payload_evidence,
         all_visual_evidence=all_visual,
@@ -253,8 +272,7 @@ def answer(
         abstained=False,
         reason=None,
         provider=provider,
-        retrieval_ms=text_result.retrieval_ms
-        + (visual_result.retrieval_ms if visual_result else 0.0),
+        retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
         model_ms=model_ms,
         token_usage=token_usage,
     )

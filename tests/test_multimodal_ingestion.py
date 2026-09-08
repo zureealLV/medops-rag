@@ -102,13 +102,9 @@ def test_office_documents_preserve_text_tables_and_image_ocr(
         assert "PACS PORT 104" in payload["content"]
         assert payload["element_count"] >= 2
         assert payload["artifact_count"] == 1
-        elements = client.get(
-            f"/documents/{payload['id']}/elements", headers=tenant_headers
-        ).json()
+        elements = client.get(f"/documents/{payload['id']}/elements", headers=tenant_headers).json()
         image_element = next(element for element in elements if element["modality"] == "image_ocr")
-        artifacts = client.get(
-            f"/documents/{payload['id']}/artifacts", headers=tenant_headers
-        ).json()
+        artifacts = client.get(f"/documents/{payload['id']}/artifacts", headers=tenant_headers).json()
         assert image_element["artifact_sha256"] == artifacts[0]["sha256"]
         if filename.endswith(".docx"):
             assert any(element["modality"] == "table" for element in elements)
@@ -135,12 +131,8 @@ def test_image_and_scanned_pdf_are_searchable_through_ocr(
         assert payload["parser"] in {"png", "pdf"}
         assert payload["element_count"] >= 1
         assert payload["artifact_count"] == 1
-        artifacts = client.get(
-            f"/documents/{payload['id']}/artifacts", headers=tenant_headers
-        ).json()
-        elements = client.get(
-            f"/documents/{payload['id']}/elements", headers=tenant_headers
-        ).json()
+        artifacts = client.get(f"/documents/{payload['id']}/artifacts", headers=tenant_headers).json()
+        elements = client.get(f"/documents/{payload['id']}/elements", headers=tenant_headers).json()
         image_element = next(element for element in elements if element["modality"] == "image_ocr")
         assert artifacts[0]["page_number"] == 1
         assert artifacts[0]["bbox"] == image_element["bbox"]
@@ -155,6 +147,63 @@ def test_image_and_scanned_pdf_are_searchable_through_ocr(
     assert any("PACS PORT 104" in item["text"] for item in search.json()["results"])
 
 
+def test_structured_exports_from_external_databases_are_searchable(
+    client: TestClient, tenant_headers: dict[str, str], kb: dict
+):
+    cases = [
+        (
+            "devices.csv",
+            b"asset_id,device_type,status\nDEV-001,Infusion pump,inspection_due\n",
+            "text/csv",
+            "DEV-001",
+            "table",
+        ),
+        (
+            "inventory.json",
+            b'[{"asset_id":"DEV-002","device_type":"Pulse oximeter","status":"ready"}]',
+            "application/json",
+            "DEV-002",
+            "table",
+        ),
+        (
+            "events.jsonl",
+            b'{"event_id":"EVT-003","alarm":"upstream occlusion"}\n',
+            "application/x-ndjson",
+            "EVT-003",
+            "table",
+        ),
+    ]
+
+    for filename, content, mime_type, expected, modality in cases:
+        response = _upload(client, tenant_headers, kb["id"], filename, content, mime_type)
+        assert response.status_code == 201, response.text
+        payload = response.json()
+        assert expected in payload["content"]
+        assert payload["parser"] == filename.rsplit(".", 1)[-1]
+        elements = client.get(f"/documents/{payload['id']}/elements", headers=tenant_headers).json()
+        assert elements[0]["modality"] == modality
+
+    search = client.post(
+        "/search",
+        headers=tenant_headers,
+        json={"query": "upstream occlusion EVT-003", "knowledge_base_id": kb["id"]},
+    )
+    assert search.status_code == 200
+    assert search.json()["results"][0]["source"] == "events.jsonl"
+
+
+def test_invalid_structured_exports_are_rejected(
+    client: TestClient, tenant_headers: dict[str, str], kb: dict
+):
+    invalid_json = _upload(client, tenant_headers, kb["id"], "broken.json", b"{not-json", "application/json")
+    assert invalid_json.status_code == 400
+    assert invalid_json.json()["code"] == "invalid_json"
+
+    header_only_csv = _upload(client, tenant_headers, kb["id"], "empty.csv", b"asset_id,status\n", "text/csv")
+    assert header_only_csv.status_code == 422
+    assert header_only_csv.json()["code"] == "no_extractable_content"
+
+
 def test_content_hash_makes_upload_idempotent_within_knowledge_base(
     client: TestClient, tenant_headers: dict[str, str], kb: dict
 ):
@@ -164,9 +213,7 @@ def test_content_hash_makes_upload_idempotent_within_knowledge_base(
     assert first.status_code == 201
     assert second.status_code == 200
     assert second.json()["id"] == first.json()["id"]
-    listed = client.get(
-        f"/knowledge-bases/{kb['id']}/documents", headers=tenant_headers
-    ).json()
+    listed = client.get(f"/knowledge-bases/{kb['id']}/documents", headers=tenant_headers).json()
     assert [item["sha256"] for item in listed].count(first.json()["sha256"]) == 1
 
 

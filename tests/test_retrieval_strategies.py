@@ -74,7 +74,7 @@ def test_explicit_query_transforms_are_visible_and_bounded(
     )
     assert hyde.status_code == 200
     assert hyde.json()["query_transform"] == "hyde"
-    assert hyde.json()["transformed_queries"][0].startswith("Hospital IT operations runbook")
+    assert hyde.json()["transformed_queries"][0].startswith("Healthcare or medical-device knowledge document")
     assert len(hyde.json()["transformed_queries"][0]) <= 1800
 
 

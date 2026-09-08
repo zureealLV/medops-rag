@@ -123,7 +123,9 @@ async function loadKnowledgeBases() {
   const kbs = await api("/knowledge-bases");
   state.knowledgeBases = Array.isArray(kbs) ? kbs : [];
   if (!state.knowledgeBases.some((kb) => kb.id === state.activeKbId)) {
-    state.activeKbId = state.knowledgeBases[0]?.id ?? null;
+    const preferred = state.knowledgeBases.find((kb) => /器械/.test(kb.name))
+      ?? state.knowledgeBases.find((kb) => /医疗|医学/.test(kb.name));
+    state.activeKbId = preferred?.id ?? state.knowledgeBases[0]?.id ?? null;
   }
   $("#stat-kbs").textContent = String(state.knowledgeBases.length);
   $("#kb-count").textContent = String(state.knowledgeBases.length);
@@ -175,7 +177,7 @@ function renderDocuments() {
   const body = $("#documents-body");
   body.innerHTML = state.documents.length
     ? state.documents.map((doc) => `<tr><td>${escapeHtml(doc.title)}<br><small>${escapeHtml(doc.mime_type)}</small></td><td>${escapeHtml(doc.source)}</td><td>${Number(doc.chunk_count)} chunks<br><small>${Number(doc.artifact_count)} artifacts</small></td><td>${escapeHtml(doc.ingest_status)} · ${escapeHtml(doc.parser)}</td></tr>`).join("")
-    : '<tr class="empty-row"><td colspan="4">这个知识库还是空的，把运维资料拖进来吧。</td></tr>';
+    : '<tr class="empty-row"><td colspan="4">这个知识库还是空的，把医学或医疗器械资料拖进来吧。</td></tr>';
 }
 
 async function askQuestion() {
@@ -215,10 +217,15 @@ async function askQuestion() {
 }
 
 function renderAnswer(answer) {
-  const textEvidence = (answer.retrieved_chunks || []).slice(0, 5).map((item, index) => `<article class="citation"><header><span>[${index + 1}] ${escapeHtml(item.source)}</span><span>SCORE ${Number(item.score || 0).toFixed(3)}</span></header><p>${escapeHtml(item.matched_text || item.text)}</p></article>`).join("");
-  const visualEvidence = (answer.visual_citations || []).map((item, index) => `<article class="citation"><header><span>[V${index + 1}] ${escapeHtml(item.source)}</span><span>PAGE ${escapeHtml(item.page_number ?? "—")}</span></header><div class="visual-slot" data-visual-url="${escapeHtml(item.content_url)}"><p>正在载入原始视觉证据…</p></div></article>`).join("");
+  const chunks = answer.retrieved_chunks || [];
+  const textEvidence = (answer.citations || []).map((citation, index) => {
+    const item = chunks.find((chunk) => chunk.document_id === citation.document_id && chunk.chunk_id === citation.chunk_id);
+    const excerpt = item?.matched_text || item?.text || "该来源已用于回答，暂无可展示摘要。";
+    return `<article class="citation"><header><span>[来源${index + 1}] ${escapeHtml(citation.source)}</span><span>文本证据</span></header><p>${escapeHtml(excerpt)}</p></article>`;
+  }).join("");
+  const visualEvidence = (answer.visual_citations || []).map((item, index) => `<article class="citation"><header><span>[图像${index + 1}] ${escapeHtml(item.source)}</span><span>${item.page_number ? `第 ${escapeHtml(item.page_number)} 页` : "原始图像"}</span></header><div class="visual-slot" data-visual-url="${escapeHtml(item.content_url)}"><p>正在载入原始视觉证据…</p></div></article>`).join("");
   $("#answer-result").innerHTML = `
-    <div class="result-status"><span class="badge ${answer.abstained ? "abstained" : ""}">${answer.abstained ? "EVIDENCE REFUSED" : "EVIDENCE GROUNDED"}</span><span class="timing">${escapeHtml(answer.provider)} · R ${Number(answer.retrieval_ms).toFixed(1)}ms / M ${Number(answer.model_ms).toFixed(1)}ms</span></div>
+    <div class="result-status"><span class="badge ${answer.abstained ? "abstained" : ""}">${answer.abstained ? "证据不足，已拒答" : "已依据来源回答"}</span><span class="timing">${escapeHtml(answer.provider)} · ${Number(answer.retrieval_ms + answer.model_ms).toFixed(1)} ms</span></div>
     <div class="answer-copy">${escapeHtml(answer.answer)}</div>
     ${answer.reason ? `<div class="reason">门禁说明：${escapeHtml(answer.reason)}</div>` : ""}
     <div class="citation-grid">${textEvidence}${visualEvidence || (!textEvidence ? '<div class="citation"><p>没有可展示的证据片段。</p></div>' : "")}</div>`;

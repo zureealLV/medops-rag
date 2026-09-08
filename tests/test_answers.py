@@ -17,6 +17,8 @@ def test_grounded_answer_has_citations(client: TestClient, tenant_headers: dict[
     assert body["abstained"] is False
     assert body["citations"][0]["document_id"] == document["id"]
     assert body["provider"] == "offline-extractive"
+    assert "[来源1]" in body["answer"]
+    assert "[1:1]" not in body["answer"]
 
 
 def test_unanswerable_question_abstains(client: TestClient, tenant_headers: dict[str, str], document: dict):

@@ -30,6 +30,8 @@ htmlcov/
 .coverage
 reports/generated/
 logs/
+.codex-build/
+.codex-finalizer/
 
 # IDE / OS
 .idea/

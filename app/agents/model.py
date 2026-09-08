@@ -28,7 +28,13 @@ def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
             candidates.append((overlap, sentence, item))
     candidates.sort(key=lambda value: value[0], reverse=True)
     selected = candidates[:2] or [(0, evidence[0].text[:240], evidence[0])]
-    return " ".join(f"{sentence} [{item.document_id}:{item.chunk_id}]" for _, sentence, item in selected)
+    source_numbers = {
+        (item.document_id, item.chunk_id): index for index, item in enumerate(evidence, start=1)
+    }
+    return " ".join(
+        f"{sentence} [source:{source_numbers[(item.document_id, item.chunk_id)]}]"
+        for _, sentence, item in selected
+    )
 
 
 def _offline_answer(
@@ -40,7 +46,7 @@ def _offline_answer(
     if visual_payloads:
         visual = visual_payloads[0][0]
         locator = (
-            f"与问题最匹配的视觉证据来自 {visual.source} [visual:{visual.id}]。"
+            f"与问题最匹配的视觉证据来自 {visual.source} [image:1]。"
             "当前未启用视觉生成模型，不能据图推断未被检索证据明确支持的细节。"
         )
         answer = f"{answer} {locator}".strip()

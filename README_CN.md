@@ -1,8 +1,8 @@
-# MedOps 多模态 RAG V2.1
+# MedOps 多模态 RAG V2.2
 
 [English README](README.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**合成医院信息化运维资料**的可审计、多租户多模态 RAG 知识助手。V2.1 在 V2.0 的多模态证据、校准混合检索、持久化摄取与 Map-Reduce Worker、服务密钥 RBAC、恶意文件资源门禁、指标、迁移/回滚和单机 Compose 配置之上，补齐了第一方浏览器控制台。
+这是一个面向**合成医疗知识与医疗器械资料**的可审计、多租户多模态 RAG 知识助手。V2.2 加入明亮临床风 Web 控制台、人类可读引用、医疗领域起始语料、CSV/JSON/JSONL 结构化摄取，以及经过显式导出的 SQLite 数据桥；V2.1 的多模态证据、混合检索、持久化 Worker、RBAC、安全解析门禁和 Compose 配置继续保留。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
@@ -17,7 +17,7 @@
 - 持久化异步摄取任务：租户级幂等键、Worker 租约、有限重试、取消与崩溃恢复；
 - 独立轮询 Worker，把解析、OCR、分块和 Embedding 从 API 进程剥离；
 - 可恢复的多文档 Map-Reduce 摘要任务：逐文档结果持久化、最终引用、局部失败可见，并把单次模型调用硬限制在 30 秒内；
-- TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP 解析与文本、表格、OCR 元素归一化；
+- TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP/CSV/JSON/JSONL 解析与文本、表格、结构化行、OCR 元素归一化；
 - Office 解压前条目/膨胀/压缩比门禁、危险路径与宏拒绝、PDF 页数/渲染限制，以及确定性畸形输入回归集；
 - 通过 `GET /documents/{id}/elements` 查询页码、幻灯片、标题、模态来源及固定版式边界框；
 - RapidOCR/ONNX Runtime 的扫描 PDF 条件式 OCR 与 Office 内嵌图片 OCR；
@@ -28,16 +28,17 @@
 - 哈希向量、关键词、BM25、加权及 RRF 五种可比较检索策略；
 - 显式 Rewrite、Multi-query、确定性模板 HyDE，以及受策略开关约束的自动 HyDE；
 - 可选的结构感知 `parent_child` 检索：小块命中，大块恢复回答上下文；
-- 带 `source`、`document_id`、`chunk_id` 的引用回答与低证据拒答；
+- API 保留 `source`、`document_id`、`chunk_id` 的结构化溯源，界面回答只显示 `[来源N]` / `[图像N]`，不暴露内部行号或匹配分数；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
 - 在 SQL 检索阶段执行租户过滤，其他租户内容不会先进入模型再过滤；
 - 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 86 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
+- 92 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
-- 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷。
+- 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；
+- 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
 
 ## Windows 快速启动
 
@@ -48,7 +49,7 @@ git clone https://github.com/zureealLV/medops-rag.git
 cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py
+.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
 .\.venv\Scripts\fastapi.exe dev
 ```
 
@@ -99,7 +100,7 @@ Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/summary-jobs `
 
 ## 测试与评测
 
-一条命令执行发布核心门禁（Ruff、86 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
+一条命令执行发布核心门禁（Ruff、92 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell

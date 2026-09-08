@@ -6,23 +6,40 @@ persistence never need to understand a DOCX relationship or a PPTX shape.
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import threading
 import zipfile
 from dataclasses import dataclass, field
 from functools import lru_cache
-from io import BytesIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import Literal
 
 from app.exceptions import AppError
 
 Modality = Literal["text", "table", "image_ocr"]
-SUPPORTED_SUFFIXES = {".txt", ".md", ".pdf", ".docx", ".pptx", ".png", ".jpg", ".jpeg", ".webp"}
+SUPPORTED_SUFFIXES = {
+    ".txt",
+    ".md",
+    ".csv",
+    ".json",
+    ".jsonl",
+    ".pdf",
+    ".docx",
+    ".pptx",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+}
 MIME_BY_SUFFIX = {
     ".txt": "text/plain",
     ".md": "text/markdown",
+    ".csv": "text/csv",
+    ".json": "application/json",
+    ".jsonl": "application/x-ndjson",
     ".pdf": "application/pdf",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -234,6 +251,73 @@ def _parse_text(
     return elements, [], []
 
 
+def _stringify_structured_value(value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return str(value)
+
+
+def _records_to_elements(
+    records: list[object], *, source_format: str
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
+    elements: list[NormalizedElement] = []
+    for row_number, record in enumerate(records, start=1):
+        if isinstance(record, dict):
+            text = " | ".join(f"{key}: {_stringify_structured_value(value)}" for key, value in record.items())
+            modality: Modality = "table"
+        else:
+            text = _stringify_structured_value(record)
+            modality = "text"
+        if text.strip():
+            elements.append(
+                NormalizedElement(
+                    modality=modality,
+                    text=text,
+                    metadata={"format": source_format, "row_number": row_number},
+                )
+            )
+    return elements, [], []
+
+
+def _parse_csv(
+    content: bytes,
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
+    text = _decode_text(content)
+    try:
+        sample = text[:8192]
+        dialect = csv.Sniffer().sniff(sample, delimiters=",;\t|")
+        reader = csv.DictReader(StringIO(text), dialect=dialect)
+        if not reader.fieldnames:
+            raise ValueError("missing header")
+        records = [dict(row) for row in reader]
+    except (csv.Error, ValueError) as exc:
+        raise AppError(400, "invalid_csv", "CSV must contain a readable header row") from exc
+    if not records:
+        raise AppError(422, "no_extractable_content", "CSV contains no data rows")
+    return _records_to_elements(records, source_format="csv")
+
+
+def _parse_json(
+    content: bytes, *, json_lines: bool
+) -> tuple[list[NormalizedElement], list[str], list[ParsedArtifact]]:
+    text = _decode_text(content)
+    try:
+        if json_lines:
+            records = [json.loads(line) for line in text.splitlines() if line.strip()]
+        else:
+            payload = json.loads(text)
+            records = payload if isinstance(payload, list) else [payload]
+    except json.JSONDecodeError as exc:
+        code = "invalid_jsonl" if json_lines else "invalid_json"
+        label = "JSONL" if json_lines else "JSON"
+        raise AppError(400, code, f"{label} cannot be decoded") from exc
+    if not records:
+        raise AppError(422, "no_extractable_content", "Structured document contains no records")
+    return _records_to_elements(records, source_format="jsonl" if json_lines else "json")
+
+
 def _parse_docx(
     content: bytes,
     *,
@@ -271,9 +355,7 @@ def _parse_docx(
         if style_name.lower().startswith("heading"):
             heading = text
         elements.append(
-            NormalizedElement(
-                modality="text", text=text, heading=heading, metadata={"style": style_name}
-            )
+            NormalizedElement(modality="text", text=text, heading=heading, metadata={"style": style_name})
         )
     for table_index, table in enumerate(document.tables, start=1):
         rows = [[cell.text.strip().replace("\n", " ") for cell in row.cells] for row in table.rows]
@@ -375,8 +457,7 @@ def _parse_pptx(
                     )
             if getattr(shape, "has_table", False):
                 rows = [
-                    [cell.text.strip().replace("\n", " ") for cell in row.cells]
-                    for row in shape.table.rows
+                    [cell.text.strip().replace("\n", " ") for cell in row.cells] for row in shape.table.rows
                 ]
                 text = "\n".join(" | ".join(cells) for cells in rows if any(cells))
                 if text:
@@ -568,6 +649,10 @@ def parse_bytes(
     parser_name = suffix.removeprefix(".")
     if suffix in {".txt", ".md"}:
         elements, warnings, artifacts = _parse_text(content, suffix)
+    elif suffix == ".csv":
+        elements, warnings, artifacts = _parse_csv(content)
+    elif suffix in {".json", ".jsonl"}:
+        elements, warnings, artifacts = _parse_json(content, json_lines=suffix == ".jsonl")
     elif suffix == ".docx":
         elements, warnings, artifacts = _parse_docx(
             content,

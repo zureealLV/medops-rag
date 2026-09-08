@@ -1,0 +1,2 @@
+{"event_id": "DEMO-EVT-001", "asset_id": "DEMO-PUMP-042", "event": "upstream_occlusion_alarm", "action": "removed_from_service_for_authorized_review"}
+{"event_id": "DEMO-EVT-002", "asset_id": "DEMO-SPO2-017", "event": "functional_check", "action": "passed_in_simulation_lab"}

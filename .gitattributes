@@ -17,5 +17,14 @@
 .gitattributes text eol=lf
 Dockerfile text eol=lf
 
+# Binary fixtures must never be normalized or scanned as text diffs.
+*.pdf binary
+*.docx binary
+*.pptx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+
 # PowerShell scripts keep native Windows line endings.
 *.ps1 text eol=crlf

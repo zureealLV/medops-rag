@@ -32,7 +32,7 @@ def hypothetical_document(query: str) -> str:
             "处置步骤包括核对告警与日志、确认根因、执行受控变更、验证恢复结果并保留回滚路径。"
         )[:1800]
     return (
-        "Hospital IT operations runbook. "
+        "Healthcare or medical-device knowledge document. "
         f"Incident symptom and required response: {focus}. "
         "Verify alerts and logs, confirm the root cause, perform the controlled remediation, validate "
         "recovery, and retain a rollback path."
@@ -50,11 +50,7 @@ def transform_queries(
 ) -> tuple[QueryTransform, list[str]]:
     resolved: QueryTransform = requested
     if requested == "auto":
-        resolved = (
-            "hyde"
-            if settings and settings.hyde_auto_enabled and should_auto_hyde(query)
-            else "none"
-        )
+        resolved = "hyde" if settings and settings.hyde_auto_enabled and should_auto_hyde(query) else "none"
     if resolved == "none":
         return resolved, [query]
     rewritten = rewrite_query(query)

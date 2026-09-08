@@ -1,6 +1,6 @@
-# MedOps Web Console
+# MedOps Web Console V2.2
 
-V2.1 adds a first-party, same-origin browser interface at `/ui/`; `/` redirects there. It is intentionally implemented with static HTML, CSS and JavaScript served by FastAPI, so the demonstration has no Node.js runtime or frontend build chain.
+The first-party, same-origin browser interface lives at `/ui/`; `/` redirects there. V2.2 replaces the muted dark palette with a bright white/teal clinical theme, prioritizes medical knowledge bases, and presents citations as numbered source cards without raw retrieval scores. Static HTML, CSS and JavaScript are served by FastAPI, so the demonstration has no Node.js runtime or frontend build chain.
 
 ## Demonstrated workflows
 
@@ -15,7 +15,7 @@ V2.1 adds a first-party, same-origin browser interface at `/ui/`; `/` redirects 
 ## Start and open
 
 ```powershell
-.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py
+.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -30,7 +30,7 @@ The default local profile sends `X-Tenant-ID: hospital-a` and `X-Actor-ID: zuree
 - Visual evidence is fetched with the active authorization headers rather than exposed through an unauthenticated image URL.
 - All dynamic HTML values are escaped before insertion. Artifact URLs are restricted to the current origin.
 - The synchronous upload action is optimized for an immediate local demo. Durable ingestion jobs and workers remain the production-shaped path for queued ingestion.
-- Only synthetic hospital IT operations data belongs in this portfolio application. It is not a medical device and must not contain real patient records.
+- Only synthetic, public, licensed, de-identified healthcare or medical-device material belongs in this portfolio application. It is not a medical device and must not contain real patient records.
 
 ## Deployment note
 

@@ -87,3 +87,45 @@ and partial failures remain visible.
 - [x] exact V1 fixture migration, schema versioning, integrity-checked backup and tested full rollback;
 - [x] bilingual README, architecture diagram, threat model, demo, and benchmark reproduction;
 - [x] release tag only after fresh-clone validation.
+
+## Gate 6 — V2.1: first-party browser console
+
+- [x] same-origin responsive console for knowledge bases, uploads, answers, evidence and metrics;
+- [x] session-only Bearer key storage and authenticated artifact fetching;
+- [x] desktop and narrow-screen layout checks without adding a frontend build chain.
+
+## Gate 7 — V2.2: medical corpus, data exchange and readable evidence
+
+- [x] replace the default IT-operations seed with separated clinical and medical-device knowledge bases;
+- [x] add educational FDA/CDC/WHO/MedlinePlus-derived material with source URL and access date;
+- [x] accept reviewed CSV, JSON and JSONL exports and provide a read-only SQLite table bridge;
+- [x] keep provenance IDs in the API while replacing raw `[document:chunk]` markers with `[来源N]` and `[图像N]` in answers;
+- [x] remove raw retrieval scores from the browser and align source cards with numbered answer labels;
+- [x] ship and visually inspect a synthetic multiformat test pack;
+- [x] replace the muted dark console with a bright white/teal clinical theme.
+
+Acceptance: a fresh seed answers a medical-device question with a numbered source, structured exports are searchable, all supplied formats ingest, and the browser never exposes internal locator or score syntax.
+
+## Gate 8 — V2.3: governed connectors and domain evaluation
+
+- [ ] introduce connector contracts for approved snapshots from PostgreSQL/MySQL/object storage;
+- [ ] add schema mapping, allow-listed columns, de-identification reports and lineage manifests;
+- [ ] build a reviewed Chinese medical-device Q&A, refusal and citation evaluation set;
+- [ ] calibrate retrieval and abstention thresholds against that domain set;
+- [ ] add manufacturer-document versioning, supersession and expiry workflows.
+
+## Gate 9 — V2.4: production-shaped platform
+
+- [ ] move metadata to PostgreSQL, artifacts to object storage and dense retrieval to a server Qdrant profile;
+- [ ] integrate OIDC/SSO, secret management, gateway TLS, rate limits and immutable audit export;
+- [ ] run backup/restore, load, failover and security tests in the target deployment environment;
+- [ ] add observability dashboards and operational SLOs backed by measured traffic.
+
+## Gate 10 — V3.0 final candidate
+
+- [ ] obtain domain-owner sign-off for corpus rights, medical-device accuracy and user-facing safety language;
+- [ ] pass the frozen domain evaluation, red-team, accessibility and disaster-recovery gates;
+- [ ] publish a versioned deployment runbook and rollback rehearsal;
+- [ ] tag a final candidate only after fresh-environment installation and remote runtime verification.
+
+V3.0 can be a portfolio final release, but it must not be described as a regulated medical device without the separate regulatory, quality-system and clinical-validation work that such a claim requires.

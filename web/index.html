@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#071318">
-  <title>MedOps Control Plane</title>
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#eef8f6">
+  <title>MedOps 医疗知识助手</title>
   <link rel="icon" href="/ui/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/ui/styles.css">
+  <link rel="stylesheet" href="/ui/styles.css?v=2.2.0">
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -16,7 +16,7 @@
     <aside class="sidebar">
       <a class="brand" href="#overview" aria-label="MedOps 首页">
         <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span><strong>MEDOPS</strong><small>RAG CONTROL PLANE</small></span>
+        <span><strong>MEDOPS</strong><small>MEDICAL KNOWLEDGE</small></span>
       </a>
       <nav class="nav" aria-label="控制台导航">
         <button class="nav-item active" data-view="overview"><span>01</span>总览</button>
@@ -26,7 +26,7 @@
       </nav>
       <div class="side-note">
         <span class="eyebrow">SAFETY BOUNDARY</span>
-        <p>仅使用合成医院 IT 运维资料，不提供医疗建议。</p>
+        <p>面向医学教育与医疗器械知识；不替代专业诊疗。</p>
       </div>
       <a class="docs-link" href="/docs" target="_blank" rel="noreferrer">API 文档 <span>↗</span></a>
     </aside>
@@ -43,9 +43,9 @@
       <section class="view active" id="view-overview">
         <div class="hero panel">
           <div class="hero-copy">
-            <span class="eyebrow">MEDOPS MULTIMODAL RAG V2.1</span>
-            <h2>让每个答案都能<br><em>回到原始证据。</em></h2>
-            <p>多格式摄取、租户隔离、可恢复任务与受控拒答，统一在一个本地运行面中。</p>
+            <span class="eyebrow">MEDOPS MULTIMODAL RAG V2.2</span>
+            <h2>医疗知识，<br><em>有据可查。</em></h2>
+            <p>医学基础、医疗器械与多模态资料统一检索；每个回答都能回到人类可读的原始来源。</p>
             <div class="hero-actions"><button class="primary" data-go="answer">开始提问 <span>→</span></button><button class="secondary" data-go="documents">查看语料</button></div>
           </div>
           <div class="signal-map" aria-hidden="true">
@@ -58,7 +58,7 @@
           <article class="stat-card"><span>知识库</span><strong id="stat-kbs">—</strong><small>当前租户</small></article>
           <article class="stat-card"><span>文档</span><strong id="stat-docs">—</strong><small>可检索资料</small></article>
           <article class="stat-card"><span>24H 请求</span><strong id="stat-requests">—</strong><small id="stat-errors">等待指标</small></article>
-          <article class="stat-card accent"><span>服务版本</span><strong id="stat-version">2.1.0</strong><small>web console enabled</small></article>
+          <article class="stat-card accent"><span>服务版本</span><strong id="stat-version">2.2.0</strong><small>medical corpus ready</small></article>
         </div>
         <div class="two-column">
           <section class="panel compact-panel">
@@ -77,7 +77,7 @@
           <section class="panel query-panel">
             <div class="panel-heading"><div><span class="eyebrow">GROUNDED ANSWER</span><h3>向知识库提问</h3></div><span class="shortcut">Ctrl ↵</span></div>
             <label class="field"><span>知识库</span><select id="answer-kb"></select></label>
-            <label class="field"><span>问题</span><textarea id="question" rows="7">LIS 接口连续超时时，第一步应该检查什么？</textarea></label>
+            <label class="field"><span>问题</span><textarea id="question" rows="7">哪些因素可能影响脉搏血氧仪读数？</textarea></label>
             <div class="field-row">
               <label class="field"><span>检索策略</span><select id="text-strategy"><option value="auto">Auto</option><option value="bm25">BM25</option><option value="rrf">RRF</option><option value="parent_child">Parent-child</option><option value="keyword">Keyword</option></select></label>
               <label class="field"><span>证据类型</span><select id="retrieval-profile"><option value="auto">自动路由</option><option value="text">文本</option><option value="visual">视觉</option></select></label>
@@ -85,7 +85,7 @@
             <button class="primary wide" id="ask-button"><span class="button-label">生成带引用回答</span><span>→</span></button>
             <p class="hint">试试越界问题：“明天合肥会不会下雨？” 系统应明确拒答。</p>
           </section>
-          <section class="panel result-panel" id="answer-result"><div class="empty-state"><div class="empty-glyph">⌬</div><h3>等待问题</h3><p>回答、证据引用和检索轨迹将在这里出现。</p></div></section>
+          <section class="panel result-panel" id="answer-result"><div class="empty-state"><div class="empty-glyph">⌬</div><h3>等待问题</h3><p>回答与人类可读的来源卡片将在这里出现。</p></div></section>
         </div>
       </section>
 
@@ -94,8 +94,8 @@
         <div class="documents-layout">
           <section class="panel kb-panel"><div class="panel-heading"><h3>知识库</h3><span id="kb-count" class="count">0</span></div><div id="kb-list" class="kb-list"></div></section>
           <section class="panel docs-panel">
-            <div class="panel-heading"><div><span class="eyebrow" id="active-kb-label">SELECTED SPACE</span><h3 id="active-kb-name">请选择知识库</h3></div><label class="upload-button">上传文件<input id="file-input" type="file" multiple accept=".txt,.md,.pdf,.docx,.pptx,.png,.jpg,.jpeg,.webp"></label></div>
-            <div class="drop-zone" id="drop-zone"><b>拖放资料到这里</b><span>TXT / MD / PDF / DOCX / PPTX / PNG / JPEG / WebP，单文件 ≤ 10 MB</span></div>
+            <div class="panel-heading"><div><span class="eyebrow" id="active-kb-label">SELECTED SPACE</span><h3 id="active-kb-name">请选择知识库</h3></div><label class="upload-button">上传文件<input id="file-input" type="file" multiple accept=".txt,.md,.csv,.json,.jsonl,.pdf,.docx,.pptx,.png,.jpg,.jpeg,.webp"></label></div>
+            <div class="drop-zone" id="drop-zone"><b>拖放资料到这里</b><span>支持文本、数据库导出、Office、PDF 与图片，单文件 ≤ 10 MB</span></div>
             <div class="table-wrap"><table><thead><tr><th>文档</th><th>来源</th><th>切片 / 证据</th><th>摄取状态</th></tr></thead><tbody id="documents-body"></tbody></table></div>
           </section>
         </div>
@@ -127,12 +127,12 @@
 
   <dialog id="kb-dialog"><form method="dialog" class="dialog-card" id="kb-form">
     <div class="dialog-heading"><div><span class="eyebrow">NEW SPACE</span><h2>新建知识库</h2></div><button class="icon-button" value="cancel" aria-label="关闭">×</button></div>
-    <label class="field"><span>名称</span><input id="new-kb-name" required maxlength="120" placeholder="例如：网络与接口运行手册"></label>
+    <label class="field"><span>名称</span><input id="new-kb-name" required maxlength="120" placeholder="例如：监护设备使用与维护"></label>
     <label class="field"><span>说明</span><textarea id="new-kb-description" rows="3" maxlength="500" placeholder="可选说明"></textarea></label>
     <div class="dialog-actions"><button value="cancel" class="secondary">取消</button><button value="default" class="primary">创建</button></div>
   </form></dialog>
 
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
-  <script src="/ui/app.js" defer></script>
+  <script src="/ui/app.js?v=2.2.0.1" defer></script>
 </body>
 </html>

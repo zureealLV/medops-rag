@@ -14,7 +14,7 @@ router = APIRouter(tags=["documents"])
 PositiveId = Annotated[int, Path(ge=1)]
 UploadedFile = Annotated[
     UploadFile,
-    File(description="TXT, Markdown, PDF, DOCX, PPTX, PNG, JPEG, or WebP document"),
+    File(description=("TXT, Markdown, CSV, JSON, JSONL, PDF, DOCX, PPTX, PNG, JPEG, or WebP document")),
 ]
 
 
@@ -47,9 +47,7 @@ def upload_document(
     filename = file.filename or "upload.txt"
     raw = file.file.read(settings.max_upload_bytes + 1)
     if len(raw) > settings.max_upload_bytes:
-        raise AppError(
-            413, "document_too_large", f"Uploads are limited to {settings.max_upload_bytes} bytes"
-        )
+        raise AppError(413, "document_too_large", f"Uploads are limited to {settings.max_upload_bytes} bytes")
     parsed = parse_bytes(
         filename,
         raw,

@@ -1,8 +1,8 @@
-# MedOps Multimodal RAG V2.1
+# MedOps Multimodal RAG V2.2
 
 [中文说明](README_CN.md) · [Web console](docs/v2/WEB_CONSOLE.md) · [Engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Migration/rollback](docs/v2/MIGRATION_AND_ROLLBACK.md) · [Performance](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT operations documents**. V2.1 adds a first-party browser control plane to the V2.0 multimodal evidence, calibrated hybrid retrieval, durable ingestion and Map-Reduce workers, service-key RBAC, bounded hostile-file parsing, metrics, migration/rollback and verified single-host Compose profile.
+An auditable, tenant-scoped multimodal RAG assistant for **synthetic healthcare and medical-device knowledge**. V2.2 adds a bright clinical Web console, source-friendly answer labels, a medically scoped starter corpus, structured CSV/JSON/JSONL ingestion, and a reviewed SQLite export bridge. The V2.1 control plane, multimodal evidence, calibrated hybrid retrieval, durable workers, RBAC, parser budgets, metrics, migration/rollback and verified single-host Compose profile remain intact.
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
@@ -19,7 +19,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - an isolated polling worker for parsing, OCR, chunking and embedding outside the API process;
 - resumable multi-document Map-Reduce summary jobs with persisted per-document results, final citations,
   partial-failure visibility and a hard 30-second per-model-call timeout;
-- TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP parsing with native text, table, and OCR elements;
+- TXT/Markdown/PDF/DOCX/PPTX/PNG/JPEG/WebP/CSV/JSON/JSONL parsing with native text, table, structured-row and OCR elements;
 - pre-decompression Office archive budgets, unsafe path/macro rejection, PDF page/render caps and a
   deterministic malformed-input regression corpus;
 - page/slide/heading provenance and fixed-layout bounding boxes through `GET /documents/{id}/elements`;
@@ -31,16 +31,17 @@ An auditable, tenant-scoped multimodal RAG assistant for **synthetic hospital IT
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
 - explicit rewrite, multi-query and deterministic template-HyDE transformations with policy-gated auto HyDE;
 - opt-in structure-aware `parent_child` retrieval that matches small children and reconstructs parent context;
-- cited extractive answers and evidence-threshold abstention;
+- cited extractive answers and evidence-threshold abstention, with human-readable `[来源N]` and `[图像N]` labels instead of internal row/chunk locators;
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 86 API/security/parser/migration/job/UI tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 92 API/security/parser/migration/job/UI tests and repeatable ingestion/retrieval benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a verified Docker Compose image with API, ingestion worker, summary worker, health checks and persistent
-  data/model volumes.
+  data/model volumes;
+- two idempotent starter knowledge bases for clinical fundamentals and medical-device safety, derived from public FDA, CDC, WHO and MedlinePlus material and kept strictly educational.
 
 ## Quick start (Windows / PowerShell)
 
@@ -51,7 +52,7 @@ git clone https://github.com/zureealLV/medops-rag.git
 cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py
+.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
 .\.venv\Scripts\fastapi.exe dev
 ```
 
@@ -81,10 +82,10 @@ spoofed `X-Tenant-ID`/`X-Actor-ID` values. See [`docs/v2/AUTHORIZATION.md`](docs
 $headers = @{ "X-Tenant-ID" = "hospital-a"; "X-Actor-ID" = "local-demo" }
 
 Invoke-RestMethod http://127.0.0.1:8000/search -Method Post -Headers $headers `
-  -ContentType "application/json" -Body '{"query":"LIS 接口连续超时先检查什么？"}'
+  -ContentType "application/json" -Body '{"query":"哪些因素可能影响脉搏血氧仪读数？","knowledge_base_id":2}'
 
 Invoke-RestMethod http://127.0.0.1:8000/answer -Method Post -Headers $headers `
-  -ContentType "application/json" -Body '{"question":"PACS 健康检查失败如何排查？"}'
+  -ContentType "application/json" -Body '{"question":"输液泵上游阻塞告警应先核对什么？","knowledge_base_id":2}'
 ```
 
 Queue a document with an idempotency key, then run one worker iteration:
@@ -114,7 +115,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 86 tests, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 92 tests, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 

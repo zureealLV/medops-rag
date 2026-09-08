@@ -113,7 +113,8 @@ def test_answer_routes_to_visual_evidence_and_returns_citation(tmp_path: Path, m
             "width": 224,
             "height": 224,
         }
-        assert "[visual:" in payload["answer"]
+        assert "[图像1]" in payload["answer"]
+        assert "[visual:" not in payload["answer"]
         citation = payload["visual_citations"][0]
         image = client.get(citation["content_url"], headers=headers)
         assert image.status_code == 200
@@ -244,4 +245,4 @@ def test_configured_text_model_is_not_called_for_visual_payload_when_vision_is_d
         "What does the image show?", [], settings, [(visual, b"synthetic-image")]
     )
     assert provider == "offline-visual-locator"
-    assert "[visual:7]" in answer
+    assert "[image:1]" in answer

@@ -6,7 +6,7 @@ on `feat/multimodal-rag-v2` with versioned benchmark evidence.
 
 ## 1. Product boundary
 
-The project remains an educational assistant for **synthetic hospital IT operations material**. It does not
+The project remains an educational assistant for **synthetic healthcare and medical-device material**. It does not
 process patient records, diagnose, prescribe, or execute system-changing tools.
 
 V2 must support two distinct meanings that are often incorrectly collapsed into “multimodal RAG”:

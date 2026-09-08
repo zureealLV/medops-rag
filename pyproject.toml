@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "medops-rag"
-version = "2.1.0"
-description = "An auditable multimodal RAG assistant for synthetic hospital IT operations documents."
+version = "2.2.0"
+description = "An auditable multimodal RAG assistant for synthetic healthcare and medical-device knowledge."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
