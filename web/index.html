@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#eef8f6">
   <title>MedOps 医疗知识助手</title>
   <link rel="icon" href="/ui/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/ui/styles.css?v=3.0.0">
+  <link rel="stylesheet" href="/ui/styles.css?v=3.0.0-perf1">
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -97,6 +97,7 @@
           <section class="panel docs-panel">
             <div class="panel-heading"><div><span class="eyebrow" id="active-kb-label">SELECTED SPACE</span><h3 id="active-kb-name">请选择知识库</h3></div><label class="upload-button">上传文件<input id="file-input" type="file" multiple accept=".txt,.md,.csv,.json,.jsonl,.pdf,.docx,.pptx,.png,.jpg,.jpeg,.webp"></label></div>
             <div class="drop-zone" id="drop-zone"><b>拖放资料到这里</b><span>支持文本、数据库导出、Office、PDF 与图片，单文件 ≤ 10 MB</span></div>
+            <div class="document-toolbar"><label><span class="sr-only">筛选文档</span><input id="document-search" type="search" maxlength="100" placeholder="按标题或来源筛选"></label><div class="document-pager"><button class="secondary" id="document-prev" disabled>← 上一页</button><span id="document-page-info">0–0 / 0</span><button class="secondary" id="document-next" disabled>下一页 →</button></div></div>
             <div class="table-wrap"><table><thead><tr><th>文档</th><th>来源</th><th>切片 / 证据</th><th>摄取状态</th></tr></thead><tbody id="documents-body"></tbody></table></div>
           </section>
         </div>
@@ -134,6 +135,6 @@
   </form></dialog>
 
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
-  <script src="/ui/app.js?v=3.0.0" defer></script>
+  <script src="/ui/app.js?v=3.0.0-perf1" defer></script>
 </body>
 </html>

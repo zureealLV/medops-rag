@@ -29,6 +29,9 @@ the existing public-evidence, tenant-isolation and educational-safety boundaries
   blanket default.
 - The separate long-range fixture remains decisive for parent-child: linked context recovered 50/50 versus 0/50
   for legacy fixed context, at 19.702 ms versus 13.628 ms mean retrieval.
+- The 15,000-document Huatuo catalog previously returned 20,291,013 bytes and rendered 15,000 table rows. The
+  metadata-only 50-row page returned 16,124 bytes in 22.1 ms on the same database: 1,258.4x less payload, with
+  exactly 50 rows rendered, bounded pagination and debounced title/source filtering.
 
 ## Reproduction gates
 

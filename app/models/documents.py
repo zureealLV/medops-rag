@@ -45,6 +45,30 @@ class Document(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class DocumentSummary(BaseModel):
+    """Lightweight list representation that intentionally excludes document content."""
+
+    id: int
+    kb_id: int
+    tenant_id: str
+    title: str
+    source: str
+    chunk_count: int = 0
+    element_count: int = 0
+    artifact_count: int = 0
+    mime_type: str = "text/plain"
+    parser: str = "manual"
+    ingest_status: str = "succeeded"
+
+
+class DocumentPage(BaseModel):
+    items: list[DocumentSummary]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+
 class DocumentElement(BaseModel):
     index: int
     modality: str

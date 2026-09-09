@@ -20,7 +20,8 @@ the bright clinical console.
 - DeepSeek V4 Flash OpenAI-compatible API defaults, with the API key read only from the local environment plus
   bounded retry, cache/prompt/completion token accounting, and offline fallback.
 - a responsive, dependency-free Web console for knowledge spaces, synchronous demo uploads, cited Q&A,
-  health and tenant-scoped operational metrics;
+  health and tenant-scoped operational metrics; the document catalog uses metadata-only server pagination and
+  title/source filtering instead of sending every document body to the browser;
 - FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
 - SQLite transactions, foreign keys, indexes and restart persistence;
 - knowledge-base and document CRUD with SHA-256 idempotent uploads;

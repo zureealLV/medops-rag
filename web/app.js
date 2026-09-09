@@ -11,6 +11,11 @@ const state = {
   profile: loadProfile(),
   knowledgeBases: [],
   documents: [],
+  documentTotal: 0,
+  documentOffset: 0,
+  documentPageSize: 50,
+  documentQuery: "",
+  documentRequestId: 0,
   activeKbId: null,
   activity: [],
 };
@@ -93,6 +98,7 @@ function navigate(view) {
   $("#page-title").textContent = titles[view] || titles.overview;
   history.replaceState(null, "", `#${view}`);
   if (view === "operations") loadMetrics();
+  if (view === "documents" && state.knowledgeBases.length) safeRun(loadDocuments, "读取文档失败");
 }
 
 function setHealth(status, label) {
@@ -137,7 +143,7 @@ async function loadKnowledgeBases() {
   if (state.activeKbId) $("#answer-kb").value = String(state.activeKbId);
   renderKbOverview();
   renderKbList();
-  await loadDocuments();
+  if ($("#view-documents").classList.contains("active")) await loadDocuments();
 }
 
 function renderKbOverview() {
@@ -155,6 +161,9 @@ function renderKbList() {
     : '<p class="hint">暂无知识库，请点击右上角创建。</p>';
   $$("[data-kb-id]", root).forEach((button) => button.addEventListener("click", async () => {
     state.activeKbId = Number(button.dataset.kbId);
+    state.documentOffset = 0;
+    state.documentQuery = "";
+    $("#document-search").value = "";
     $("#answer-kb").value = String(state.activeKbId);
     renderKbList();
     await safeRun(loadDocuments, "读取文档失败");
@@ -167,19 +176,41 @@ async function loadDocuments() {
   $("#active-kb-label").textContent = active ? `KB-${String(active.id).padStart(2, "0")} / ${active.tenant_id}` : "SELECTED SPACE";
   if (!active) {
     state.documents = [];
+    state.documentTotal = 0;
     renderDocuments();
     return;
   }
-  state.documents = await api(`/knowledge-bases/${active.id}/documents`);
+  const requestId = ++state.documentRequestId;
+  $("#documents-body").innerHTML = '<tr class="empty-row"><td colspan="4">正在读取文档索引…</td></tr>';
+  $("#document-page-info").textContent = "LOADING";
+  const params = new URLSearchParams({
+    limit: String(state.documentPageSize),
+    offset: String(state.documentOffset),
+  });
+  if (state.documentQuery) params.set("query", state.documentQuery);
+  const page = await api(`/knowledge-bases/${active.id}/documents/page?${params}`);
+  if (requestId !== state.documentRequestId || active.id !== state.activeKbId) return;
+  state.documents = page.items;
+  state.documentTotal = page.total;
+  if (state.documentOffset >= page.total && page.total > 0) {
+    state.documentOffset = Math.floor((page.total - 1) / state.documentPageSize) * state.documentPageSize;
+    await loadDocuments();
+    return;
+  }
   renderDocuments();
 }
 
 function renderDocuments() {
-  $("#stat-docs").textContent = String(state.documents.length);
+  $("#stat-docs").textContent = String(state.documentTotal);
   const body = $("#documents-body");
   body.innerHTML = state.documents.length
     ? state.documents.map((doc) => `<tr><td>${escapeHtml(doc.title)}<br><small>${escapeHtml(doc.mime_type)}</small></td><td>${escapeHtml(doc.source)}</td><td>${Number(doc.chunk_count)} chunks<br><small>${Number(doc.artifact_count)} artifacts</small></td><td>${escapeHtml(doc.ingest_status)} · ${escapeHtml(doc.parser)}</td></tr>`).join("")
-    : '<tr class="empty-row"><td colspan="4">这个知识库还是空的，把医学或医疗器械资料拖进来吧。</td></tr>';
+    : `<tr class="empty-row"><td colspan="4">${state.documentQuery ? "没有匹配的文档。" : "这个知识库还是空的，把医学或医疗器械资料拖进来吧。"}</td></tr>`;
+  const first = state.documentTotal ? state.documentOffset + 1 : 0;
+  const last = Math.min(state.documentOffset + state.documents.length, state.documentTotal);
+  $("#document-page-info").textContent = `${first}–${last} / ${state.documentTotal}`;
+  $("#document-prev").disabled = state.documentOffset === 0;
+  $("#document-next").disabled = last >= state.documentTotal;
 }
 
 async function askQuestion() {
@@ -278,6 +309,7 @@ async function uploadFiles(files) {
       await api(`/knowledge-bases/${state.activeKbId}/documents/upload`, { method: "POST", body: form });
       uploaded += 1;
     }
+    state.documentOffset = 0;
     await loadDocuments();
     toast(`已处理 ${uploaded} 个文件。`, "success");
     logActivity("同步文档摄取", `${uploaded} FILES`);
@@ -302,6 +334,9 @@ async function createKnowledgeBase(event) {
       body: JSON.stringify({ name, description: $("#new-kb-description").value.trim() || null }),
     });
     state.activeKbId = created.id;
+    state.documentOffset = 0;
+    state.documentQuery = "";
+    $("#document-search").value = "";
     $("#kb-dialog").close();
     $("#kb-form").reset();
     await loadKnowledgeBases();
@@ -395,8 +430,29 @@ function bind() {
   });
   $("#answer-kb").addEventListener("change", (event) => {
     state.activeKbId = Number(event.target.value) || null;
+    state.documentOffset = 0;
+    state.documentQuery = "";
+    $("#document-search").value = "";
     renderKbList();
-    safeRun(loadDocuments, "读取文档失败");
+    if ($("#view-documents").classList.contains("active")) safeRun(loadDocuments, "读取文档失败");
+  });
+  let searchTimer = null;
+  $("#document-search").addEventListener("input", (event) => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => {
+      state.documentQuery = event.target.value.trim();
+      state.documentOffset = 0;
+      safeRun(loadDocuments, "筛选文档失败");
+    }, 250);
+  });
+  $("#document-prev").addEventListener("click", () => {
+    state.documentOffset = Math.max(0, state.documentOffset - state.documentPageSize);
+    safeRun(loadDocuments, "读取上一页失败");
+  });
+  $("#document-next").addEventListener("click", () => {
+    if (state.documentOffset + state.documents.length >= state.documentTotal) return;
+    state.documentOffset += state.documentPageSize;
+    safeRun(loadDocuments, "读取下一页失败");
   });
   $("#file-input").addEventListener("change", (event) => uploadFiles(event.target.files));
   const drop = $("#drop-zone");

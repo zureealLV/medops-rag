@@ -9,7 +9,7 @@ from pathlib import Path
 
 from app.db import transaction
 from app.ingestion.parsers import ParsedDocument, element_metadata_json
-from app.models.documents import Document, DocumentCreate, DocumentUpdate
+from app.models.documents import Document, DocumentCreate, DocumentSummary, DocumentUpdate
 from app.repositories import artifacts as artifact_repository
 from app.retrieval.structure_chunking import ParentChunkPlan
 from app.retrieval.text_embeddings import TextEmbeddingProvider
@@ -25,6 +25,12 @@ def _model(row: sqlite3.Row) -> Document:
     return Document(**data)
 
 
+def _summary_model(row: sqlite3.Row) -> DocumentSummary:
+    data = dict(row)
+    data["kb_id"] = data.pop("knowledge_base_id")
+    return DocumentSummary(**data)
+
+
 DOCUMENT_SELECT = """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
                             d.mime_type, d.sha256, d.parser, d.ingest_status, d.warning_json,
                             COUNT(DISTINCT c.id) AS chunk_count,
@@ -34,6 +40,16 @@ DOCUMENT_SELECT = """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.c
                      LEFT JOIN chunks c ON c.document_id = d.id
                      LEFT JOIN document_elements e ON e.document_id = d.id
                      LEFT JOIN document_artifacts da ON da.document_id = d.id"""
+
+DOCUMENT_SUMMARY_SELECT = """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.source,
+                                     d.mime_type, d.parser, d.ingest_status,
+                                     (SELECT COUNT(*) FROM chunks c
+                                      WHERE c.document_id = d.id) AS chunk_count,
+                                     (SELECT COUNT(*) FROM document_elements e
+                                      WHERE e.document_id = d.id) AS element_count,
+                                     (SELECT COUNT(*) FROM document_artifacts da
+                                      WHERE da.document_id = d.id) AS artifact_count
+                              FROM documents d"""
 
 
 def _insert_chunks(
@@ -203,6 +219,38 @@ def list_for_kb(path: Path, tenant_id: str, kb_id: int) -> list[Document]:
             (kb_id, tenant_id),
         ).fetchall()
     return [_model(row) for row in rows]
+
+
+def list_page_for_kb(
+    path: Path,
+    tenant_id: str,
+    kb_id: int,
+    *,
+    limit: int,
+    offset: int,
+    query: str = "",
+) -> tuple[list[DocumentSummary], int]:
+    """Return one metadata-only page without materializing every document body."""
+    where = "d.knowledge_base_id = ? AND d.tenant_id = ?"
+    params: list[object] = [kb_id, tenant_id]
+    normalized_query = query.strip()
+    if normalized_query:
+        escaped = (
+            normalized_query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        )
+        where += " AND (d.title LIKE ? ESCAPE '\\' OR d.source LIKE ? ESCAPE '\\')"
+        pattern = f"%{escaped}%"
+        params.extend((pattern, pattern))
+    with transaction(path) as connection:
+        total = int(
+            connection.execute(f"SELECT COUNT(*) FROM documents d WHERE {where}", params).fetchone()[0]
+        )
+        rows = connection.execute(
+            DOCUMENT_SUMMARY_SELECT
+            + f" WHERE {where} ORDER BY d.id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        ).fetchall()
+    return [_summary_model(row) for row in rows], total
 
 
 def find_by_hash(path: Path, tenant_id: str, kb_id: int, sha256: str) -> Document | None:

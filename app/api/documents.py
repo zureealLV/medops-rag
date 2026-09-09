@@ -2,12 +2,12 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, File, Path, Response, UploadFile
+from fastapi import APIRouter, File, Path, Query, Response, UploadFile
 
 from app.api.deps import SettingsDep, TenantContext
 from app.exceptions import AppError
 from app.ingestion import parse_bytes
-from app.models.documents import Document, DocumentCreate, DocumentElement, DocumentUpdate
+from app.models.documents import Document, DocumentCreate, DocumentElement, DocumentPage, DocumentUpdate
 from app.services import documents as service
 
 router = APIRouter(tags=["documents"])
@@ -31,6 +31,28 @@ def create_document(
 @router.get("/knowledge-bases/{kb_id}/documents")
 def list_documents(kb_id: PositiveId, context: TenantContext, settings: SettingsDep) -> list[Document]:
     result = service.list_for_kb(settings.database_path, context.tenant_id, kb_id)
+    if result is None:
+        raise AppError(404, "knowledge_base_not_found", "Knowledge base not found")
+    return result
+
+
+@router.get("/knowledge-bases/{kb_id}/documents/page")
+def list_document_page(
+    kb_id: PositiveId,
+    context: TenantContext,
+    settings: SettingsDep,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    query: str = Query(default="", max_length=100),
+) -> DocumentPage:
+    result = service.list_page_for_kb(
+        settings.database_path,
+        context.tenant_id,
+        kb_id,
+        limit=limit,
+        offset=offset,
+        query=query,
+    )
     if result is None:
         raise AppError(404, "knowledge_base_not_found", "Knowledge base not found")
     return result

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from app.config import Settings
 from app.ingestion.parsers import NormalizedElement, ParsedDocument
-from app.models.documents import Document, DocumentCreate, DocumentUpdate
+from app.models.documents import Document, DocumentCreate, DocumentPage, DocumentUpdate
 from app.repositories import documents as repository
 from app.repositories import knowledge_bases
 from app.retrieval.chunking import split_text
@@ -88,6 +88,29 @@ def list_for_kb(path: Path, tenant_id: str, kb_id: int) -> list[Document] | None
     if knowledge_bases.get(path, tenant_id, kb_id) is None:
         return None
     return repository.list_for_kb(path, tenant_id, kb_id)
+
+
+def list_page_for_kb(
+    path: Path,
+    tenant_id: str,
+    kb_id: int,
+    *,
+    limit: int,
+    offset: int,
+    query: str = "",
+) -> DocumentPage | None:
+    if knowledge_bases.get(path, tenant_id, kb_id) is None:
+        return None
+    items, total = repository.list_page_for_kb(
+        path, tenant_id, kb_id, limit=limit, offset=offset, query=query
+    )
+    return DocumentPage(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=offset + len(items) < total,
+    )
 
 
 def update(

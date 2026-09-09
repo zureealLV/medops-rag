@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS documents (
 );
 CREATE INDEX IF NOT EXISTS idx_documents_kb ON documents(knowledge_base_id);
 CREATE INDEX IF NOT EXISTS idx_documents_tenant ON documents(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_documents_tenant_kb ON documents(tenant_id, knowledge_base_id);
 CREATE TABLE IF NOT EXISTS document_elements (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL,
