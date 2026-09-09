@@ -117,16 +117,23 @@ Acceptance: a fresh seed answers a medical-device question with numbered source 
 
 Acceptance: the default Huatuo import is idempotent at 15,000 records, the local database contains more Chinese than English external records, documented Chinese questions return their paired answers with source cards, and the full automated test suite passes.
 
-## Gate 9 — V2.4: governed connectors and domain evaluation
+## Gate 9 — V2.4: official Chinese evidence and semantic chunking
+
+- [x] add a separate, hash-pinned catalog and importer for six NHC, State Council/Ministry of Justice and NMPA PDFs;
+- [x] enforce publisher-host, redirect, byte-count, PDF-signature and SHA-256 gates without redistributing source binaries;
+- [x] normalize official PDFs and keep Chinese sentence, semicolon and paragraph boundaries when forming overlapping chunks;
+- [x] improve deterministic offline extraction for quantity questions and enumerated medical-device classes;
+- [x] pass a frozen eight-case official-source answer, citation, refusal and p95 latency gate.
+
+Acceptance: all six files import into an isolated official-source knowledge base,
+an idempotent rerun skips all six, changed content is rejected for review, and the
+frozen evaluation passes without exposing raw retrieval syntax in the browser.
+
+## Gate 10 — V2.5: governed connectors and production-shaped platform
 
 - [ ] introduce connector contracts for approved snapshots from PostgreSQL/MySQL/object storage;
 - [ ] add schema mapping, allow-listed columns, de-identification reports and lineage manifests;
-- [ ] build a reviewed Chinese medical-device Q&A, refusal and citation evaluation set;
-- [ ] calibrate retrieval and abstention thresholds against that domain set;
-- [ ] add manufacturer-document versioning, supersession and expiry workflows.
-
-## Gate 10 — V2.5: production-shaped platform
-
+- [ ] add manufacturer-document versioning, supersession and expiry workflows;
 - [ ] move metadata to PostgreSQL, artifacts to object storage and dense retrieval to a server Qdrant profile;
 - [ ] integrate OIDC/SSO, secret management, gateway TLS, rate limits and immutable audit export;
 - [ ] run backup/restore, load, failover and security tests in the target deployment environment;

@@ -25,9 +25,12 @@ def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
         if answer:
             return f"{answer[:800]} [source:1]"
     query_tokens = set(tokenize(question))
-    candidates: list[tuple[int, str, Evidence]] = []
+    category_list_question = bool(re.search(r"哪三类|分为.*类|几类", question))
+    quantity_question = bool(re.search(r"多少|几(?:种|类|项)?", question))
+    candidates: list[tuple[int, int, str, Evidence, list[str]]] = []
     for item in evidence[:3]:
-        for sentence in re.split(r"(?<=[。！？.!?])\s*|\n+", item.text):
+        sentences = re.split(r"(?<=[。！？；.!?;])\s*|\n+", item.text)
+        for sentence_index, sentence in enumerate(sentences):
             sentence = sentence.strip(" #-\t")
             if len(sentence) < 8:
                 continue
@@ -48,19 +51,66 @@ def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
                     "许可证标记：",
                     "证据说明：",
                     "安全说明：",
+                    "发布机构：",
+                    "发布日期：",
+                    "资料类别：",
+                    "官方原文：",
+                    "固定文件 sha-256：",
+                    "来源等级：",
                 )
             ):
                 continue
             overlap = len(query_tokens.intersection(tokenize(sentence)))
-            candidates.append((overlap, sentence, item))
+            intent_bonus = 0
+            if re.search(r"多少|几(?:种|类|项)?|哪(?:些|三类)", question):
+                if re.search(r"\d|[一二三四五六七八九十]+类|(?:mg|kg|g|ml|%)", sentence, re.I):
+                    intent_bonus += 2
+            if category_list_question:
+                if re.search(r"分类管理|分为[^。]{0,20}类", sentence):
+                    intent_bonus += 10
+                elif re.search(r"第[一二三]类", sentence):
+                    intent_bonus += 4
+            candidates.append((overlap + intent_bonus, sentence_index, sentence, item, sentences))
     candidates.sort(key=lambda value: value[0], reverse=True)
-    selected = candidates[:2] or [(0, evidence[0].text[:240], evidence[0])]
+    selected: list[tuple[str, Evidence]] = []
+    if candidates:
+        _, sentence_index, sentence, item, sentences = candidates[0]
+        selected.append((sentence, item))
+        if category_list_question:
+            for neighbor in sentences[sentence_index + 1 : sentence_index + 5]:
+                neighbor = neighbor.strip(" #-\t")
+                if re.search(r"第[一二三]类", neighbor):
+                    selected.append((neighbor, item))
+        if not category_list_question:
+            quantity_concepts = [
+                concept for concept in ("烹调油", "食盐") if concept in question
+            ]
+            if len(quantity_concepts) > 1:
+                for concept in quantity_concepts:
+                    match = next(
+                        (
+                            (candidate, candidate_item)
+                            for _, _, candidate, candidate_item, _ in candidates
+                            if concept in candidate and re.search(r"\d", candidate)
+                        ),
+                        None,
+                    )
+                    if match is not None and match not in selected:
+                        selected.append(match)
+            target_count = 1 if quantity_question else 2
+            for _, _, candidate, candidate_item, _ in candidates[1:]:
+                if len(selected) >= max(target_count, len(quantity_concepts)):
+                    break
+                if candidate not in {text for text, _ in selected}:
+                    selected.append((candidate, candidate_item))
+    if not selected:
+        selected = [(evidence[0].text[:240], evidence[0])]
     source_numbers = {
         (item.document_id, item.chunk_id): index for index, item in enumerate(evidence, start=1)
     }
     return " ".join(
         f"{sentence} [source:{source_numbers[(item.document_id, item.chunk_id)]}]"
-        for _, sentence, item in selected
+        for sentence, item in selected
     )
 
 

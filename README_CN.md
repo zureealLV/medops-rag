@@ -1,8 +1,8 @@
-# MedOps 多模态 RAG V2.3
+# MedOps 多模态 RAG V2.4
 
-[English README](README.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [中文语料基准](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [中文语料基准](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户多模态 RAG 知识助手。V2.3 将中文资料提升为本地主要语料：固定版本导入 15,000 条 Huatuo-26M 中文医学知识，并使用 SQLite FTS5 三元字符索引加速中文检索；同时保留 NLM MedlinePlus 官方全量导入、明亮临床风 Web 控制台、人类可读来源卡片、多模态证据、结构化摄取、RBAC、安全解析门禁和 Compose 配置。
+这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户多模态 RAG 知识助手。V2.4 新增 6 份国家卫健委、国务院法规库与国家药监局中文 PDF 的哈希固定导入器，并改进中文句子/段落边界切片和“多少/哪三类”等离线答案抽取；同时保留 15,000 条 Huatuo-26M 中文研究语料、NLM MedlinePlus 官方导入、SQLite FTS5 中文索引、明亮 Web 控制台和多模态证据链。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
@@ -31,6 +31,8 @@
 - API 保留 `source`、`document_id`、`chunk_id` 的结构化溯源；正文不再插入来源标记，仅在下方来源卡片显示编号，也不暴露内部行号或匹配分数；
 - 可复现下载并导入 NLM 官方 MedlinePlus 健康主题全量 XML，每个主题保留 URL、主题 ID、语言、MeSH 与来源清单；
 - 固定数据版本导入 12,000 条 Huatuo-26M 中文医学知识图谱问答和 3,000 条中文医学百科问答，并生成本地哈希来源清单；
+- 从版本化目录下载 6 份中国政府医疗/医疗器械 PDF，执行 HTTPS 主机白名单、大小、PDF 文件头与 SHA-256 门禁，原文不进入 Git；
+- 使用中文句号、问号、感叹号、分号和段落边界切片，并把重叠起点吸附到语义边界，减少半句和重复句；
 - 在租户及知识库边界内使用 SQLite FTS5 三元字符索引召回候选，再由 BM25 排序，避免中文大语料每次全表扫描；
 - 可选 OpenAI-compatible 模型调用，包含超时、有限重试和离线 fallback；
 - 在 SQL 检索阶段执行租户过滤，其他租户内容不会先进入模型再过滤；
@@ -38,7 +40,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 97 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
+- 102 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；
 - 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
@@ -53,12 +55,13 @@ cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
+.\.venv\Scripts\python.exe -m scripts.import_chinese_official
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
 .\.venv\Scripts\python.exe -m scripts.import_medlineplus
 .\.venv\Scripts\fastapi.exe dev
 ```
 
-Huatuo 命令默认导入 15,000 条中文研究语料，MedlinePlus 命令导入完整英文公开健康主题库。数据源比较、许可边界、
+官方中文命令导入 6 份哈希固定的政府公开 PDF；Huatuo 命令默认导入 15,000 条中文研究语料，MedlinePlus 命令导入完整英文公开健康主题库。官方来源、再分发边界与验收见 [`docs/v2/OFFICIAL_CHINESE_CORPUS.md`](docs/v2/OFFICIAL_CHINESE_CORPUS.md)。其他数据源比较、许可边界、
 西班牙文导入方式与测试问题见
 [`docs/v2/PUBLIC_MEDICAL_CORPORA.md`](docs/v2/PUBLIC_MEDICAL_CORPORA.md)。
 
@@ -109,7 +112,7 @@ Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/summary-jobs `
 
 ## 测试与评测
 
-一条命令执行发布核心门禁（Ruff、92 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
+一条命令执行发布核心门禁（Ruff、102 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell
@@ -203,4 +206,4 @@ POST /answer
 - Prompt Injection 检测只是启发式纵深防御，不能宣称完全阻断；
 - `trusted_headers` 仍是演示边界；API Key 模式已有认证授权，但公网部署仍需网关 TLS、限流与密钥管理；
 - SQLite 和进程内检索面向本地案例，不面向医院级流量；
-- 语料全部为合成资料，评测集规模有限。
+- 官方与研究语料都不等于本项目完成了临床复核；当前官方冻结评测仅 8 例，仍需领域专家签核。

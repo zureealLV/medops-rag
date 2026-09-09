@@ -1,0 +1,74 @@
+{
+  "catalog_version": 1,
+  "name": "中国官方医疗与医疗器械公开资料",
+  "language": "zh-CN",
+  "distribution_policy": "The catalog is versioned; source files are fetched from publishers and are not redistributed by this repository.",
+  "sources": [
+    {
+      "key": "nhc-hyperlipidemia-diet-2023",
+      "title": "成人高脂血症食养指南（2023年版）",
+      "publisher": "中华人民共和国国家卫生健康委员会",
+      "published_at": "2023-01-12",
+      "category": "慢性病食养",
+      "trust_tier": "official_government",
+      "filename": "成人高脂血症食养指南-2023.pdf",
+      "url": "https://www.nhc.gov.cn/wjw/c100378/202301/7faed9993c9b45aea158c5335346f282/files/1732844468018_41219.pdf",
+      "sha256": "595f0f3358c7b96580a548ee93923010b2a2ff672f500e3bf0859344811893d0"
+    },
+    {
+      "key": "nhc-hypertension-diet-2023",
+      "title": "成人高血压食养指南（2023年版）",
+      "publisher": "中华人民共和国国家卫生健康委员会",
+      "published_at": "2023-01-12",
+      "category": "慢性病食养",
+      "trust_tier": "official_government",
+      "filename": "成人高血压食养指南-2023.pdf",
+      "url": "https://www.nhc.gov.cn/cms-search/downFiles/63f752a17cfd4b4781f744477561866f.pdf",
+      "sha256": "e6c5227d95d289a810c953d895afc740ae922fc80ed4a8f1d5f4e39a9cd6c000"
+    },
+    {
+      "key": "nhc-diabetes-diet-2023",
+      "title": "成人糖尿病食养指南（2023年版）",
+      "publisher": "中华人民共和国国家卫生健康委员会",
+      "published_at": "2023-01-12",
+      "category": "慢性病食养",
+      "trust_tier": "official_government",
+      "filename": "成人糖尿病食养指南-2023.pdf",
+      "url": "https://www.nhc.gov.cn/cms-search/downFiles/4fcbecd2c18e46baaf291bf46c2b79cd.pdf",
+      "sha256": "2e03cd9e06b1a1faf67298647a01c5e5d2be9cd99aacb527732c51f1ee378d87"
+    },
+    {
+      "key": "nhc-child-growth-diet-2023",
+      "title": "儿童青少年生长迟缓食养指南（2023年版）",
+      "publisher": "中华人民共和国国家卫生健康委员会",
+      "published_at": "2023-01-12",
+      "category": "儿童营养",
+      "trust_tier": "official_government",
+      "filename": "儿童青少年生长迟缓食养指南-2023.pdf",
+      "url": "https://www.nhc.gov.cn/cms-search/downFiles/b127fbe92b104f929f0877303d369150.pdf",
+      "sha256": "74d67776a6f130e4e7965cc91e1b49761f0c6591eae2c21c3baf9c63fcdb0d57"
+    },
+    {
+      "key": "state-council-medical-device-regulation-2021",
+      "title": "医疗器械监督管理条例（国务院令第739号）",
+      "publisher": "中华人民共和国国务院",
+      "published_at": "2021-02-09",
+      "category": "医疗器械法规",
+      "trust_tier": "official_government",
+      "filename": "医疗器械监督管理条例-国务院令第739号.pdf",
+      "url": "https://xzfg.moj.gov.cn/law/download?LawID=678&type=pdf",
+      "sha256": "2dcd707861f8dae93a4c392bcc5beea84931905bf36e920a6c678fbb9ceabcba"
+    },
+    {
+      "key": "nmpa-udi-creation-2022",
+      "title": "YY/T 1879—2022 医疗器械唯一标识的创建和赋予",
+      "publisher": "国家药品监督管理局",
+      "published_at": "2022-08-17",
+      "category": "医疗器械标准",
+      "trust_tier": "official_government",
+      "filename": "YYT1879-2022-医疗器械唯一标识的创建和赋予.pdf",
+      "url": "https://udid.nmpa.gov.cn/attachments/attachment/download.html?path=A2E0C4E371D356DC134BE4F49B8062115BDE71683E61CA7B7286BD099B6DB8A47BC58DD51BC6B49BFFD24103CFB501E4F6E3380D24683869EA98CB2E1656CE6F52C2BF671FBA9CAC669B8237250DBEC6",
+      "sha256": "1d7f314ef464547c743a72658f376ce7343fc4affd0599384c096dc0bc53c3a2"
+    }
+  ]
+}

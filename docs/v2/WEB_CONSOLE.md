@@ -1,6 +1,6 @@
-# MedOps Web Console V2.3
+# MedOps Web Console V2.4
 
-The first-party, same-origin browser interface lives at `/ui/`; `/` redirects there. V2.3 keeps the bright white/teal clinical theme, prefers the Chinese Huatuo research knowledge base on a fresh session, and presents citations as numbered source cards without raw retrieval scores. Static HTML, CSS and JavaScript are served by FastAPI, so the demonstration has no Node.js runtime or frontend build chain.
+The first-party, same-origin browser interface lives at `/ui/`; `/` redirects there. V2.4 keeps the bright white/teal clinical theme, prefers a Chinese knowledge base on a fresh session, and presents citations as numbered source cards without raw retrieval scores. Static HTML, CSS and JavaScript are served by FastAPI, so the demonstration has no Node.js runtime or frontend build chain.
 
 ## Demonstrated workflows
 
