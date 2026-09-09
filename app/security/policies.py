@@ -12,6 +12,7 @@ SUPPORTED_DOMAIN = re.compile(
     r"消毒|灭菌|洗手|A1C|medical|medicine|disease|symptom|drug|blood|infection|"
     r"asthma|diabetes|arthritis|diagnos|treatment|surgery|prevention|patient|clinical|"
     r"device|oximeter|infusion|PACS|DICOM|HIS|EMR|LIS|HL7|SSO|Redis|Kafka|NTP|"
+    r"影像|挂号|电子签名|信息系统|故障|运维|告警|日志|知识助手|"
     r"backup|VPN|gateway|archive|queue)",
     re.I,
 )

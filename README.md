@@ -1,8 +1,12 @@
-# MedOps Multimodal RAG V2.4
+# MedOps Medical Knowledge Agent RAG V3.0
 
-[中文说明](README_CN.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web console](docs/v2/WEB_CONSOLE.md) · [Chinese corpus benchmark](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [Engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Migration/rollback](docs/v2/MIGRATION_AND_ROLLBACK.md) · [Performance](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [EnterpriseQA source review](docs/v3/ENTERPRISEQA_SOURCE_REVIEW.md) · [V3 acceptance](docs/v3/V3_ACCEPTANCE.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web console](docs/v2/WEB_CONSOLE.md) · [Chinese corpus benchmark](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [Engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Migration/rollback](docs/v2/MIGRATION_AND_ROLLBACK.md) · [Performance](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped multimodal RAG assistant for **public medical knowledge and medical-device evidence**. V2.4 adds a hash-pinned importer for six Chinese government PDFs from NHC, the State Council regulation database and NMPA, sentence-aware Chinese chunk boundaries, and quantity/list-aware offline extraction. It retains the 15,000-record Huatuo research corpus, official NLM MedlinePlus import, SQLite trigram FTS and the bright clinical console.
+An auditable, tenant-scoped Agent RAG assistant for **public medical knowledge and medical-device evidence**.
+V3.0 adds bounded LangGraph tool orchestration, a controlled LangChain/Classic comparison, DeepSeek V4 Flash,
+token/cost telemetry, and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
+PDFs, 15,000-record Huatuo research corpus, NLM MedlinePlus import, multimodal evidence, SQLite trigram FTS and
+the bright clinical console.
 
 > Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
 
@@ -10,6 +14,11 @@ An auditable, tenant-scoped multimodal RAG assistant for **public medical knowle
 
 ## Current capabilities
 
+- Experimental V3 bounded-Agent layer: the same `/answer` endpoint compares Classic Python, LangChain LCEL,
+  and LangGraph; LangGraph uses a conditional policy edge, one allowlisted read-only evidence-search tool, a
+  grounding verifier, and a Web-visible node trace.
+- DeepSeek V4 Flash OpenAI-compatible API defaults, with the API key read only from the local environment plus
+  bounded retry, cache/prompt/completion token accounting, and offline fallback.
 - a responsive, dependency-free Web console for knowledge spaces, synchronous demo uploads, cited Q&A,
   health and tenant-scoped operational metrics;
 - FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
@@ -42,7 +51,7 @@ An auditable, tenant-scoped multimodal RAG assistant for **public medical knowle
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 102 API/security/parser/migration/job/UI tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 120 API/security/parser/migration/job/UI tests and repeatable ingestion/retrieval benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a verified Docker Compose image with API, ingestion worker, summary worker, health checks and persistent
   data/model volumes;
@@ -62,6 +71,12 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
 .\.venv\Scripts\python.exe -m scripts.import_medlineplus
 .\.venv\Scripts\fastapi.exe dev
+```
+
+To reuse an existing external DeepSeek dotenv file without copying its secret into this repository:
+
+```powershell
+.\scripts\run_dev.ps1 -EnvFile <external-.env-path>
 ```
 
 The official-source command imports six hash-pinned government PDFs without bundling their binaries in Git.
@@ -130,7 +145,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 102 tests, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 120 tests, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 
@@ -154,7 +169,16 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\evaluate_confidence_thresholds.py
 .\.venv\Scripts\python.exe .\evals\benchmark_qdrant_server.py
 .\.venv\Scripts\python.exe .\evals\benchmark_v2_performance.py
+.\.venv\Scripts\python.exe .\evals\benchmark_agent_orchestration.py --repetitions 20
+.\.venv\Scripts\python.exe .\evals\benchmark_chunk_profiles.py
+.\.venv\Scripts\python.exe .\evals\benchmark_official_chunk_profiles.py
 ```
+
+The [V3 Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) isolates framework overhead on 600 calls
+per mode and records a paid live `deepseek-v4-flash` run on 8 official-corpus cases, 3 repetitions and 24 runs
+per mode. All live quality metrics were 1.0000; mean end-to-end latency was 2332.197 ms (Classic), 2269.603 ms
+(LangChain LCEL), and 2294.754 ms (LangGraph). The live result proves compatibility and telemetry, not a broad
+latency ranking; the repeated offline benchmark isolates LangGraph overhead at 1.986 ms.
 
 See the [Alpha.2 benchmark report](docs/v2/BENCHMARK_REPORT_ALPHA2.md). CLIP-B/32 reached 0.95 English Hit@1 on 20 text-free icons versus 0.05 for OCR-only, but only 0.10 Chinese Hit@1. Image embeddings therefore remain opt-in until a multilingual profile passes the Chinese gate.
 

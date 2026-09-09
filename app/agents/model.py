@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import time
+from dataclasses import dataclass
 
 import httpx
 
@@ -12,6 +13,24 @@ from app.config import Settings
 from app.models.artifacts import VisualEvidence
 from app.models.retrieval import Evidence
 from app.retrieval.embeddings import tokenize
+
+
+@dataclass(frozen=True, slots=True)
+class ModelUsage:
+    """Provider token counters used by benchmarks and cost estimates."""
+
+    total_tokens: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cached_prompt_tokens: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationResult:
+    answer: str
+    provider: str
+    model_ms: float
+    usage: ModelUsage
 
 
 def _extractive_answer(question: str, evidence: list[Evidence]) -> str:
@@ -141,21 +160,41 @@ def _offline_answer(
     return answer, provider, tokens
 
 
-def generate(
+def generate_detailed(
     question: str,
     evidence: list[Evidence],
     settings: Settings,
     visual_payloads: list[tuple[VisualEvidence, bytes]] | None = None,
-) -> tuple[str, str, float, int]:
+) -> GenerationResult:
     started = time.perf_counter()
     visual_payloads = visual_payloads or []
     if not (settings.model_api_key and settings.model_base_url and settings.model_name):
         answer, provider, tokens = _offline_answer(question, evidence, visual_payloads)
-        return answer, provider, 0.0, tokens
+        completion_tokens = len(tokenize(answer))
+        return GenerationResult(
+            answer,
+            provider,
+            0.0,
+            ModelUsage(
+                total_tokens=tokens,
+                prompt_tokens=max(0, tokens - completion_tokens),
+                completion_tokens=completion_tokens,
+            ),
+        )
 
     if visual_payloads and not settings.model_vision_enabled:
         answer, provider, tokens = _offline_answer(question, evidence, visual_payloads)
-        return answer, provider, 0.0, tokens
+        completion_tokens = len(tokenize(answer))
+        return GenerationResult(
+            answer,
+            provider,
+            0.0,
+            ModelUsage(
+                total_tokens=tokens,
+                prompt_tokens=max(0, tokens - completion_tokens),
+                completion_tokens=completion_tokens,
+            ),
+        )
 
     endpoint = settings.model_base_url.rstrip("/") + "/chat/completions"
     payload = {
@@ -178,8 +217,26 @@ def generate(
             response.raise_for_status()
             body = response.json()
             content = body["choices"][0]["message"]["content"]
-            tokens = int(body.get("usage", {}).get("total_tokens", 0))
-            return str(content), "openai-compatible", (time.perf_counter() - started) * 1000, tokens
+            usage = body.get("usage", {})
+            prompt_tokens = int(usage.get("prompt_tokens", 0))
+            completion_tokens = int(usage.get("completion_tokens", 0))
+            cached_prompt_tokens = int(
+                usage.get("prompt_cache_hit_tokens")
+                or usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
+                or 0
+            )
+            total_tokens = int(usage.get("total_tokens", prompt_tokens + completion_tokens))
+            return GenerationResult(
+                str(content),
+                "openai-compatible",
+                (time.perf_counter() - started) * 1000,
+                ModelUsage(
+                    total_tokens=total_tokens,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    cached_prompt_tokens=cached_prompt_tokens,
+                ),
+            )
         except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError):
             if attempt < settings.model_max_retries:
                 time.sleep(0.1 * (attempt + 1))
@@ -187,4 +244,25 @@ def generate(
     fallback_provider = "offline-visual-fallback" if visual_payloads else "offline-fallback"
     if provider == "offline-extractive+visual-locator":
         fallback_provider = "offline-text+visual-fallback"
-    return answer, fallback_provider, (time.perf_counter() - started) * 1000, tokens
+    completion_tokens = len(tokenize(answer))
+    return GenerationResult(
+        answer,
+        fallback_provider,
+        (time.perf_counter() - started) * 1000,
+        ModelUsage(
+            total_tokens=tokens,
+            prompt_tokens=max(0, tokens - completion_tokens),
+            completion_tokens=completion_tokens,
+        ),
+    )
+
+
+def generate(
+    question: str,
+    evidence: list[Evidence],
+    settings: Settings,
+    visual_payloads: list[tuple[VisualEvidence, bytes]] | None = None,
+) -> tuple[str, str, float, int]:
+    """Compatibility wrapper for call sites that only need total token usage."""
+    result = generate_detailed(question, evidence, settings, visual_payloads)
+    return result.answer, result.provider, result.model_ms, result.usage.total_tokens

@@ -1,8 +1,11 @@
-# MedOps 多模态 RAG V2.4
+# MedOps 医疗健康知识 Agent RAG V3.0
 
-[English README](README.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [中文语料基准](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [EnterpriseQA 源码审阅](docs/v3/ENTERPRISEQA_SOURCE_REVIEW.md) · [V3 验收记录](docs/v3/V3_ACCEPTANCE.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [中文语料基准](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户多模态 RAG 知识助手。V2.4 新增 6 份国家卫健委、国务院法规库与国家药监局中文 PDF 的哈希固定导入器，并改进中文句子/段落边界切片和“多少/哪三类”等离线答案抽取；同时保留 15,000 条 Huatuo-26M 中文研究语料、NLM MedlinePlus 官方导入、SQLite FTS5 中文索引、明亮 Web 控制台和多模态证据链。
+这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.0 新增
+受控 LangGraph 工具编排、LangChain/Classic 同变量对比、DeepSeek V4 Flash、Token/成本遥测，以及
+有实测数据的分片策略门禁；同时保留 V2.4 的 6 份中国政府哈希固定 PDF、15,000 条 Huatuo-26M
+中文研究语料、NLM MedlinePlus、多模态证据、SQLite FTS5 中文索引和明亮 Web 控制台。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
 
@@ -10,6 +13,10 @@
 
 ## 当前已实现
 
+- 实验性 V3 受控 Agent 层：同一 `/answer` 接口可对比 Classic Python、LangChain LCEL 与 LangGraph；
+  LangGraph 使用条件式安全策略边、最多一次白名单只读证据检索工具、引用验证节点，并在 Web 控制台展示完整路径；
+- DeepSeek V4 Flash 官方 OpenAI-compatible API 预配置，API Key 只从本地环境读取，保留有限重试、
+  缓存命中/输入/输出 Token 统计和离线降级；
 - 无需 Node 构建链的响应式 Web 控制台：知识空间、同步演示上传、带引用问答、健康状态和租户指标；
 - FastAPI 应用工厂、类型化 Router、依赖注入、统一错误与 OpenAPI；
 - SQLite 事务、外键、索引和重启持久化；
@@ -40,7 +47,7 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 102 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
+- 120 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；
 - 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
@@ -59,6 +66,12 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
 .\.venv\Scripts\python.exe -m scripts.import_medlineplus
 .\.venv\Scripts\fastapi.exe dev
+```
+
+如果已有外部 DeepSeek dotenv 文件，可直接复用而不把密钥复制进本仓库：
+
+```powershell
+.\scripts\run_dev.ps1 -EnvFile <外部-.env-路径>
 ```
 
 官方中文命令导入 6 份哈希固定的政府公开 PDF；Huatuo 命令默认导入 15,000 条中文研究语料，MedlinePlus 命令导入完整英文公开健康主题库。官方来源、再分发边界与验收见 [`docs/v2/OFFICIAL_CHINESE_CORPUS.md`](docs/v2/OFFICIAL_CHINESE_CORPUS.md)。其他数据源比较、许可边界、
@@ -112,7 +125,14 @@ Invoke-RestMethod http://127.0.0.1:8000/knowledge-bases/1/summary-jobs `
 
 ## 测试与评测
 
-一条命令执行发布核心门禁（Ruff、102 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
+Agent 编排对比见 [`docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md`](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md)。
+冻结 30-case、每种编排 600 次离线调用中，三者 Hit@5、引用正确率和拒答正确率均为 `1.0000`；
+LangChain LCEL 相比 Classic 平均增加 `0.901 ms`，LangGraph 增加 `1.986 ms`。另有真实
+`deepseek-v4-flash` 付费测试：8 个官方语料用例、3 次重复、每种模式 24 次运行，全部质量指标为
+`1.0000`，平均端到端耗时依次为 `2332.197 / 2269.603 / 2294.754 ms`。它用于证明兼容性和
+Token/成本遥测，不拿八个不同问题伪装成宽泛、稳定的框架性能排名。
+
+一条命令执行发布核心门禁（Ruff、120 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell
@@ -135,6 +155,9 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\evaluate_confidence_thresholds.py
 .\.venv\Scripts\python.exe .\evals\benchmark_qdrant_server.py
 .\.venv\Scripts\python.exe .\evals\benchmark_v2_performance.py
+.\.venv\Scripts\python.exe .\evals\benchmark_agent_orchestration.py --repetitions 20
+.\.venv\Scripts\python.exe .\evals\benchmark_chunk_profiles.py
+.\.venv\Scripts\python.exe .\evals\benchmark_official_chunk_profiles.py
 ```
 
 详细数据见 [`docs/v2/BENCHMARK_REPORT_ALPHA2.md`](docs/v2/BENCHMARK_REPORT_ALPHA2.md)。20 张无文字图标上，CLIP-B/32 英文 Hit@1 为 0.95，OCR-only 只有 0.05；但中文 Hit@1 仅 0.10，因此图片向量保持显式开启，不能冒充合格的中文生产方案。

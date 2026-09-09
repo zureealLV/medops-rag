@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 def test_health_is_public_and_reports_database(client: TestClient):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "2.4.0", "database": "ok"}
+    assert response.json() == {"status": "ok", "version": "3.0.0", "database": "ok"}
     assert response.headers["X-Request-ID"]
 
 

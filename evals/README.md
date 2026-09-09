@@ -43,6 +43,20 @@ Run `benchmark_query_transforms.py` to compare unchanged queries, deterministic 
 and the template-HyDE experiment against the frozen Beta.1 corpus. It writes the versioned raw report to
 `reports/query-transform-benchmark-v2-beta1.json`.
 
+V3 comparison runners:
+
+```powershell
+python evals/benchmark_agent_orchestration.py --repetitions 20
+python evals/benchmark_chunk_profiles.py
+python evals/benchmark_official_chunk_profiles.py
+# Paid provider run; the dotenv file stays outside this repository.
+python evals/benchmark_deepseek_live.py --env-file <external-.env-path>
+```
+
+The live runner accepts `MODEL_API_KEY` or `DEEPSEEK_API_KEY`, never writes the key, counterbalances execution
+order across Classic/LangChain/LangGraph, and captures provider success, quality, p50/p95 latency, cache/prompt/
+completion tokens and a peak/off-peak cost range.
+
 ## Hardened V2 performance profile
 
 `benchmark_v2_performance.py` measures raw per-call latency for API-key-authenticated upload acceptance,

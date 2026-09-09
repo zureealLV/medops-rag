@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from app.agents.model import generate
+from app.agents.model import generate_detailed
 from app.config import Settings
 from app.models.answers import AnswerRequest, AnswerResponse, Citation, VisualCitation
 from app.models.artifacts import VisualEvidence, VisualSearchRequest
@@ -20,7 +20,7 @@ from app.services.retrieval import search as text_search
 def _strip_inline_citation_markers(answer_text: str) -> str:
     """Keep the answer natural; structured citation cards are rendered separately."""
     result = re.sub(
-        r"\s*\[(?:\d+:\d+|source:\d+|visual:\d+|image:\d+|来源\d+|图像\d+)\]",
+        r"\s*[\[【](?:\d+:\d+|source:\d+|evidence:\d+|visual:\d+|image:\d+|来源\d+|图像\d+)[\]】]",
         "",
         answer_text,
         flags=re.I,
@@ -97,6 +97,9 @@ def _response(
     retrieval_ms: float,
     model_ms: float = 0.0,
     token_usage: int = 0,
+    prompt_tokens: int = 0,
+    completion_tokens: int = 0,
+    cached_prompt_tokens: int = 0,
 ) -> AnswerResponse:
     return AnswerResponse(
         answer=answer_text,
@@ -130,6 +133,9 @@ def _response(
         retrieval_ms=round(retrieval_ms, 3),
         model_ms=round(model_ms, 3),
         token_usage=token_usage,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        cached_prompt_tokens=cached_prompt_tokens,
     )
 
 
@@ -256,13 +262,13 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
         )
     payload_evidence = [item for item, _ in payloads]
     answer_text_evidence = accepted_text[:3]
-    response_text, provider, model_ms, token_usage = generate(
+    generation = generate_detailed(
         request.question,
         answer_text_evidence,
         settings,
         payloads,
     )
-    response_text = _strip_inline_citation_markers(response_text)
+    response_text = _strip_inline_citation_markers(generation.answer)
     return _response(
         answer_text=response_text,
         text_evidence=answer_text_evidence,
@@ -272,8 +278,11 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
         resolved_profile=resolved_profile,
         abstained=False,
         reason=None,
-        provider=provider,
+        provider=generation.provider,
         retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
-        model_ms=model_ms,
-        token_usage=token_usage,
+        model_ms=generation.model_ms,
+        token_usage=generation.usage.total_tokens,
+        prompt_tokens=generation.usage.prompt_tokens,
+        completion_tokens=generation.usage.completion_tokens,
+        cached_prompt_tokens=generation.usage.cached_prompt_tokens,
     )

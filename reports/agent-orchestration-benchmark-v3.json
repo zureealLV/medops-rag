@@ -1,0 +1,68 @@
+{
+  "benchmark": "medops-agent-orchestration-v3",
+  "provider": "offline-extractive",
+  "controlled_variables": {
+    "dataset": "evals/dataset.jsonl",
+    "cases": 30,
+    "repetitions": 20,
+    "retriever_prompt_and_model_are_identical": true
+  },
+  "versions": {
+    "medops-rag": "3.0.0",
+    "langchain": "1.4.0",
+    "langgraph": "1.2.11"
+  },
+  "results": {
+    "classic": {
+      "runs": 600,
+      "quality": {
+        "retrieval_hit_at_5": 1.0,
+        "citation_correctness": 1.0,
+        "correct_abstention": 1.0
+      },
+      "latency_ms": {
+        "mean": 6.03,
+        "median": 6.538,
+        "p95": 9.009,
+        "min": 0.01,
+        "max": 14.205
+      },
+      "exact_output_parity_with_classic": 1.0,
+      "mean_overhead_vs_classic_ms": 0.0
+    },
+    "langchain": {
+      "runs": 600,
+      "quality": {
+        "retrieval_hit_at_5": 1.0,
+        "citation_correctness": 1.0,
+        "correct_abstention": 1.0
+      },
+      "latency_ms": {
+        "mean": 6.931,
+        "median": 7.365,
+        "p95": 10.487,
+        "min": 0.46,
+        "max": 16.582
+      },
+      "exact_output_parity_with_classic": 1.0,
+      "mean_overhead_vs_classic_ms": 0.901
+    },
+    "langgraph": {
+      "runs": 600,
+      "quality": {
+        "retrieval_hit_at_5": 1.0,
+        "citation_correctness": 1.0,
+        "correct_abstention": 1.0
+      },
+      "latency_ms": {
+        "mean": 8.016,
+        "median": 8.381,
+        "p95": 11.985,
+        "min": 0.768,
+        "max": 16.316
+      },
+      "exact_output_parity_with_classic": 1.0,
+      "mean_overhead_vs_classic_ms": 1.986
+    }
+  }
+}

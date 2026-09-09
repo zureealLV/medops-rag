@@ -203,6 +203,7 @@ async function askQuestion() {
         top_k: 5,
         text_strategy: $("#text-strategy").value,
         retrieval_profile: $("#retrieval-profile").value,
+        orchestration: $("#orchestration").value,
       }),
     });
     renderAnswer(answer);
@@ -226,10 +227,19 @@ function renderAnswer(answer) {
     return `<article class="citation"><header><span>[来源${index + 1}] ${escapeHtml(citation.source)}</span><span>文本证据</span></header><p>${escapeHtml(excerpt)}</p></article>`;
   }).join("");
   const visualEvidence = (answer.visual_citations || []).map((item, index) => `<article class="citation"><header><span>[图像${index + 1}] ${escapeHtml(item.source)}</span><span>${item.page_number ? `第 ${escapeHtml(item.page_number)} 页` : "原始图像"}</span></header><div class="visual-slot" data-visual-url="${escapeHtml(item.content_url)}"><p>正在载入原始视觉证据…</p></div></article>`).join("");
+  const agentTrace = (answer.agent_steps || []).map((step) => {
+    const detail = step.detail ? ` (${escapeHtml(step.detail)})` : "";
+    return `${escapeHtml(step.node)} ${Number(step.duration_ms || 0).toFixed(2)}ms${detail}`;
+  }).join(" → ");
+  const tokenTrace = Number(answer.token_usage || 0) > 0
+    ? `Token ${Number(answer.token_usage || 0).toLocaleString()} · 输入 ${Number(answer.prompt_tokens || 0).toLocaleString()} · 输出 ${Number(answer.completion_tokens || 0).toLocaleString()} · 缓存 ${Number(answer.cached_prompt_tokens || 0).toLocaleString()}`
+    : "Token 0（策略直接处理）";
   $("#answer-result").innerHTML = `
-    <div class="result-status"><span class="badge ${answer.abstained ? "abstained" : ""}">${answer.abstained ? "证据不足，已拒答" : "已依据来源回答"}</span><span class="timing">${escapeHtml(answer.provider)} · ${Number(answer.retrieval_ms + answer.model_ms).toFixed(1)} ms</span></div>
+    <div class="result-status"><span class="badge ${answer.abstained ? "abstained" : ""}">${answer.abstained ? "证据不足，已拒答" : "已依据来源回答"}</span><span class="timing">${escapeHtml(answer.orchestration || "classic")} / ${escapeHtml(answer.provider)} · ${Number(answer.retrieval_ms + answer.model_ms).toFixed(1)} ms</span></div>
     <div class="answer-copy">${escapeHtml(answer.answer)}</div>
     ${answer.reason ? `<div class="reason">门禁说明：${escapeHtml(answer.reason)}</div>` : ""}
+    ${agentTrace ? `<div class="reason">Agent 路径：${agentTrace}</div>` : ""}
+    <div class="reason">模型遥测：${tokenTrace}</div>
     <div class="citation-grid">${textEvidence}${visualEvidence || (!textEvidence ? '<div class="citation"><p>没有可展示的证据片段。</p></div>' : "")}</div>`;
   hydrateVisualEvidence();
 }

@@ -48,8 +48,8 @@ class Settings:
     visual_similarity_threshold: float = 0.28
     visual_similarity_margin: float = 0.002
     model_api_key: str = ""
-    model_base_url: str = ""
-    model_name: str = ""
+    model_base_url: str = "https://api.deepseek.com"
+    model_name: str = "deepseek-v4-flash"
     model_vision_enabled: bool = False
     model_max_visual_images: int = 3
     model_max_visual_bytes: int = 6_000_000
@@ -106,9 +106,9 @@ class Settings:
             model_cache_dir=Path(os.getenv("MODEL_CACHE_DIR", "data/models/fastembed")),
             visual_similarity_threshold=float(os.getenv("VISUAL_SIMILARITY_THRESHOLD", "0.28")),
             visual_similarity_margin=float(os.getenv("VISUAL_SIMILARITY_MARGIN", "0.002")),
-            model_api_key=os.getenv("MODEL_API_KEY", ""),
-            model_base_url=os.getenv("MODEL_BASE_URL", ""),
-            model_name=os.getenv("MODEL_NAME", ""),
+            model_api_key=os.getenv("MODEL_API_KEY") or os.getenv("DEEPSEEK_API_KEY", ""),
+            model_base_url=os.getenv("MODEL_BASE_URL", "https://api.deepseek.com"),
+            model_name=os.getenv("MODEL_NAME", "deepseek-v4-flash"),
             model_vision_enabled=os.getenv("MODEL_VISION_ENABLED", "false").lower()
             in {"1", "true", "yes", "on"},
             model_max_visual_images=int(os.getenv("MODEL_MAX_VISUAL_IMAGES", "3")),

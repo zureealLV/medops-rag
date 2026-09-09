@@ -1,0 +1,65 @@
+{
+  "benchmark": "medops-chunk-profiles-v3",
+  "corpus": "sample_data/medical_knowledge",
+  "documents": 7,
+  "questions": 7,
+  "results": {
+    "enterpriseqa_fixed_500_50": {
+      "chunks": 12,
+      "mean_chunk_chars": 330.083,
+      "duplicated_character_ratio": 0.0674,
+      "mid_sentence_boundary_ratio": 0.4,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 1.0,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [],
+      "index_build_ms": 0.125,
+      "query_mean_ms": 0.228
+    },
+    "medops_semantic_500_50": {
+      "chunks": 12,
+      "mean_chunk_chars": 340.5,
+      "duplicated_character_ratio": 0.1011,
+      "mid_sentence_boundary_ratio": 0.0,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 1.0,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [],
+      "index_build_ms": 0.297,
+      "query_mean_ms": 0.163
+    },
+    "medops_semantic_600_80": {
+      "chunks": 9,
+      "mean_chunk_chars": 437.333,
+      "duplicated_character_ratio": 0.0606,
+      "mid_sentence_boundary_ratio": 0.0,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 1.0,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [],
+      "index_build_ms": 0.087,
+      "query_mean_ms": 0.13
+    },
+    "medops_parent_child_1600_350_50": {
+      "chunks": 15,
+      "mean_chunk_chars": 282.0,
+      "duplicated_character_ratio": 0.1399,
+      "mid_sentence_boundary_ratio": 0.125,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 1.0,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [],
+      "index_build_ms": 0.225,
+      "query_mean_ms": 0.146
+    }
+  },
+  "limitations": [
+    "Seven concise educational documents make retrieval easy; context completeness and boundaries are the stronger diagnostics.",
+    "BM25 is held constant; this benchmark does not compare embedding models.",
+    "Fixed 500/50 is a local reference implementation of the EnterpriseQA policy, not LangChain's splitter implementation."
+  ]
+}

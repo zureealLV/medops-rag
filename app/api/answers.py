@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Response
 
+from app.agents.orchestration import orchestrate_answer
 from app.api.deps import RequestIdDep, SettingsDep, TenantContext
 from app.exceptions import AppError
 from app.models.answers import AnswerRequest, AnswerResponse
@@ -19,15 +20,23 @@ def grounded_answer(
     settings: SettingsDep,
     request_id: RequestIdDep,
 ) -> AnswerResponse:
-    result = answer(settings.database_path, settings, context.tenant_id, data)
+    result = orchestrate_answer(
+        data.orchestration,
+        data,
+        lambda: answer(settings.database_path, settings, context.tenant_id, data),
+    )
     if result is None:
         raise AppError(404, "knowledge_base_not_found", "Knowledge base not found")
     response.headers["X-MedOps-Abstained"] = str(result.abstained).lower()
     response.headers["X-MedOps-Retrieval-Ms"] = str(result.retrieval_ms)
     response.headers["X-MedOps-Model-Ms"] = str(result.model_ms)
     response.headers["X-MedOps-Token-Usage"] = str(result.token_usage)
+    response.headers["X-MedOps-Prompt-Tokens"] = str(result.prompt_tokens)
+    response.headers["X-MedOps-Completion-Tokens"] = str(result.completion_tokens)
+    response.headers["X-MedOps-Cached-Prompt-Tokens"] = str(result.cached_prompt_tokens)
     response.headers["X-MedOps-Retrieval-Profile"] = result.retrieval_profile
     response.headers["X-MedOps-Provider"] = result.provider
+    response.headers["X-MedOps-Orchestration"] = result.orchestration
     write_audit(
         settings.database_path,
         request_id=request_id,
@@ -46,6 +55,8 @@ def grounded_answer(
             "text_strategy": data.text_strategy,
             "visual_strategy": data.visual_strategy,
             "provider": result.provider,
+            "orchestration": result.orchestration,
+            "agent_steps": [step.node for step in result.agent_steps],
         },
     )
     return result

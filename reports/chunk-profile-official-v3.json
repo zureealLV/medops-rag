@@ -1,0 +1,75 @@
+{
+  "benchmark": "medops-official-chunk-profiles-v3",
+  "corpus": "data/external/chinese_official/raw (hash-pinned; binaries ignored by Git)",
+  "documents": 6,
+  "source_characters": 157761,
+  "questions": 6,
+  "retriever": "rank-bm25 0.2.2 with identical tokenizer and top-1 selection",
+  "results": {
+    "enterpriseqa_fixed_500_50": {
+      "chunks": 353,
+      "mean_chunk_chars": 496.065,
+      "duplicated_character_ratio": 0.11,
+      "mid_sentence_boundary_ratio": 0.9827,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 0.8333,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [
+        "医疗器械 UDI-DI 在什么情况下需要分配新的标识？"
+      ],
+      "index_build_ms": 3.935,
+      "query_mean_ms": 2.139
+    },
+    "medops_semantic_500_50": {
+      "chunks": 393,
+      "mean_chunk_chars": 458.321,
+      "duplicated_character_ratio": 0.1417,
+      "mid_sentence_boundary_ratio": 0.4574,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 0.8333,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [
+        "医疗器械 UDI-DI 在什么情况下需要分配新的标识？"
+      ],
+      "index_build_ms": 7.681,
+      "query_mean_ms": 2.26
+    },
+    "medops_semantic_600_80": {
+      "chunks": 354,
+      "mean_chunk_chars": 536.477,
+      "duplicated_character_ratio": 0.2038,
+      "mid_sentence_boundary_ratio": 0.4253,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 0.8333,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [
+        "医疗器械 UDI-DI 在什么情况下需要分配新的标识？"
+      ],
+      "index_build_ms": 5.569,
+      "query_mean_ms": 2.233
+    },
+    "medops_parent_child_1600_350_50": {
+      "chunks": 616,
+      "mean_chunk_chars": 302.313,
+      "duplicated_character_ratio": 0.1804,
+      "mid_sentence_boundary_ratio": 0.4426,
+      "bm25_hit_at_1": 1.0,
+      "bm25_hit_at_5": 1.0,
+      "answer_context_complete_at_1": 0.8333,
+      "answer_context_complete_at_5": 1.0,
+      "context_incomplete_at_1_questions": [
+        "糖尿病患者每日烹调油和食盐分别应控制在多少？"
+      ],
+      "index_build_ms": 14.403,
+      "query_mean_ms": 3.172
+    }
+  },
+  "limitations": [
+    "The six answerable questions are a small labelled set, so quality differences need confirmation on a larger held-out corpus.",
+    "PDF extraction is performed once before timing; index_build_ms measures chunk planning only.",
+    "Fixed 500/50 is a local EnterpriseQA-style reference, not LangChain's exact splitter."
+  ]
+}

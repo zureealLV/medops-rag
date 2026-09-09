@@ -15,6 +15,14 @@ class AnswerRequest(BaseModel):
     retrieval_profile: Literal["auto", "text", "visual"] = "auto"
     text_strategy: RetrievalStrategy = "auto"
     visual_strategy: VisualStrategy = "fusion"
+    orchestration: Literal["classic", "langchain", "langgraph"] = "langgraph"
+
+
+class AgentStep(BaseModel):
+    node: str
+    status: Literal["completed", "abstained", "failed"] = "completed"
+    duration_ms: float = 0.0
+    detail: str | None = None
 
 
 class Citation(BaseModel):
@@ -47,3 +55,8 @@ class AnswerResponse(BaseModel):
     retrieval_ms: float
     model_ms: float
     token_usage: int
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cached_prompt_tokens: int = 0
+    orchestration: Literal["classic", "langchain", "langgraph"] = "classic"
+    agent_steps: list[AgentStep] = Field(default_factory=list)
