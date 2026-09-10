@@ -198,6 +198,8 @@ export interface Metrics {
     overload_reasons: Record<string, number>
     circuit_rejections: number
     circuit_states: Record<string, number>
+    deadline_rejections: number
+    deadline_phases: Record<string, number>
     malformed_audit_details: number
   }
   provider_runtime: {
@@ -217,6 +219,29 @@ export interface Metrics {
       consecutive_failures: number
       epoch: number
       half_open_probe_active: boolean
+    }
+    policy: {
+      request_deadline_seconds: number
+      max_retries_per_request: number
+      retry_after_max_seconds: number
+    }
+    retry_budget: {
+      retries_consumed: number
+      global: {
+        remaining: number
+        capacity: number
+        refill_per_second: number
+        rejected: number
+      }
+      per_tenant: {
+        tracked: number
+        remaining_total: number
+        remaining_min: number | null
+        remaining_max: number | null
+        capacity: number
+        refill_per_second: number
+        rejected: number
+      }
     }
   }
 }

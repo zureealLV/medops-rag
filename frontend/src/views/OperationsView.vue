@@ -41,7 +41,9 @@ const stages = computed(() => Object.entries(app.metrics?.pipeline_stages ?? {})
 const routingStrategies = computed(() => Object.entries(app.metrics?.rag_routing.strategies ?? {}))
 const routingReasons = computed(() => Object.entries(app.metrics?.rag_routing.reasons ?? {}))
 const providerRejections = computed(() =>
-  (app.metrics?.rag_routing.overload_rejections ?? 0) + (app.metrics?.rag_routing.circuit_rejections ?? 0),
+  (app.metrics?.rag_routing.overload_rejections ?? 0)
+  + (app.metrics?.rag_routing.circuit_rejections ?? 0)
+  + (app.metrics?.rag_routing.deadline_rejections ?? 0),
 )
 const isAdmin = computed(() => app.identity?.role === 'admin')
 const selectedKbId = computed({
@@ -216,7 +218,7 @@ onBeforeUnmount(() => { searchController?.abort(); answerController?.abort() })
       <StatCard label="P95 延迟" :value="request ? `${request.latency_ms.p95.toLocaleString()} ms` : '—'" caption="端到端请求" />
       <StatCard label="安全拒答" :value="request?.abstained_count ?? '—'" caption="证据或边界门禁" />
       <StatCard label="Fallback" :value="request?.fallback_count ?? '—'" caption="模型服务降级" accent />
-      <StatCard label="Provider 拒绝" :value="app.metrics ? providerRejections : '—'" caption="过载或熔断，均显式返回" />
+      <StatCard label="Provider 拒绝" :value="app.metrics ? providerRejections : '—'" caption="过载、熔断或截止，均显式返回" />
     </section>
 
     <section class="surface-panel admin-lab">
@@ -310,6 +312,9 @@ onBeforeUnmount(() => { searchController?.abort(); answerController?.abort() })
           <div class="queue-row"><span><b>活动调用</b><small>当前进程实际 HTTP attempt</small></span><el-tag effect="plain">{{ app.metrics.provider_runtime.capacity.active }} / {{ app.metrics.provider_runtime.capacity.max_concurrency }}</el-tag></div>
           <div class="queue-row"><span><b>排队请求</b><small>全局上限 {{ app.metrics.provider_runtime.capacity.max_queue_waiters }}</small></span><el-tag effect="plain">{{ app.metrics.provider_runtime.capacity.waiting }}</el-tag></div>
           <div class="queue-row"><span><b>租户公平上限</b><small>每租户活动 / 等待</small></span><el-tag effect="plain">{{ app.metrics.provider_runtime.capacity.max_concurrency_per_tenant }} / {{ app.metrics.provider_runtime.capacity.max_queue_waiters_per_tenant }}</el-tag></div>
+          <div class="queue-row"><span><b>端到端截止</b><small>排队、HTTP 与退避共享</small></span><el-tag effect="plain">{{ app.metrics.provider_runtime.policy.request_deadline_seconds }} s</el-tag></div>
+          <div class="queue-row"><span><b>全局重试预算</b><small>已消费 {{ app.metrics.provider_runtime.retry_budget.retries_consumed }} · 拒绝 {{ app.metrics.provider_runtime.retry_budget.global.rejected }}</small></span><el-tag effect="plain">{{ app.metrics.provider_runtime.retry_budget.global.remaining }} / {{ app.metrics.provider_runtime.retry_budget.global.capacity }}</el-tag></div>
+          <div class="queue-row"><span><b>租户重试预算</b><small>{{ app.metrics.provider_runtime.retry_budget.per_tenant.tracked }} 个活跃租户 · 拒绝 {{ app.metrics.provider_runtime.retry_budget.per_tenant.rejected }}</small></span><el-tag effect="plain">{{ app.metrics.provider_runtime.retry_budget.per_tenant.remaining_min ?? '—' }} / {{ app.metrics.provider_runtime.retry_budget.per_tenant.capacity }}</el-tag></div>
           <div class="queue-row"><span><b>连续故障</b><small>breaker epoch {{ app.metrics.provider_runtime.circuit.epoch }}</small></span><el-tag :type="app.metrics.provider_runtime.circuit.consecutive_failures ? 'warning' : 'success'" effect="plain">{{ app.metrics.provider_runtime.circuit.consecutive_failures }}</el-tag></div>
         </div>
         <el-empty v-else description="暂无 Provider 运行数据" :image-size="70" />

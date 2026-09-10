@@ -54,7 +54,16 @@ class Settings:
     model_max_visual_images: int = 3
     model_max_visual_bytes: int = 6_000_000
     model_timeout_seconds: float = 8.0
+    model_request_deadline_seconds: float = 12.0
     model_max_retries: int = 1
+    model_retry_base_delay_seconds: float = 0.1
+    model_retry_max_delay_seconds: float = 2.0
+    model_retry_jitter_ratio: float = 0.2
+    model_retry_after_max_seconds: float = 5.0
+    model_retry_budget_global_capacity: int = 32
+    model_retry_budget_global_refill_per_second: float = 4.0
+    model_retry_budget_per_tenant_capacity: int = 8
+    model_retry_budget_per_tenant_refill_per_second: float = 1.0
     model_max_concurrency: int = 4
     model_max_concurrency_per_tenant: int = 2
     model_max_queue_waiters: int = 8
@@ -112,7 +121,32 @@ class Settings:
             model_max_visual_images=int(os.getenv("MODEL_MAX_VISUAL_IMAGES", "3")),
             model_max_visual_bytes=int(os.getenv("MODEL_MAX_VISUAL_BYTES", "6000000")),
             model_timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "8")),
+            model_request_deadline_seconds=float(
+                os.getenv("MODEL_REQUEST_DEADLINE_SECONDS", "12")
+            ),
             model_max_retries=int(os.getenv("MODEL_MAX_RETRIES", "1")),
+            model_retry_base_delay_seconds=float(
+                os.getenv("MODEL_RETRY_BASE_DELAY_SECONDS", "0.1")
+            ),
+            model_retry_max_delay_seconds=float(
+                os.getenv("MODEL_RETRY_MAX_DELAY_SECONDS", "2")
+            ),
+            model_retry_jitter_ratio=float(os.getenv("MODEL_RETRY_JITTER_RATIO", "0.2")),
+            model_retry_after_max_seconds=float(
+                os.getenv("MODEL_RETRY_AFTER_MAX_SECONDS", "5")
+            ),
+            model_retry_budget_global_capacity=int(
+                os.getenv("MODEL_RETRY_BUDGET_GLOBAL_CAPACITY", "32")
+            ),
+            model_retry_budget_global_refill_per_second=float(
+                os.getenv("MODEL_RETRY_BUDGET_GLOBAL_REFILL_PER_SECOND", "4")
+            ),
+            model_retry_budget_per_tenant_capacity=int(
+                os.getenv("MODEL_RETRY_BUDGET_PER_TENANT_CAPACITY", "8")
+            ),
+            model_retry_budget_per_tenant_refill_per_second=float(
+                os.getenv("MODEL_RETRY_BUDGET_PER_TENANT_REFILL_PER_SECOND", "1")
+            ),
             model_max_concurrency=int(os.getenv("MODEL_MAX_CONCURRENCY", "4")),
             model_max_concurrency_per_tenant=int(
                 os.getenv("MODEL_MAX_CONCURRENCY_PER_TENANT", "2")

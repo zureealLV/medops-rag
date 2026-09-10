@@ -109,16 +109,16 @@ Every engine or model change must record:
 This prevents an attractive framework name or one favorable demo query from
 silently becoming the production default.
 
-## V3.3 progress checkpoint
+## V3.4 progress checkpoint
 
 | Area | Current evidence | Remaining enterprise gate |
 |---|---|---|
-| Vue console | Admin-only engine lab, four-engine side-by-side run, route/reason and Provider runtime panels | SSO-driven identity, accessibility regression suite, deployed Docker image QA |
-| Adaptive routing | Tuning set, independent held-out v1, and independent challenge v2; challenge v2 has 28 documents/48 cases, zero normalized overlap, and real SQLite tenant probes | Production-log blind set, typo/noise set, harder three-source cases, Chinese embedding bake-off |
-| Online concurrency | AsyncClient, `.ainvoke()`, off-loop SQLite/retrieval/checkpoint/audit work, bounded fair per-tenant scheduling, classified retry, circuit breaker, explicit 503 | End-to-end deadline, Retry-After+jitter, retry budgets, soak/open-loop tests |
+| Vue console | Admin-only engine lab, four-engine side-by-side run, route/reason and Provider capacity/circuit/deadline/retry-budget panels | SSO-driven identity, accessibility regression suite, deployed Docker image QA |
+| Adaptive routing | Tuning set, held-out v1, challenge v2, and frozen challenge v3; v3 adds typo/noise, low-overlap and three-source cases with zero leakage checks and exposes lower adaptive scores | Production-log blind set, answer-generation/grounding scoring, Chinese embedding bake-off, evidence-driven routing improvement |
+| Online concurrency | AsyncClient, `.ainvoke()`, off-loop work, bounded fair tenant scheduling, classified retry, breaker, explicit 503/504, one end-to-end deadline, bounded Retry-After+jitter, global/per-tenant retry token buckets | Soak/open-loop tests, Provider idempotency/duplicate-billing policy, client-disconnect evidence |
 | Deployment-wide quota | Process-local limits are observable and explicitly labelled | Redis/gateway/provider-proxy lease with TTL, fencing and multi-worker socket tests |
-| Background model work | Ingestion/summary jobs retain durable SQLite lease semantics | Put summary model calls under a shared or explicitly partitioned Provider budget |
+| Background model work | Ingestion/summary jobs retain durable SQLite lease semantics; V3.4 records a fixed online/batch partition and migration contract | Implement async batch adapter, step fairness, lease fencing/heartbeat/cancel and Provider-call ledger |
 | Data plane | SQLite WAL baseline remains reproducible | PostgreSQL/RLS migration, Qdrant decision gate, backup/restore and rollback drills |
 
-V3.3 is therefore a verified single-process resilience milestone, not a claim
+V3.4 is therefore a verified single-process online-resilience and harder-evaluation milestone, not a claim
 of production-scale horizontal deployment.

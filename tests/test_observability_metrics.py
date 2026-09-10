@@ -69,6 +69,16 @@ def test_metrics_snapshot_aggregates_tenant_scoped_pipeline_facts(
         result="rejected",
         details={"reason": "model_provider_circuit_open", "circuit_state": "open"},
     )
+    write_audit(
+        settings.database_path,
+        request_id="metrics-deadline-01",
+        actor="tester",
+        tenant_id="hospital-a",
+        action="answer",
+        resource="rag",
+        result="rejected",
+        details={"reason": "model_provider_deadline_exceeded", "deadline_phase": "backoff"},
+    )
 
     response = client.get("/system/metrics", headers=tenant_headers)
     assert response.status_code == 200
@@ -97,12 +107,22 @@ def test_metrics_snapshot_aggregates_tenant_scoped_pipeline_facts(
     assert payload["rag_routing"]["overload_reasons"] == {"queue_timeout": 1}
     assert payload["rag_routing"]["circuit_rejections"] == 1
     assert payload["rag_routing"]["circuit_states"] == {"open": 1}
+    assert payload["rag_routing"]["deadline_rejections"] == 1
+    assert payload["rag_routing"]["deadline_phases"] == {"backoff": 1}
     assert payload["rag_routing"]["malformed_audit_details"] == 0
     assert payload["provider_runtime"]["scope"] == "process_local"
     assert payload["provider_runtime"]["capacity"]["max_concurrency"] == 4
     assert payload["provider_runtime"]["capacity"]["max_concurrency_per_tenant"] == 2
     assert payload["provider_runtime"]["capacity"]["max_queue_waiters_per_tenant"] == 4
     assert payload["provider_runtime"]["circuit"]["state"] == "closed"
+    assert payload["provider_runtime"]["policy"] == {
+        "request_deadline_seconds": 12.0,
+        "max_retries_per_request": 1,
+        "retry_after_max_seconds": 5.0,
+    }
+    assert payload["provider_runtime"]["retry_budget"]["retries_consumed"] == 0
+    assert payload["provider_runtime"]["retry_budget"]["global"]["capacity"] == 32
+    assert payload["provider_runtime"]["retry_budget"]["per_tenant"]["capacity"] == 8
 
 
 def test_metrics_do_not_cross_tenant_boundary(

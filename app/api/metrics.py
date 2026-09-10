@@ -91,6 +91,7 @@ def _tenant_metrics_snapshot(context: TenantContext, settings: SettingsDep) -> d
     orchestrations: dict[str, int] = defaultdict(int)
     overload_reasons: dict[str, int] = defaultdict(int)
     circuit_states: dict[str, int] = defaultdict(int)
+    deadline_phases: dict[str, int] = defaultdict(int)
     malformed_audit_details = 0
     for row in rag_events:
         try:
@@ -111,6 +112,8 @@ def _tenant_metrics_snapshot(context: TenantContext, settings: SettingsDep) -> d
             overload_reasons[str(details.get("overload_reason") or "unknown")] += 1
         if details.get("reason") == "model_provider_circuit_open":
             circuit_states[str(details.get("circuit_state") or "unknown")] += 1
+        if details.get("reason") == "model_provider_deadline_exceeded":
+            deadline_phases[str(details.get("deadline_phase") or "unknown")] += 1
 
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -154,6 +157,8 @@ def _tenant_metrics_snapshot(context: TenantContext, settings: SettingsDep) -> d
             "overload_reasons": dict(sorted(overload_reasons.items())),
             "circuit_rejections": sum(circuit_states.values()),
             "circuit_states": dict(sorted(circuit_states.items())),
+            "deadline_rejections": sum(deadline_phases.values()),
+            "deadline_phases": dict(sorted(deadline_phases.items())),
             "malformed_audit_details": malformed_audit_details,
         },
     }
@@ -171,5 +176,11 @@ async def metrics_snapshot(
         "scope": "process_local",
         "capacity": await model_provider.async_capacity_snapshot(),
         "circuit": model_provider.circuit_snapshot(),
+        "policy": {
+            "request_deadline_seconds": settings.model_request_deadline_seconds,
+            "max_retries_per_request": settings.model_max_retries,
+            "retry_after_max_seconds": settings.model_retry_after_max_seconds,
+        },
+        "retry_budget": model_provider.retry_budget_snapshot(),
     }
     return snapshot

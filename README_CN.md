@@ -1,9 +1,9 @@
-# MedOps 医疗健康知识 Agent RAG V3.3
+# MedOps 医疗健康知识 Agent RAG V3.4
 
-[English README](README.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V2](docs/v3/ADAPTIVE_CHALLENGE_V2_EVALUATION.md) · [独立中文留出集](docs/v3/ADAPTIVE_HELDOUT_EVALUATION.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [摘要 Provider 策略](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.3 将在线回答改为
-共享 AsyncClient 的真正异步模型路径，加入租户公平调度、分类重试、熔断器、Provider 运行面板和独立挑战集 V2；并保留管理员专用检索实验室、Agent 控制检查点、Vue 3 企业控制台、可解释自适应检索与受控 LangGraph 编排、
+这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.4 在 V3.3 真异步、公平调度与熔断基础上，
+加入覆盖排队/HTTP/退避的总截止时间、受限 `Retry-After`、指数抖动、进程内全局/租户重试预算和更困难的独立挑战集 V3；并保留管理员专用检索实验室、Agent 控制检查点、Vue 3 企业控制台、可解释自适应检索与受控 LangGraph 编排、
 DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 的 6 份中国政府哈希固定 PDF、15,000 条 Huatuo-26M
 中文研究语料、NLM MedlinePlus、多模态证据、SQLite FTS5 中文索引和明亮 Web 控制台。
 
@@ -17,7 +17,7 @@ DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 
   托管路径最多选择两个代码所有的只读工具（证据回答与引用租户复核），执行安全/引用门禁并展示节点路径；
   SQLite 只保存有界控制状态，不保存问题、Prompt、证据或答案；
 - DeepSeek V4 Flash 官方 OpenAI-compatible API 预配置，API Key 只从本地环境读取；在线 `/answer` 使用
-  lifespan 共享 `httpx.AsyncClient`、租户间 round-robin、公平的活动/等待配额、分类有限重试、closed/open/half-open 熔断器、显式 `503` 和有界关闭；
+  lifespan 共享 `httpx.AsyncClient`、租户间 round-robin、公平的活动/等待配额、分类有限重试、closed/open/half-open 熔断器；排队、HTTP 与退避共享总 deadline，超时显式 `504`，并使用受限 `Retry-After`、指数 jitter、全局/租户重试 Token Bucket、过载 `503` 和有界关闭；
 - Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 企业控制台：知识空间、并发受控上传、带引用问答、健康状态和租户指标；
   文档目录使用服务端元数据分页和标题/来源筛选，不再把整个知识库正文一次性塞进浏览器；
 - 普通 viewer/editor 只能提交业务问题，文本/视觉检索、`top_k`、证据策略与编排引擎均由后端自动管理；
@@ -51,11 +51,11 @@ DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 
 - 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
-- 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback/路由指标和进程内 Provider 容量/熔断状态；
-- 187 个 API/安全/解析器/迁移/任务队列/UI/异步竞态测试，以及可重复的摄取、检索与并发基准；
+- 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback/路由指标和进程内 Provider 容量/熔断/deadline/重试预算状态；
+- 205 个 API/安全/解析器/迁移/任务队列/UI/异步竞态测试，以及可重复的摄取、检索与并发基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - Docker Compose 已覆盖 API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；旧 V3 镜像曾完成真实构建，
-  但 V3.3 异步 Provider 与前端构建阶段后的新镜像仍需在 Docker Linux Engine 可用的主机上重新验证；
+  但 V3.4 异步 Provider 与前端构建阶段后的新镜像仍需在 Docker Linux Engine 可用的主机上重新验证；
 - 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
 
 ## Windows 快速启动
@@ -152,12 +152,18 @@ Adaptive 在 32 个正例中选择 BM25/RRF/父子分片 `16/10/6` 次，22 次�
 `0/0` 重复。24 个单来源题上 BM25/Parent-Child/Adaptive Hit@1 均为 `1.0000`，RRF 为 `0.9583`；
 8 个双来源题四策略 Recall@3 均为 `1.0000`，说明这组多来源题区分力仍不足，不能硬吹成全面胜利。8 个不可回答题只统计路由，不冒充拒答准确率；8 个真实 SQLite 租户探针泄漏 `0`、外租户 KB 隐藏 `8/8`。
 
+冻结挑战集 V3 刻意加入错字/噪声、低词面重叠和三来源冲突/组合。20 个单来源题中 Adaptive
+Hit@1 为 `0.8000`、Hit@5 为 `1.0000`，但低词面子集 Hit@1 只有 `0.6000`；8 个三来源题的
+Recall@5 为 `0.8333`、完整覆盖@5 为 `0.6250`，低于固定 BM25 的 `0.8750 / 0.7500`。
+V3 与前三套数据的问题精确/近重复、来源名和内容哈希重叠全部为 `0`，冻结后没有为了分数修改主路由，
+Provider/API 调用仍为 `0`。这次不是刷满分，而是把真实短板测出来了。
+
 单进程、15,000 文档、2,304 次离线并发测量中没有请求错误；完整回答路径吞吐在并发 16 达到峰值
 `67.655 req/s`，但 P95 已从并发 4 的 `141.483 ms` 增至 `309.240 ms`，并发 32 又恶化至
 `973.943 ms`。这证明需要背压和容量门禁，不代表真实 DeepSeek 能达到同样吞吐。详见
 [`docs/v3/CONCURRENCY_OPTIONS.md`](docs/v3/CONCURRENCY_OPTIONS.md)。
 
-一条命令执行发布核心门禁（Ruff、187 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
+一条命令执行发布核心门禁（Ruff、205 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell
@@ -186,6 +192,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_routing.py
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_heldout_zh.py --repetitions 3
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_challenge_v2.py --repetitions 1
+.\.venv\Scripts\python.exe .\evals\benchmark_adaptive_challenge_v3.py --repetitions 5
 .\.venv\Scripts\python.exe .\evals\benchmark_concurrency_v3.py
 ```
 

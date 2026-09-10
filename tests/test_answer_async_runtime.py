@@ -107,6 +107,41 @@ def test_answer_keeps_event_loop_live_and_offloads_retrieval_and_checkpoints(
     asyncio.run(scenario())
 
 
+def test_answer_maps_provider_deadline_to_explicit_504(tmp_path: Path) -> None:
+    async def scenario() -> None:
+        async def blocked(_: httpx.Request) -> httpx.Response:
+            await asyncio.Event().wait()
+            raise AssertionError("unreachable")
+
+        settings = Settings(
+            database_path=tmp_path / "deadline.db",
+            model_api_key="test",
+            model_request_deadline_seconds=0.03,
+            model_max_retries=0,
+            model_circuit_failure_threshold=10,
+        )
+        app = create_app(settings, model_async_transport=httpx.MockTransport(blocked))
+        headers = {"X-Tenant-ID": "hospital-a", "X-Actor-ID": "tester"}
+        async with app.router.lifespan_context(app):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                kb_id = await _seed(client, headers)
+                response = await client.post(
+                    "/answer",
+                    headers=headers,
+                    json={"question": "LIS 超时检查什么？", "knowledge_base_id": kb_id},
+                )
+
+        assert response.status_code == 504
+        assert response.json()["code"] == "model_provider_deadline_exceeded"
+        assert response.json()["details"]["phase"] == "http"
+        assert response.headers["x-medops-provider-deadline"] == "exceeded"
+        assert response.headers["x-medops-deadline-phase"] == "http"
+
+    asyncio.run(scenario())
+
+
 def test_answer_circuit_open_is_explicit_503_and_never_offline_200(tmp_path: Path) -> None:
     async def scenario() -> None:
         attempts = 0

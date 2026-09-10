@@ -1,0 +1,2266 @@
+{
+  "benchmark": "medops-adaptive-routing-challenge-zh-v3",
+  "benchmark_version": "3.0.0",
+  "dataset_version": "3.0.0",
+  "generated_at": "2026-09-10T23:26:54.862900+08:00",
+  "evaluation_contract": {
+    "dataset_frozen_before_engine_run": true,
+    "freeze_manifest_verified": true,
+    "thresholds_changed_for_this_dataset": false,
+    "application_router_modified_for_this_dataset": false,
+    "user_strategy_override": false,
+    "provider_or_application_api_calls": 0,
+    "network_access": "hard-disabled-by-socket-guard",
+    "source_ranking_denominator": 20,
+    "multi_source_coverage_denominator": 8,
+    "negative_cases_used_for_quality_metrics": 0,
+    "negative_case_purpose": "adaptive route/reason distribution only; no abstention claim"
+  },
+  "dataset": {
+    "language": "zh-CN",
+    "documents": 28,
+    "documents_by_tenant": {
+      "hospital-cobalt": 28
+    },
+    "cases": 36,
+    "category_counts": {
+      "independent_unanswerable": 8,
+      "low_lexical_overlap": 10,
+      "three_source_combination": 3,
+      "three_source_conflict": 5,
+      "typo_noise": 10
+    },
+    "evaluation_counts": {
+      "multi_source_coverage": 8,
+      "negative_route_only": 8,
+      "source_ranking": 20
+    },
+    "freeze": {
+      "frozen_at": "2026-09-10T15:15:47.584Z",
+      "manifest_sha256": "d176f747491af47153efa866316e54b27994ee56e524d19036879ec1f67003d9",
+      "files": {
+        "adaptive_challenge_v3_documents_zh.jsonl": {
+          "sha256": "3799bb095cc1174ff23b4391420a0662dd3951f2a73d8555ae9f71b10e94df59",
+          "rows": 28
+        },
+        "adaptive_challenge_v3_cases_zh.jsonl": {
+          "sha256": "0aaf0a4fb345977db5da7458a8db563d5eb88fd1933109e3c0979f60ea1e5e93",
+          "rows": 36
+        }
+      }
+    },
+    "leakage_audit": {
+      "normalization": "Unicode NFKC + casefold + remove whitespace/punctuation",
+      "near_duplicate_method": "difflib.SequenceMatcher over normalized question text",
+      "near_duplicate_threshold": 0.85,
+      "prior_sets": {
+        "threshold_tuning": {
+          "exact_normalized_question_overlap": 0,
+          "source_name_overlap": 0,
+          "exact_document_content_hash_overlap": 0,
+          "near_duplicate_question_threshold": 0.85,
+          "near_duplicate_question_count": 0,
+          "maximum_question_similarity": {
+            "ratio": 0.3051,
+            "v3_case_id": "ch3-sem-05",
+            "prior_case_id": "case-07-5"
+          }
+        },
+        "heldout_v1": {
+          "exact_normalized_question_overlap": 0,
+          "source_name_overlap": 0,
+          "exact_document_content_hash_overlap": 0,
+          "near_duplicate_question_threshold": 0.85,
+          "near_duplicate_question_count": 0,
+          "maximum_question_similarity": {
+            "ratio": 0.3333,
+            "v3_case_id": "ch3-neg-06",
+            "prior_case_id": "hd-negative-04"
+          }
+        },
+        "challenge_v2": {
+          "exact_normalized_question_overlap": 0,
+          "source_name_overlap": 0,
+          "exact_document_content_hash_overlap": 0,
+          "near_duplicate_question_threshold": 0.85,
+          "near_duplicate_question_count": 0,
+          "maximum_question_similarity": {
+            "ratio": 0.2759,
+            "v3_case_id": "ch3-neg-03",
+            "prior_case_id": "ch2-neg-07"
+          }
+        }
+      },
+      "totals": {
+        "exact_normalized_question_overlap": 0,
+        "source_name_overlap": 0,
+        "exact_document_content_hash_overlap": 0,
+        "near_duplicate_question_count": 0
+      },
+      "near_duplicate_matches": [],
+      "all_leakage_checks_passed": true
+    },
+    "sha256": {
+      "adaptive_challenge_v3_documents_zh.jsonl": "3799bb095cc1174ff23b4391420a0662dd3951f2a73d8555ae9f71b10e94df59",
+      "adaptive_challenge_v3_cases_zh.jsonl": "0aaf0a4fb345977db5da7458a8db563d5eb88fd1933109e3c0979f60ea1e5e93",
+      "adaptive_challenge_v3_freeze.json": "d176f747491af47153efa866316e54b27994ee56e524d19036879ec1f67003d9",
+      "benchmark_adaptive_challenge_v3.py": "5dbc5210fc1d3bc9230e9d9c4b68a914378b729eabd68a5178e5f39744126f99",
+      "app/retrieval/adaptive.py": "09ee92695a6dc86a840460028b37c77f386af3f7bd56e42d57a4ee7ff580761a"
+    }
+  },
+  "runtime": {
+    "project": "medops-rag",
+    "project_version": "3.3.0",
+    "git_commit": "c02a8b81cb429b1180fe981ea38974e890955b1e",
+    "python": "3.11.5",
+    "platform": "Windows-10-10.0.22631-SP0",
+    "fastembed": "0.7.4",
+    "rank_bm25": "0.2.2",
+    "numpy": "2.4.6",
+    "dense_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "dense_cache": "data/models/fastembed",
+    "dense_local_files_only": true,
+    "hf_hub_offline": "1",
+    "transformers_offline": "1",
+    "model_load_and_document_index_ms": 4248.758,
+    "query_repetitions": 5
+  },
+  "policy_snapshot": {
+    "dense_available": true,
+    "parent_child_available": true,
+    "semantic_score_threshold": 1.25,
+    "parent_score_threshold": 2.0
+  },
+  "source_ranking": {
+    "bm25": {
+      "evaluated_cases": 20,
+      "hit_at_1": 0.85,
+      "hit_at_3": 0.95,
+      "hit_at_5": 0.95,
+      "mrr_at_5": 0.9,
+      "ndcg_at_5": 0.9131,
+      "hit_at_1_by_category": {
+        "low_lexical_overlap": 0.7,
+        "typo_noise": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch3-noise-01",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "blood-product-label-unlink.md",
+            "cold-room-cleaning.md",
+            "mammography-laterality-correction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-02",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "cold-room-cleaning.md",
+            "controlled-drug-return.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-03",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "clinical-code-change-notice.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-04",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "recall-serial-freeze.md",
+            "generic-incident-checklist.md",
+            "ultrasound-cache-lock.md",
+            "archive-readonly-continuity.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-05",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "generic-incident-checklist.md",
+            "blood-bank-probe-drift.md",
+            "cold-route-reconstruction.md",
+            "clinical-code-change-notice.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-06",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "archive-readonly-continuity.md",
+            "cold-sensor-evidence.md",
+            "cold-route-reconstruction.md",
+            "bedside-substitution-approval.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-07",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "syringe-pump-loop-label.md",
+            "bedside-monitor-map.md",
+            "lab-code-dictionary.md",
+            "blood-bank-probe-drift.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-08",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "collection-scanner-bounce.md",
+            "lab-reference-version.md",
+            "lab-code-dictionary.md",
+            "imaging-retention-hold.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-09",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "archive-readonly-continuity.md",
+            "bedside-substitution-approval.md",
+            "ultrasound-cache-lock.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-10",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "preventive-maintenance-calendar.md",
+            "historical-result-preservation.md",
+            "clinical-code-change-notice.md",
+            "pump-network-containment.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-01",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "bedside-monitor-map.md",
+            "syringe-pump-loop-label.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-02",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "generic-incident-checklist.md",
+            "lab-reference-version.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-03",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "syringe-pump-loop-label.md",
+            "archive-readonly-continuity.md",
+            "blood-product-label-unlink.md",
+            "collection-scanner-bounce.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-04",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "lab-reference-version.md",
+            "ultrasound-cache-lock.md",
+            "cold-sensor-evidence.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-05",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 1,
+          "top_sources": [
+            "mammography-laterality-correction.md",
+            "blood-bank-probe-drift.md",
+            "cleanroom-pressure-calibration.md",
+            "ultrasound-cache-lock.md",
+            "historical-result-preservation.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-06",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 2,
+          "top_sources": [
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "lab-code-dictionary.md",
+            "cleanroom-pressure-calibration.md",
+            "recall-serial-freeze.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-07",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": null,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cleanroom-pressure-calibration.md",
+            "pump-network-containment.md",
+            "archive-readonly-continuity.md",
+            "cold-sensor-evidence.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-08",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": 2,
+          "top_sources": [
+            "historical-result-preservation.md",
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "clinical-code-change-notice.md",
+            "cleanroom-pressure-calibration.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-09",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-product-label-unlink.md",
+            "bedside-monitor-map.md",
+            "archive-readonly-continuity.md",
+            "blood-bank-probe-drift.md",
+            "mammography-laterality-correction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-10",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-product-label-unlink.md",
+            "mammography-laterality-correction.md",
+            "network-change-template.md",
+            "migration-throughput-tuning.md",
+            "historical-result-preservation.md"
+          ]
+        }
+      ]
+    },
+    "rrf": {
+      "evaluated_cases": 20,
+      "hit_at_1": 0.8,
+      "hit_at_3": 0.95,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.8767,
+      "ndcg_at_5": 0.9074,
+      "hit_at_1_by_category": {
+        "low_lexical_overlap": 0.6,
+        "typo_noise": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch3-noise-01",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "cold-room-cleaning.md",
+            "blood-product-label-unlink.md",
+            "collection-scanner-bounce.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-02",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-room-cleaning.md",
+            "cold-sensor-evidence.md",
+            "syringe-pump-loop-label.md",
+            "controlled-drug-return.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-03",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "collection-scanner-bounce.md",
+            "blood-product-label-unlink.md",
+            "ultrasound-cache-lock.md",
+            "cleanroom-pressure-calibration.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-04",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "controlled-drug-return.md",
+            "recall-serial-freeze.md",
+            "cold-route-reconstruction.md",
+            "ultrasound-cache-lock.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-05",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "blood-bank-probe-drift.md",
+            "syringe-pump-loop-label.md",
+            "cold-route-reconstruction.md",
+            "controlled-drug-return.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-06",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "syringe-pump-loop-label.md",
+            "cleanroom-pressure-calibration.md",
+            "cold-sensor-evidence.md",
+            "imaging-retention-hold.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-07",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "syringe-pump-loop-label.md",
+            "bedside-monitor-map.md",
+            "pump-network-containment.md",
+            "blood-bank-probe-drift.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-08",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "imaging-retention-hold.md",
+            "collection-scanner-bounce.md",
+            "archive-readonly-continuity.md",
+            "archive-migration-manifest.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-09",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "cleanroom-pressure-calibration.md",
+            "collection-scanner-bounce.md",
+            "blood-bank-probe-drift.md",
+            "bedside-substitution-approval.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-10",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "controlled-drug-return.md",
+            "pump-network-containment.md",
+            "syringe-pump-loop-label.md",
+            "cleanroom-pressure-calibration.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-01",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "bedside-monitor-map.md",
+            "collection-scanner-bounce.md",
+            "cold-room-cleaning.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-02",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "collection-scanner-bounce.md",
+            "syringe-pump-loop-label.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-03",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "syringe-pump-loop-label.md",
+            "blood-bank-probe-drift.md",
+            "collection-scanner-bounce.md",
+            "pharmacy-product-disposition.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-04",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "bedside-substitution-approval.md",
+            "lab-reference-version.md",
+            "clinical-code-change-notice.md",
+            "pharmacy-product-disposition.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-05",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 1,
+          "top_sources": [
+            "mammography-laterality-correction.md",
+            "historical-result-preservation.md",
+            "blood-bank-probe-drift.md",
+            "collection-scanner-bounce.md",
+            "cleanroom-pressure-calibration.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-06",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 2,
+          "top_sources": [
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md",
+            "ultrasound-cache-lock.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-07",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": 3,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "blood-bank-probe-drift.md",
+            "lab-reference-version.md",
+            "historical-result-preservation.md",
+            "cold-sensor-evidence.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-08",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": 2,
+          "top_sources": [
+            "historical-result-preservation.md",
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "clinical-code-change-notice.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-09",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-product-label-unlink.md",
+            "blood-bank-probe-drift.md",
+            "mammography-laterality-correction.md",
+            "collection-scanner-bounce.md",
+            "archive-readonly-continuity.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-10",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 5,
+          "top_sources": [
+            "network-change-template.md",
+            "archive-migration-manifest.md",
+            "historical-result-preservation.md",
+            "mammography-laterality-correction.md",
+            "blood-product-label-unlink.md"
+          ]
+        }
+      ]
+    },
+    "parent_child": {
+      "evaluated_cases": 20,
+      "hit_at_1": 0.85,
+      "hit_at_3": 0.95,
+      "hit_at_5": 0.95,
+      "mrr_at_5": 0.9,
+      "ndcg_at_5": 0.9131,
+      "hit_at_1_by_category": {
+        "low_lexical_overlap": 0.7,
+        "typo_noise": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch3-noise-01",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "blood-product-label-unlink.md",
+            "cold-room-cleaning.md",
+            "mammography-laterality-correction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-02",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "cold-room-cleaning.md",
+            "controlled-drug-return.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-03",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "clinical-code-change-notice.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-04",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "recall-serial-freeze.md",
+            "generic-incident-checklist.md",
+            "ultrasound-cache-lock.md",
+            "archive-readonly-continuity.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-05",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "generic-incident-checklist.md",
+            "blood-bank-probe-drift.md",
+            "cold-route-reconstruction.md",
+            "clinical-code-change-notice.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-06",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "archive-readonly-continuity.md",
+            "cold-sensor-evidence.md",
+            "cold-route-reconstruction.md",
+            "bedside-substitution-approval.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-07",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "syringe-pump-loop-label.md",
+            "bedside-monitor-map.md",
+            "lab-code-dictionary.md",
+            "blood-bank-probe-drift.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-08",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "collection-scanner-bounce.md",
+            "lab-reference-version.md",
+            "lab-code-dictionary.md",
+            "imaging-retention-hold.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-09",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "archive-readonly-continuity.md",
+            "bedside-substitution-approval.md",
+            "ultrasound-cache-lock.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-10",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "preventive-maintenance-calendar.md",
+            "historical-result-preservation.md",
+            "clinical-code-change-notice.md",
+            "pump-network-containment.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-01",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "bedside-monitor-map.md",
+            "syringe-pump-loop-label.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-02",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "generic-incident-checklist.md",
+            "lab-reference-version.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-03",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "syringe-pump-loop-label.md",
+            "archive-readonly-continuity.md",
+            "blood-product-label-unlink.md",
+            "collection-scanner-bounce.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-04",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "lab-reference-version.md",
+            "ultrasound-cache-lock.md",
+            "cold-sensor-evidence.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-05",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 1,
+          "top_sources": [
+            "mammography-laterality-correction.md",
+            "blood-bank-probe-drift.md",
+            "cleanroom-pressure-calibration.md",
+            "ultrasound-cache-lock.md",
+            "historical-result-preservation.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-06",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 2,
+          "top_sources": [
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "lab-code-dictionary.md",
+            "cleanroom-pressure-calibration.md",
+            "recall-serial-freeze.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-07",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": null,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cleanroom-pressure-calibration.md",
+            "pump-network-containment.md",
+            "archive-readonly-continuity.md",
+            "cold-sensor-evidence.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-08",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": 2,
+          "top_sources": [
+            "historical-result-preservation.md",
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "clinical-code-change-notice.md",
+            "cleanroom-pressure-calibration.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-09",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-product-label-unlink.md",
+            "bedside-monitor-map.md",
+            "archive-readonly-continuity.md",
+            "blood-bank-probe-drift.md",
+            "mammography-laterality-correction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-10",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-product-label-unlink.md",
+            "mammography-laterality-correction.md",
+            "network-change-template.md",
+            "migration-throughput-tuning.md",
+            "historical-result-preservation.md"
+          ]
+        }
+      ]
+    },
+    "adaptive": {
+      "evaluated_cases": 20,
+      "hit_at_1": 0.8,
+      "hit_at_3": 0.95,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.8767,
+      "ndcg_at_5": 0.9074,
+      "hit_at_1_by_category": {
+        "low_lexical_overlap": 0.6,
+        "typo_noise": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch3-noise-01",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "blood-product-label-unlink.md",
+            "cold-room-cleaning.md",
+            "mammography-laterality-correction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-02",
+          "category": "typo_noise",
+          "expected_source": "blood-bank-probe-drift.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "cold-room-cleaning.md",
+            "controlled-drug-return.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-03",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "clinical-code-change-notice.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-04",
+          "category": "typo_noise",
+          "expected_source": "syringe-pump-loop-label.md",
+          "rank": 1,
+          "top_sources": [
+            "syringe-pump-loop-label.md",
+            "recall-serial-freeze.md",
+            "generic-incident-checklist.md",
+            "ultrasound-cache-lock.md",
+            "archive-readonly-continuity.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-05",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "generic-incident-checklist.md",
+            "blood-bank-probe-drift.md",
+            "cold-route-reconstruction.md",
+            "clinical-code-change-notice.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-06",
+          "category": "typo_noise",
+          "expected_source": "collection-scanner-bounce.md",
+          "rank": 1,
+          "top_sources": [
+            "collection-scanner-bounce.md",
+            "archive-readonly-continuity.md",
+            "cold-sensor-evidence.md",
+            "cold-route-reconstruction.md",
+            "bedside-substitution-approval.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-07",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "syringe-pump-loop-label.md",
+            "bedside-monitor-map.md",
+            "lab-code-dictionary.md",
+            "blood-bank-probe-drift.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-08",
+          "category": "typo_noise",
+          "expected_source": "ultrasound-cache-lock.md",
+          "rank": 1,
+          "top_sources": [
+            "ultrasound-cache-lock.md",
+            "collection-scanner-bounce.md",
+            "lab-reference-version.md",
+            "lab-code-dictionary.md",
+            "imaging-retention-hold.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-09",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "archive-readonly-continuity.md",
+            "bedside-substitution-approval.md",
+            "ultrasound-cache-lock.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-noise-10",
+          "category": "typo_noise",
+          "expected_source": "bedside-monitor-map.md",
+          "rank": 1,
+          "top_sources": [
+            "bedside-monitor-map.md",
+            "preventive-maintenance-calendar.md",
+            "historical-result-preservation.md",
+            "clinical-code-change-notice.md",
+            "pump-network-containment.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-01",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "bedside-monitor-map.md",
+            "collection-scanner-bounce.md",
+            "cold-room-cleaning.md",
+            "cold-route-reconstruction.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-02",
+          "category": "low_lexical_overlap",
+          "expected_source": "cleanroom-pressure-calibration.md",
+          "rank": 1,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "blood-bank-probe-drift.md",
+            "cold-sensor-evidence.md",
+            "generic-incident-checklist.md",
+            "lab-reference-version.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-03",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "syringe-pump-loop-label.md",
+            "blood-bank-probe-drift.md",
+            "collection-scanner-bounce.md",
+            "pharmacy-product-disposition.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-04",
+          "category": "low_lexical_overlap",
+          "expected_source": "controlled-drug-return.md",
+          "rank": 1,
+          "top_sources": [
+            "controlled-drug-return.md",
+            "bedside-substitution-approval.md",
+            "lab-reference-version.md",
+            "clinical-code-change-notice.md",
+            "pharmacy-product-disposition.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-05",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 1,
+          "top_sources": [
+            "mammography-laterality-correction.md",
+            "historical-result-preservation.md",
+            "blood-bank-probe-drift.md",
+            "collection-scanner-bounce.md",
+            "cleanroom-pressure-calibration.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-06",
+          "category": "low_lexical_overlap",
+          "expected_source": "mammography-laterality-correction.md",
+          "rank": 2,
+          "top_sources": [
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md",
+            "ultrasound-cache-lock.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-07",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": 3,
+          "top_sources": [
+            "cleanroom-pressure-calibration.md",
+            "blood-bank-probe-drift.md",
+            "lab-reference-version.md",
+            "historical-result-preservation.md",
+            "cold-sensor-evidence.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-08",
+          "category": "low_lexical_overlap",
+          "expected_source": "lab-reference-version.md",
+          "rank": 2,
+          "top_sources": [
+            "historical-result-preservation.md",
+            "lab-reference-version.md",
+            "mammography-laterality-correction.md",
+            "clinical-code-change-notice.md",
+            "generic-incident-checklist.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-09",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 1,
+          "top_sources": [
+            "blood-product-label-unlink.md",
+            "blood-bank-probe-drift.md",
+            "mammography-laterality-correction.md",
+            "collection-scanner-bounce.md",
+            "archive-readonly-continuity.md"
+          ]
+        },
+        {
+          "case_id": "ch3-sem-10",
+          "category": "low_lexical_overlap",
+          "expected_source": "blood-product-label-unlink.md",
+          "rank": 5,
+          "top_sources": [
+            "network-change-template.md",
+            "archive-migration-manifest.md",
+            "historical-result-preservation.md",
+            "mammography-laterality-correction.md",
+            "blood-product-label-unlink.md"
+          ]
+        }
+      ]
+    }
+  },
+  "multi_source_coverage": {
+    "bm25": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 0.75,
+      "mean_recall_at_5": 0.875,
+      "full_coverage_at_3": 0.375,
+      "full_coverage_at_5": 0.75,
+      "mean_recall_at_5_by_category": {
+        "three_source_combination": 0.7778,
+        "three_source_conflict": 0.9333
+      },
+      "trace": [
+        {
+          "case_id": "ch3-triad-01",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "pump-network-containment.md",
+            "network-change-template.md",
+            "bedside-substitution-approval.md",
+            "recall-serial-freeze.md",
+            "preventive-maintenance-calendar.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-02",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "syringe-pump-loop-label.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.6667,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-03",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "clinical-code-change-notice.md",
+            "lab-code-dictionary.md",
+            "staff-training-attendance.md",
+            "historical-result-preservation.md",
+            "mammography-laterality-correction.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-04",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "lab-code-dictionary.md",
+            "historical-result-preservation.md",
+            "clinical-code-change-notice.md",
+            "migration-throughput-tuning.md",
+            "lab-reference-version.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-05",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "imaging-retention-hold.md",
+            "archive-readonly-continuity.md",
+            "archive-migration-manifest.md",
+            "ultrasound-cache-lock.md",
+            "lab-reference-version.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-06",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md",
+            "syringe-pump-loop-label.md",
+            "lab-code-dictionary.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-07",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "cold-sensor-evidence.md",
+            "generic-incident-checklist.md",
+            "cleanroom-pressure-calibration.md",
+            "cold-room-cleaning.md",
+            "historical-result-preservation.md"
+          ],
+          "recall_at_3": 0.3333,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.3333,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-08",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "pharmacy-product-disposition.md",
+            "cold-sensor-evidence.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "cold-route-reconstruction.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        }
+      ]
+    },
+    "rrf": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 0.7083,
+      "mean_recall_at_5": 0.8333,
+      "full_coverage_at_3": 0.375,
+      "full_coverage_at_5": 0.625,
+      "mean_recall_at_5_by_category": {
+        "three_source_combination": 0.7778,
+        "three_source_conflict": 0.8667
+      },
+      "trace": [
+        {
+          "case_id": "ch3-triad-01",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "pump-network-containment.md",
+            "bedside-substitution-approval.md",
+            "network-change-template.md",
+            "recall-serial-freeze.md",
+            "generic-incident-checklist.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-02",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "pump-network-containment.md",
+            "blood-bank-probe-drift.md",
+            "bedside-substitution-approval.md",
+            "generic-incident-checklist.md",
+            "syringe-pump-loop-label.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.6667,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-03",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "clinical-code-change-notice.md",
+            "lab-code-dictionary.md",
+            "staff-training-attendance.md",
+            "historical-result-preservation.md",
+            "lab-reference-version.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-04",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md",
+            "clinical-code-change-notice.md",
+            "lab-reference-version.md",
+            "archive-readonly-continuity.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-05",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "imaging-retention-hold.md",
+            "archive-readonly-continuity.md",
+            "archive-migration-manifest.md",
+            "mammography-laterality-correction.md",
+            "blood-bank-probe-drift.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-06",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "imaging-retention-hold.md",
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "pump-network-containment.md",
+            "cold-route-reconstruction.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-07",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "cold-sensor-evidence.md",
+            "cold-room-cleaning.md",
+            "generic-incident-checklist.md",
+            "cleanroom-pressure-calibration.md",
+            "pump-network-containment.md"
+          ],
+          "recall_at_3": 0.3333,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.3333,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-08",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "pharmacy-product-disposition.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "controlled-drug-return.md",
+            "cold-route-reconstruction.md"
+          ],
+          "recall_at_3": 0.3333,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.6667,
+          "full_coverage_at_5": false
+        }
+      ]
+    },
+    "parent_child": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 0.75,
+      "mean_recall_at_5": 0.875,
+      "full_coverage_at_3": 0.375,
+      "full_coverage_at_5": 0.75,
+      "mean_recall_at_5_by_category": {
+        "three_source_combination": 0.7778,
+        "three_source_conflict": 0.9333
+      },
+      "trace": [
+        {
+          "case_id": "ch3-triad-01",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "pump-network-containment.md",
+            "network-change-template.md",
+            "bedside-substitution-approval.md",
+            "recall-serial-freeze.md",
+            "preventive-maintenance-calendar.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-02",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "syringe-pump-loop-label.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.6667,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-03",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "clinical-code-change-notice.md",
+            "lab-code-dictionary.md",
+            "staff-training-attendance.md",
+            "historical-result-preservation.md",
+            "mammography-laterality-correction.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-04",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "lab-code-dictionary.md",
+            "historical-result-preservation.md",
+            "clinical-code-change-notice.md",
+            "migration-throughput-tuning.md",
+            "lab-reference-version.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-05",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "imaging-retention-hold.md",
+            "archive-readonly-continuity.md",
+            "archive-migration-manifest.md",
+            "ultrasound-cache-lock.md",
+            "lab-reference-version.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-06",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md",
+            "syringe-pump-loop-label.md",
+            "lab-code-dictionary.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-07",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "cold-sensor-evidence.md",
+            "generic-incident-checklist.md",
+            "cleanroom-pressure-calibration.md",
+            "cold-room-cleaning.md",
+            "historical-result-preservation.md"
+          ],
+          "recall_at_3": 0.3333,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.3333,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-08",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "pharmacy-product-disposition.md",
+            "cold-sensor-evidence.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "cold-route-reconstruction.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        }
+      ]
+    },
+    "adaptive": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 0.7083,
+      "mean_recall_at_5": 0.8333,
+      "full_coverage_at_3": 0.375,
+      "full_coverage_at_5": 0.625,
+      "mean_recall_at_5_by_category": {
+        "three_source_combination": 0.7778,
+        "three_source_conflict": 0.8667
+      },
+      "trace": [
+        {
+          "case_id": "ch3-triad-01",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "pump-network-containment.md",
+            "bedside-substitution-approval.md",
+            "network-change-template.md",
+            "recall-serial-freeze.md",
+            "generic-incident-checklist.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-02",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "recall-serial-freeze.md"
+          ],
+          "top_sources": [
+            "bedside-substitution-approval.md",
+            "pump-network-containment.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "syringe-pump-loop-label.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.6667,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-03",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "clinical-code-change-notice.md",
+            "lab-code-dictionary.md",
+            "staff-training-attendance.md",
+            "historical-result-preservation.md",
+            "mammography-laterality-correction.md"
+          ],
+          "recall_at_3": 0.6667,
+          "full_coverage_at_3": false,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-04",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "clinical-code-change-notice.md",
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md"
+          ],
+          "top_sources": [
+            "historical-result-preservation.md",
+            "lab-code-dictionary.md",
+            "clinical-code-change-notice.md",
+            "lab-reference-version.md",
+            "archive-readonly-continuity.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-05",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "imaging-retention-hold.md",
+            "archive-readonly-continuity.md",
+            "archive-migration-manifest.md",
+            "mammography-laterality-correction.md",
+            "blood-bank-probe-drift.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-06",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "imaging-retention-hold.md"
+          ],
+          "top_sources": [
+            "imaging-retention-hold.md",
+            "archive-migration-manifest.md",
+            "archive-readonly-continuity.md",
+            "pump-network-containment.md",
+            "cold-route-reconstruction.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch3-triad-07",
+          "category": "three_source_combination",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "cold-sensor-evidence.md",
+            "cold-room-cleaning.md",
+            "generic-incident-checklist.md",
+            "cleanroom-pressure-calibration.md",
+            "pump-network-containment.md"
+          ],
+          "recall_at_3": 0.3333,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.3333,
+          "full_coverage_at_5": false
+        },
+        {
+          "case_id": "ch3-triad-08",
+          "category": "three_source_conflict",
+          "expected_sources": [
+            "cold-route-reconstruction.md",
+            "cold-sensor-evidence.md",
+            "pharmacy-product-disposition.md"
+          ],
+          "top_sources": [
+            "pharmacy-product-disposition.md",
+            "blood-bank-probe-drift.md",
+            "generic-incident-checklist.md",
+            "controlled-drug-return.md",
+            "cold-route-reconstruction.md"
+          ],
+          "recall_at_3": 0.3333,
+          "full_coverage_at_3": false,
+          "recall_at_5": 0.6667,
+          "full_coverage_at_5": false
+        }
+      ]
+    }
+  },
+  "negative_route_only": {
+    "evaluated_cases": 8,
+    "quality_metrics_computed": false,
+    "abstention_accuracy_computed": false,
+    "route_counts": {
+      "bm25": 5,
+      "rrf": 3
+    },
+    "reason_counts": {
+      "lexical_default": 5,
+      "semantic_or_multi_concept_query": 3
+    }
+  },
+  "adaptive_selection": {
+    "route_counts_by_scope": {
+      "source_ranking": {
+        "bm25": 11,
+        "rrf": 9
+      },
+      "multi_source_coverage": {
+        "bm25": 2,
+        "rrf": 6
+      },
+      "negative_route_only": {
+        "bm25": 5,
+        "rrf": 3
+      }
+    },
+    "reason_counts_by_scope": {
+      "source_ranking": {
+        "lexical_default": 11,
+        "semantic_or_multi_concept_query": 9
+      },
+      "multi_source_coverage": {
+        "lexical_default": 2,
+        "semantic_or_multi_concept_query": 6
+      },
+      "negative_route_only": {
+        "lexical_default": 5,
+        "semantic_or_multi_concept_query": 3
+      }
+    },
+    "trace": [
+      {
+        "case_id": "ch3-noise-01",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-02",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-03",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-04",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-05",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-06",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-07",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-08",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-09",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-noise-10",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-sem-01",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-02",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-sem-03",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-04",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-05",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-06",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-07",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-08",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "ch3-sem-09",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-sem-10",
+        "evaluation": "source_ranking",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-triad-01",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-triad-02",
+        "evaluation": "multi_source_coverage",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-triad-03",
+        "evaluation": "multi_source_coverage",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-triad-04",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-triad-05",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.79
+      },
+      {
+        "case_id": "ch3-triad-06",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-triad-07",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74
+      },
+      {
+        "case_id": "ch3-triad-08",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74
+      },
+      {
+        "case_id": "ch3-neg-01",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-neg-02",
+        "evaluation": "negative_route_only",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-neg-03",
+        "evaluation": "negative_route_only",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74
+      },
+      {
+        "case_id": "ch3-neg-04",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-neg-05",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-neg-06",
+        "evaluation": "negative_route_only",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch3-neg-07",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch3-neg-08",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      }
+    ]
+  },
+  "latency": {
+    "bm25": {
+      "samples": 140,
+      "mean_ms": 0.577,
+      "p50_ms": 0.565,
+      "p95_ms": 1.232
+    },
+    "rrf": {
+      "samples": 140,
+      "mean_ms": 70.104,
+      "p50_ms": 70.183,
+      "p95_ms": 92.381
+    },
+    "parent_child": {
+      "samples": 140,
+      "mean_ms": 0.55,
+      "p50_ms": 0.484,
+      "p95_ms": 1.157
+    },
+    "adaptive": {
+      "samples": 140,
+      "mean_ms": 40.144,
+      "p50_ms": 64.248,
+      "p95_ms": 84.667
+    }
+  },
+  "findings_scope": [
+    "Source ranking evaluates 20 cases with exactly one relevant source.",
+    "Three-source questions use macro recall and all-three coverage, never Hit@1.",
+    "Independent unanswerable questions inspect deterministic routing only.",
+    "Leakage gates cover exact questions, near-duplicate questions, source names, and content hashes."
+  ],
+  "limitations": [
+    "This is a frozen handcrafted synthetic challenge, not blinded production traffic.",
+    "Labels were authored before the run but were not independently double-annotated.",
+    "Typo and noise patterns are selected examples, not an empirical hospital error distribution.",
+    "Low lexical-overlap labels express author intent; retrieval success does not prove clinical semantic equivalence.",
+    "Three-source coverage proves only that sources appear in top-K, not that generated prose resolves conflicts or faithfully composes every required fact.",
+    "The router is a strategy selector, not an abstention classifier; negative cases cannot establish correct refusal or answer safety.",
+    "No provider, answer-generation API, application endpoint, authentication layer, or tenant-isolation path is exercised in this V3 run.",
+    "Latency is a single-machine snapshot and excludes model load/index construction.",
+    "No routing threshold or application code was changed after inspecting V3 scores."
+  ]
+}

@@ -1,12 +1,13 @@
-# MedOps RAG V3.3 并发审计、实测与企业部署方案
+# MedOps RAG V3.4 并发审计、实测与企业部署方案
 
-> 当前实现基线：V3.3 工作树；历史吞吐基线：V3.2；测试日期：2026-09-10；Windows 10 / Python 3.11.5 / 20 logical CPUs。
-> 本文只对本机、单进程、离线可控负载负责，不把微基准包装成生产容量承诺。V3.3 改变了回答路径的
-> 并发模型，因此第 3 节数字保留为改造前对照，而不是 V3.3 新容量结论。
+> 当前实现基线：V3.4 工作树；历史吞吐基线：V3.2；测试日期：2026-09-10；Windows 10 / Python 3.11.5 / 20 logical CPUs。
+> 本文只对本机、单进程、离线可控负载负责，不把微基准包装成生产容量承诺。V3.3/V3.4 改变了回答路径的
+> 并发与重试模型，因此第 3 节数字保留为改造前对照，而不是 V3.4 新容量结论。
 
 ## 1. 当前并发路径审计
 
-当前 API 使用 FastAPI。V3.3 已把生产 `/answer` 改为真正的异步网络路径；同步仓储、检索、检查点、
+当前 API 使用 FastAPI。V3.3 已把生产 `/answer` 改为真正的异步网络路径；V3.4 又加入覆盖排队、HTTP
+尝试和重试退避的总 deadline、受上限约束的 `Retry-After`、指数 jitter 与进程内全局/租户重试预算。同步仓储、检索、检查点、
 引用复核和审计仍通过 AnyIO worker thread 隔离，不在事件循环内直接等待 SQLite：
 
 - `app/db.py` 为每次仓储操作创建并关闭 SQLite 连接，连接超时为 10 秒；
@@ -19,7 +20,10 @@
 - 单一租户感知调度器限制进程内总活动请求、每租户活动请求、全局等待者和每租户等待者；同租户 FIFO，
   租户之间 round-robin，避免热租户把全部等待预算占满；
 - 重试只覆盖 timeout、网络错误、429 与 5xx；backoff 时释放 HTTP attempt slot，但保留有界 outstanding
-  reservation；400/401/403 不重试；
+  reservation；400/401/403 不重试。`Retry-After` 支持秒数和 HTTP-date，超过上限会截断；
+- 首次尝试免费，后续重试同时消耗进程内全局和每租户 Token Bucket；预算耗尽就停止重试，避免故障风暴；
+- 默认 12 秒端到端 deadline 同时约束调度队列、动态 HTTP timeout 和退避；耗尽后返回显式
+  `504 model_provider_deadline_exceeded` 并记录 queue/http/backoff 阶段；
 - Provider 具有 monotonic clock + epoch 的 closed/open/half-open 熔断器，OPEN 与 HALF_OPEN 冲突显式
   返回 `503 model_provider_circuit_open`，不会伪装成正常模型回答；
 - Dockerfile 当前启动一个 Uvicorn worker；仓库已有 SQLite lease worker，以及 Celery/Redis 可选依赖和队列基准，
@@ -138,8 +142,8 @@ uv run python evals/benchmark_concurrency_v3.py `
 2. **已实现**：全局 outstanding、总活动数、每租户活动数、全局等待者和每租户等待者均有界；单一调度器
    保证同租户 FIFO 与租户间 round-robin，不用两把嵌套 semaphore 囤积 permit；
 3. **已实现**：短 queue deadline，满载/超时返回稳定 `503`、`Retry-After` 与审计原因；
-4. **已实现基础版**：timeout/network/429/5xx 才有限重试，backoff 释放 attempt slot；monotonic + epoch
-   熔断器支持 closed/open/half-open。总体请求 deadline、jitter、`Retry-After` 解析和 Token 重试预算仍待实现；
+4. **已实现**：timeout/network/429/5xx 才有限重试，backoff 释放 attempt slot；monotonic + epoch
+   熔断器支持 closed/open/half-open；总体 deadline、jitter、受限 `Retry-After` 和全局/租户 Token 重试预算均已纳入；
 5. **已实现**：liveness/readiness 分离；SQLite 检索、检查点、引用复核、审计和请求指标写均移出事件循环；
 6. **待实现**：指标有界内存队列与后台批量 writer；当前虽不阻塞事件循环，响应仍等待 worker 写入结束。
 
@@ -202,7 +206,8 @@ payload 在 Qdrant。通过 transactional outbox 发布索引事件，消费者�
 - `[已实现]` lifespan 共享 AsyncClient、异步网络调用和有界关闭；
 - `[已实现进程内]` 租户公平调度、有界等待、退避释放 attempt slot、显式 503 与熔断器；
 - `[已实现 offload]` liveness/readiness 分离，SQLite/检索/检查点/审计/指标写不阻塞事件循环；
-- `[待实现]` 指标批量 writer、总体 deadline、retry budget、Retry-After+jitter；
+- `[已实现进程内]` 总体 deadline、retry budget、Retry-After+jitter 及管理员运行指标；
+- `[待实现]` 指标批量 writer，以及跨进程/多主机共享 Provider 预算；
 - 用真实 DeepSeek 测试 4/8/16 并发，但使用独立测试配额和明确成本上限；
 - 加 10–30 分钟 soak、突发流量、Provider 429/超时/断网故障注入。
 
@@ -247,7 +252,8 @@ payload 在 Qdrant。通过 transactional outbox 发布索引事件，消费者�
 当活动加等待总数已满时立即返回 `queue_full`；当 admission 成功但未能及时取得执行槽时返回
 `queue_timeout`。两者都会写入审计日志，且绝不会转成 `offline-fallback` 的 200 响应。当前 gate 是**进程内**的：
 使用多个 Uvicorn worker 时总 Provider 并发上限等于各进程上限之和，部署配置必须据此折算。
-该 gate 当前覆盖在线 `/answer` 的 `app/agents/model.py`；后台 Map-Reduce 摘要仍有独立适配器，后续应让
-summary worker 使用相同的 Provider capacity policy 或分配独立且可观测的批处理配额，避免与在线问答争抢。
+该 gate 当前覆盖在线 `/answer` 的 `app/agents/model.py`；后台 Map-Reduce 摘要仍有独立适配器。V3.4 已在
+[`docs/v4/SUMMARY_PROVIDER_POLICY.md`](../v4/SUMMARY_PROVIDER_POLICY.md) 固化“先做 online/batch 固定分区，
+再迁移异步 adapter、step 级公平、lease fencing/heartbeat/cancel 与调用账本”的方案，但这些摘要改造尚未实现。
 
 达到这些门禁后，才能称为“在某一明确负载与 SLO 下通过”，不能笼统声称“支持高并发”。

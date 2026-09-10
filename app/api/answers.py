@@ -8,7 +8,11 @@ from anyio import to_thread
 from fastapi import APIRouter, Header, Response
 
 from app.agents.checkpoints import CheckpointSession, new_or_validated_thread_id
-from app.agents.model import ModelProviderCircuitOpenError, ModelProviderOverloadedError
+from app.agents.model import (
+    ModelProviderCircuitOpenError,
+    ModelProviderDeadlineExceededError,
+    ModelProviderOverloadedError,
+)
 from app.agents.orchestration import orchestrate_answer_async
 from app.api.deps import ModelProviderDep, RequestIdDep, SettingsDep, TenantContext
 from app.exceptions import AppError
@@ -134,6 +138,40 @@ async def grounded_answer(
                 "Retry-After": str(exc.retry_after_seconds),
                 "X-MedOps-Provider-Overloaded": "true",
                 "X-MedOps-Overload-Reason": exc.reason,
+            },
+        ) from exc
+    except ModelProviderDeadlineExceededError as exc:
+        await to_thread.run_sync(
+            partial(
+                write_audit,
+                settings.database_path,
+                request_id=request_id,
+                actor=context.actor,
+                tenant_id=context.tenant_id,
+                action="answer",
+                resource="rag",
+                result="rejected",
+                details={
+                    "question": effective.question,
+                    "reason": "model_provider_deadline_exceeded",
+                    "deadline_phase": exc.phase,
+                    "deadline_seconds": exc.deadline_seconds,
+                    "elapsed_ms": exc.elapsed_ms,
+                },
+            )
+        )
+        raise AppError(
+            504,
+            "model_provider_deadline_exceeded",
+            "Model provider request deadline exceeded",
+            details={
+                "phase": exc.phase,
+                "deadline_seconds": exc.deadline_seconds,
+                "elapsed_ms": exc.elapsed_ms,
+            },
+            headers={
+                "X-MedOps-Provider-Deadline": "exceeded",
+                "X-MedOps-Deadline-Phase": exc.phase,
             },
         ) from exc
     except ModelProviderCircuitOpenError as exc:

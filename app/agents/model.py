@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import math
+import random
 import re
 import threading
 import time
 from collections import Counter, deque
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Literal
 
 import httpx
@@ -41,6 +44,7 @@ class GenerationResult:
 
 OverloadReason = Literal["queue_full", "queue_timeout"]
 CircuitState = Literal["closed", "open", "half_open"]
+DeadlinePhase = Literal["queue", "http", "backoff"]
 
 
 class ModelProviderOverloadedError(RuntimeError):
@@ -72,16 +76,56 @@ class ModelProviderCircuitOpenError(RuntimeError):
         self.retry_after_seconds = retry_after_seconds
 
 
+class ModelProviderDeadlineExceededError(TimeoutError):
+    """The logical request exhausted its end-to-end provider deadline."""
+
+    def __init__(self, *, phase: DeadlinePhase, deadline_seconds: float, elapsed_ms: float) -> None:
+        super().__init__(f"model provider deadline exceeded during {phase}")
+        self.phase = phase
+        self.deadline_seconds = deadline_seconds
+        self.elapsed_ms = elapsed_ms
+
+
 @dataclass(frozen=True, slots=True)
 class _CircuitLease:
     epoch: int
     probe: bool = False
 
 
+@dataclass(slots=True)
+class _RetryTokenBucket:
+    capacity: float
+    refill_per_second: float
+    remaining: float
+    updated_at: float
+
+    def refill(self, now: float) -> None:
+        elapsed = max(0.0, now - self.updated_at)
+        self.remaining = min(self.capacity, self.remaining + elapsed * self.refill_per_second)
+        self.updated_at = now
+
+
 def _is_retriable_provider_error(exc: Exception) -> bool:
     if isinstance(exc, httpx.HTTPStatusError):
         return exc.response.status_code == 429 or exc.response.status_code >= 500
     return isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
+
+
+def _parse_retry_after_seconds(value: str | None, *, now: datetime | None = None) -> float | None:
+    """Parse an RFC 9110 Retry-After delta or HTTP date without trusting huge values."""
+    if value is None:
+        return None
+    candidate = value.strip()
+    if candidate.isdigit():
+        return float(candidate)
+    try:
+        retry_at = parsedate_to_datetime(candidate)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if retry_at.tzinfo is None:
+        retry_at = retry_at.replace(tzinfo=UTC)
+    reference = now or datetime.now(UTC)
+    return max(0.0, (retry_at - reference).total_seconds())
 
 
 class ModelProvider:
@@ -111,6 +155,28 @@ class ModelProvider:
             raise ValueError("MODEL_MAX_QUEUE_WAITERS_PER_TENANT cannot be negative")
         if settings.model_queue_timeout_seconds < 0:
             raise ValueError("MODEL_QUEUE_TIMEOUT_SECONDS cannot be negative")
+        if settings.model_request_deadline_seconds <= 0:
+            raise ValueError("MODEL_REQUEST_DEADLINE_SECONDS must be positive")
+        if settings.model_max_retries < 0:
+            raise ValueError("MODEL_MAX_RETRIES cannot be negative")
+        if settings.model_retry_base_delay_seconds < 0:
+            raise ValueError("MODEL_RETRY_BASE_DELAY_SECONDS cannot be negative")
+        if settings.model_retry_max_delay_seconds < settings.model_retry_base_delay_seconds:
+            raise ValueError(
+                "MODEL_RETRY_MAX_DELAY_SECONDS must be at least MODEL_RETRY_BASE_DELAY_SECONDS"
+            )
+        if not 0 <= settings.model_retry_jitter_ratio <= 1:
+            raise ValueError("MODEL_RETRY_JITTER_RATIO must be between 0 and 1")
+        if settings.model_retry_after_max_seconds < 0:
+            raise ValueError("MODEL_RETRY_AFTER_MAX_SECONDS cannot be negative")
+        if settings.model_retry_budget_global_capacity < 0:
+            raise ValueError("MODEL_RETRY_BUDGET_GLOBAL_CAPACITY cannot be negative")
+        if settings.model_retry_budget_global_refill_per_second < 0:
+            raise ValueError("MODEL_RETRY_BUDGET_GLOBAL_REFILL_PER_SECOND cannot be negative")
+        if settings.model_retry_budget_per_tenant_capacity < 0:
+            raise ValueError("MODEL_RETRY_BUDGET_PER_TENANT_CAPACITY cannot be negative")
+        if settings.model_retry_budget_per_tenant_refill_per_second < 0:
+            raise ValueError("MODEL_RETRY_BUDGET_PER_TENANT_REFILL_PER_SECOND cannot be negative")
         if settings.model_overload_retry_after_seconds < 1:
             raise ValueError("MODEL_OVERLOAD_RETRY_AFTER_SECONDS must be at least 1")
         if settings.model_circuit_failure_threshold < 1:
@@ -129,14 +195,28 @@ class ModelProvider:
             settings.model_max_queue_waiters_per_tenant, self.max_queue_waiters
         )
         self.queue_timeout_seconds = settings.model_queue_timeout_seconds
+        self.request_deadline_seconds = settings.model_request_deadline_seconds
         self.retry_after_seconds = settings.model_overload_retry_after_seconds
+        self.retry_base_delay_seconds = settings.model_retry_base_delay_seconds
+        self.retry_max_delay_seconds = settings.model_retry_max_delay_seconds
+        self.retry_jitter_ratio = settings.model_retry_jitter_ratio
+        self.retry_after_max_seconds = settings.model_retry_after_max_seconds
+        self.retry_budget_global_capacity = settings.model_retry_budget_global_capacity
+        self.retry_budget_global_refill_per_second = (
+            settings.model_retry_budget_global_refill_per_second
+        )
+        self.retry_budget_per_tenant_capacity = settings.model_retry_budget_per_tenant_capacity
+        self.retry_budget_per_tenant_refill_per_second = (
+            settings.model_retry_budget_per_tenant_refill_per_second
+        )
         self.circuit_failure_threshold = settings.model_circuit_failure_threshold
         self.circuit_recovery_seconds = settings.model_circuit_recovery_seconds
         self.shutdown_timeout_seconds = settings.model_shutdown_timeout_seconds
         self._admission = threading.BoundedSemaphore(self.max_concurrency + self.max_queue_waiters)
         self._execution = threading.BoundedSemaphore(self.max_concurrency)
+        self._sync_timeout = settings.model_timeout_seconds
         self._client = httpx.Client(
-            timeout=settings.model_timeout_seconds,
+            timeout=self._sync_timeout,
             limits=httpx.Limits(
                 max_connections=self.max_concurrency,
                 max_keepalive_connections=self.max_concurrency,
@@ -166,6 +246,17 @@ class ModelProvider:
         self._circuit_opened_at = 0.0
         self._circuit_epoch = 0
         self._half_open_probe_active = False
+        budget_now = time.monotonic()
+        self._global_retry_budget = _RetryTokenBucket(
+            capacity=float(self.retry_budget_global_capacity),
+            refill_per_second=self.retry_budget_global_refill_per_second,
+            remaining=float(self.retry_budget_global_capacity),
+            updated_at=budget_now,
+        )
+        self._tenant_retry_budgets: dict[str, _RetryTokenBucket] = {}
+        self._retry_budget_global_rejections = 0
+        self._retry_budget_per_tenant_rejections = 0
+        self._retries_consumed = 0
 
     @property
     def is_closed(self) -> bool:
@@ -344,6 +435,81 @@ class ModelProvider:
                 "max_queue_waiters_per_tenant": self.max_queue_waiters_per_tenant,
             }
 
+    def _tenant_retry_bucket(self, tenant_id: str, now: float) -> _RetryTokenBucket:
+        bucket = self._tenant_retry_budgets.get(tenant_id)
+        if bucket is None:
+            bucket = _RetryTokenBucket(
+                capacity=float(self.retry_budget_per_tenant_capacity),
+                refill_per_second=self.retry_budget_per_tenant_refill_per_second,
+                remaining=float(self.retry_budget_per_tenant_capacity),
+                updated_at=now,
+            )
+            self._tenant_retry_budgets[tenant_id] = bucket
+        return bucket
+
+    def _consume_retry_budget(self, tenant_id: str) -> bool:
+        """Atomically reserve one retry from both global and tenant token buckets."""
+        now = time.monotonic()
+        with self._state_lock:
+            self._global_retry_budget.refill(now)
+            if self._global_retry_budget.remaining < 1:
+                self._retry_budget_global_rejections += 1
+                return False
+            tenant = self._tenant_retry_bucket(tenant_id, now)
+            tenant.refill(now)
+            if tenant.remaining < 1:
+                self._retry_budget_per_tenant_rejections += 1
+                return False
+            self._global_retry_budget.remaining -= 1
+            tenant.remaining -= 1
+            self._retries_consumed += 1
+            return True
+
+    def retry_budget_snapshot(self) -> dict[str, object]:
+        """Expose retry capacity without leaking tenant identifiers."""
+        now = time.monotonic()
+        with self._state_lock:
+            self._global_retry_budget.refill(now)
+            for bucket in self._tenant_retry_budgets.values():
+                bucket.refill(now)
+            remaining = [bucket.remaining for bucket in self._tenant_retry_budgets.values()]
+            return {
+                "retries_consumed": self._retries_consumed,
+                "global": {
+                    "remaining": round(self._global_retry_budget.remaining, 3),
+                    "capacity": self.retry_budget_global_capacity,
+                    "refill_per_second": self.retry_budget_global_refill_per_second,
+                    "rejected": self._retry_budget_global_rejections,
+                },
+                "per_tenant": {
+                    "tracked": len(remaining),
+                    "remaining_total": round(sum(remaining), 3),
+                    "remaining_min": round(min(remaining), 3) if remaining else None,
+                    "remaining_max": round(max(remaining), 3) if remaining else None,
+                    "capacity": self.retry_budget_per_tenant_capacity,
+                    "refill_per_second": self.retry_budget_per_tenant_refill_per_second,
+                    "rejected": self._retry_budget_per_tenant_rejections,
+                },
+            }
+
+    def retry_delay_seconds(self, attempt: int, exc: Exception) -> float:
+        """Return capped exponential jitter, respecting a bounded Retry-After hint."""
+        exponential = min(
+            self.retry_max_delay_seconds,
+            self.retry_base_delay_seconds * (2**attempt),
+        )
+        jittered = random.uniform(
+            exponential * (1 - self.retry_jitter_ratio),
+            exponential * (1 + self.retry_jitter_ratio),
+        )
+        jittered = min(self.retry_max_delay_seconds, max(0.0, jittered))
+        retry_after = None
+        if isinstance(exc, httpx.HTTPStatusError):
+            retry_after = _parse_retry_after_seconds(exc.response.headers.get("Retry-After"))
+        if retry_after is None:
+            return jittered
+        return max(jittered, min(self.retry_after_max_seconds, retry_after))
+
     def circuit_snapshot(self) -> dict[str, object]:
         with self._state_lock:
             return {
@@ -430,7 +596,7 @@ class ModelProvider:
                 self._circuit_epoch += 1
 
     @contextmanager
-    def request_slot(self):
+    def request_slot(self, *, timeout_seconds: float | None = None):
         started = time.perf_counter()
         if not self._admission.acquire(blocking=False):
             raise self._overload("queue_full", started)
@@ -442,7 +608,10 @@ class ModelProvider:
 
         acquired_execution = False
         try:
-            acquired_execution = self._execution.acquire(timeout=self.queue_timeout_seconds)
+            queue_timeout = self.queue_timeout_seconds
+            if timeout_seconds is not None:
+                queue_timeout = min(queue_timeout, max(0.0, timeout_seconds))
+            acquired_execution = self._execution.acquire(timeout=queue_timeout)
             if not acquired_execution:
                 raise self._overload("queue_timeout", started)
             with self._state_lock:
@@ -675,48 +844,109 @@ def generate_detailed(
     }
     owns_provider = provider is None
     runtime = provider or ModelProvider(settings)
+    deadline_at = time.perf_counter() + settings.model_request_deadline_seconds
+    phase: DeadlinePhase = "queue"
+    circuit_lease: _CircuitLease | None = None
+    circuit_resolved = False
     try:
-        with runtime.request_slot() as client:
-            circuit_lease = runtime._circuit_before_request()
-            for attempt in range(settings.model_max_retries + 1):
-                try:
-                    response = client.post(
-                        endpoint,
-                        headers={"Authorization": f"Bearer {settings.model_api_key}"},
-                        json=payload,
-                    )
-                    response.raise_for_status()
-                    body = response.json()
-                    content = body["choices"][0]["message"]["content"]
-                    usage = body.get("usage", {})
-                    prompt_tokens = int(usage.get("prompt_tokens", 0))
-                    completion_tokens = int(usage.get("completion_tokens", 0))
-                    cached_prompt_tokens = int(
-                        usage.get("prompt_cache_hit_tokens")
-                        or usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
-                        or 0
-                    )
-                    total_tokens = int(usage.get("total_tokens", prompt_tokens + completion_tokens))
-                    runtime._circuit_success(circuit_lease)
-                    return GenerationResult(
-                        str(content),
-                        "openai-compatible",
-                        (time.perf_counter() - started) * 1000,
-                        ModelUsage(
-                            total_tokens=total_tokens,
-                            prompt_tokens=prompt_tokens,
-                            completion_tokens=completion_tokens,
-                            cached_prompt_tokens=cached_prompt_tokens,
-                        ),
-                    )
-                except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
-                    if attempt < settings.model_max_retries and _is_retriable_provider_error(exc):
-                        time.sleep(0.1 * (attempt + 1))
-                        continue
-                    break
-            circuit_error = runtime._circuit_failure(circuit_lease)
-            if circuit_error is not None:
-                raise circuit_error
+        try:
+            remaining = deadline_at - time.perf_counter()
+            if remaining <= 0:
+                raise ModelProviderDeadlineExceededError(
+                    phase="queue",
+                    deadline_seconds=settings.model_request_deadline_seconds,
+                    elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                )
+            with runtime.request_slot(timeout_seconds=remaining) as client:
+                circuit_lease = runtime._circuit_before_request()
+                for attempt in range(settings.model_max_retries + 1):
+                    try:
+                        phase = "http"
+                        remaining = deadline_at - time.perf_counter()
+                        if remaining <= 0:
+                            raise ModelProviderDeadlineExceededError(
+                                phase=phase,
+                                deadline_seconds=settings.model_request_deadline_seconds,
+                                elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                            )
+                        response = client.post(
+                            endpoint,
+                            headers={"Authorization": f"Bearer {settings.model_api_key}"},
+                            json=payload,
+                            timeout=min(runtime._sync_timeout, remaining),
+                        )
+                        response.raise_for_status()
+                        body = response.json()
+                        content = body["choices"][0]["message"]["content"]
+                        usage = body.get("usage", {})
+                        prompt_tokens = int(usage.get("prompt_tokens", 0))
+                        completion_tokens = int(usage.get("completion_tokens", 0))
+                        cached_prompt_tokens = int(
+                            usage.get("prompt_cache_hit_tokens")
+                            or usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
+                            or 0
+                        )
+                        total_tokens = int(
+                            usage.get("total_tokens", prompt_tokens + completion_tokens)
+                        )
+                        runtime._circuit_success(circuit_lease)
+                        circuit_resolved = True
+                        return GenerationResult(
+                            str(content),
+                            "openai-compatible",
+                            (time.perf_counter() - started) * 1000,
+                            ModelUsage(
+                                total_tokens=total_tokens,
+                                prompt_tokens=prompt_tokens,
+                                completion_tokens=completion_tokens,
+                                cached_prompt_tokens=cached_prompt_tokens,
+                            ),
+                        )
+                    except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
+                        if time.perf_counter() >= deadline_at:
+                            raise ModelProviderDeadlineExceededError(
+                                phase=phase,
+                                deadline_seconds=settings.model_request_deadline_seconds,
+                                elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                            ) from exc
+                        should_retry = (
+                            attempt < settings.model_max_retries
+                            and _is_retriable_provider_error(exc)
+                            and runtime._consume_retry_budget("__sync__")
+                        )
+                        if not should_retry:
+                            break
+                        phase = "backoff"
+                        delay = runtime.retry_delay_seconds(attempt, exc)
+                        remaining = deadline_at - time.perf_counter()
+                        if delay >= remaining:
+                            time.sleep(max(0.0, remaining))
+                            raise ModelProviderDeadlineExceededError(
+                                phase=phase,
+                                deadline_seconds=settings.model_request_deadline_seconds,
+                                elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                            ) from exc
+                        time.sleep(delay)
+                circuit_error = runtime._circuit_failure(circuit_lease)
+                circuit_resolved = True
+                if circuit_error is not None:
+                    raise circuit_error
+        except ModelProviderDeadlineExceededError:
+            if circuit_lease is not None and not circuit_resolved:
+                runtime._circuit_failure(circuit_lease)
+                circuit_resolved = True
+            raise
+        except ModelProviderOverloadedError as exc:
+            if exc.reason == "queue_timeout" and time.perf_counter() >= deadline_at:
+                raise ModelProviderDeadlineExceededError(
+                    phase="queue",
+                    deadline_seconds=settings.model_request_deadline_seconds,
+                    elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                ) from exc
+            raise
+        finally:
+            if circuit_lease is not None and not circuit_resolved:
+                runtime._circuit_cancel(circuit_lease)
     finally:
         if owns_provider:
             runtime.close()
@@ -746,8 +976,10 @@ async def generate_detailed_async(
     tenant_id: str,
     provider: ModelProvider,
 ) -> GenerationResult:
-    """Generate online without occupying a worker thread during network I/O."""
+    """Generate online under one deadline spanning queue, HTTP, and backoff."""
     started = time.perf_counter()
+    loop = asyncio.get_running_loop()
+    deadline_at = loop.time() + settings.model_request_deadline_seconds
     visual_payloads = visual_payloads or []
     if not (settings.model_api_key and settings.model_base_url and settings.model_name):
         answer, offline_provider, tokens = _offline_answer(question, evidence, visual_payloads)
@@ -786,56 +1018,89 @@ async def generate_detailed_async(
         ),
         "temperature": 0,
     }
+    phase: DeadlinePhase = "queue"
+    circuit_lease: _CircuitLease | None = None
+    circuit_resolved = False
     async with provider.async_admission(tenant_id) as client:
-        circuit_lease: _CircuitLease | None = None
-        circuit_resolved = False
         try:
-            for attempt in range(settings.model_max_retries + 1):
-                try:
-                    async with provider.async_attempt_slot(tenant_id):
-                        if circuit_lease is None:
-                            circuit_lease = provider._circuit_before_request()
-                        response = await client.post(
-                            endpoint,
-                            headers={"Authorization": f"Bearer {settings.model_api_key}"},
-                            json=payload,
-                        )
-                    response.raise_for_status()
-                    body = response.json()
-                    content = body["choices"][0]["message"]["content"]
-                    usage = body.get("usage", {})
-                    prompt_tokens = int(usage.get("prompt_tokens", 0))
-                    completion_tokens = int(usage.get("completion_tokens", 0))
-                    cached_prompt_tokens = int(
-                        usage.get("prompt_cache_hit_tokens")
-                        or usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
-                        or 0
-                    )
-                    total_tokens = int(usage.get("total_tokens", prompt_tokens + completion_tokens))
-                    provider._circuit_success(circuit_lease)
+            try:
+                async with asyncio.timeout_at(deadline_at):
+                    for attempt in range(settings.model_max_retries + 1):
+                        try:
+                            phase = "queue"
+                            async with provider.async_attempt_slot(tenant_id):
+                                if circuit_lease is None:
+                                    circuit_lease = provider._circuit_before_request()
+                                phase = "http"
+                                remaining = max(0.001, deadline_at - loop.time())
+                                response = await client.post(
+                                    endpoint,
+                                    headers={
+                                        "Authorization": f"Bearer {settings.model_api_key}"
+                                    },
+                                    json=payload,
+                                    timeout=min(provider._async_timeout, remaining),
+                                )
+                            response.raise_for_status()
+                            body = response.json()
+                            content = body["choices"][0]["message"]["content"]
+                            usage = body.get("usage", {})
+                            prompt_tokens = int(usage.get("prompt_tokens", 0))
+                            completion_tokens = int(usage.get("completion_tokens", 0))
+                            cached_prompt_tokens = int(
+                                usage.get("prompt_cache_hit_tokens")
+                                or usage.get("prompt_tokens_details", {}).get(
+                                    "cached_tokens", 0
+                                )
+                                or 0
+                            )
+                            total_tokens = int(
+                                usage.get("total_tokens", prompt_tokens + completion_tokens)
+                            )
+                            provider._circuit_success(circuit_lease)
+                            circuit_resolved = True
+                            return GenerationResult(
+                                str(content),
+                                "openai-compatible",
+                                (time.perf_counter() - started) * 1000,
+                                ModelUsage(
+                                    total_tokens=total_tokens,
+                                    prompt_tokens=prompt_tokens,
+                                    completion_tokens=completion_tokens,
+                                    cached_prompt_tokens=cached_prompt_tokens,
+                                ),
+                            )
+                        except (
+                            httpx.HTTPError,
+                            KeyError,
+                            IndexError,
+                            TypeError,
+                            ValueError,
+                        ) as exc:
+                            should_retry = (
+                                attempt < settings.model_max_retries
+                                and _is_retriable_provider_error(exc)
+                                and provider._consume_retry_budget(tenant_id)
+                            )
+                            if not should_retry:
+                                break
+                            phase = "backoff"
+                            await asyncio.sleep(provider.retry_delay_seconds(attempt, exc))
+                    if circuit_lease is None:
+                        raise RuntimeError("model provider circuit lease was not acquired")
+                    circuit_error = provider._circuit_failure(circuit_lease)
                     circuit_resolved = True
-                    return GenerationResult(
-                        str(content),
-                        "openai-compatible",
-                        (time.perf_counter() - started) * 1000,
-                        ModelUsage(
-                            total_tokens=total_tokens,
-                            prompt_tokens=prompt_tokens,
-                            completion_tokens=completion_tokens,
-                            cached_prompt_tokens=cached_prompt_tokens,
-                        ),
-                    )
-                except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
-                    if attempt < settings.model_max_retries and _is_retriable_provider_error(exc):
-                        await asyncio.sleep(0.1 * (attempt + 1))
-                        continue
-                    break
-            if circuit_lease is None:
-                raise RuntimeError("model provider circuit lease was not acquired")
-            circuit_error = provider._circuit_failure(circuit_lease)
-            circuit_resolved = True
-            if circuit_error is not None:
-                raise circuit_error
+                    if circuit_error is not None:
+                        raise circuit_error
+            except TimeoutError as exc:
+                if circuit_lease is not None and not circuit_resolved:
+                    provider._circuit_failure(circuit_lease)
+                    circuit_resolved = True
+                raise ModelProviderDeadlineExceededError(
+                    phase=phase,
+                    deadline_seconds=settings.model_request_deadline_seconds,
+                    elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                ) from exc
         finally:
             if circuit_lease is not None and not circuit_resolved:
                 provider._circuit_cancel(circuit_lease)

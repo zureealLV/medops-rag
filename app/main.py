@@ -66,7 +66,7 @@ def create_app(
 
     application = FastAPI(
         title="MedOps RAG",
-        version="3.3.0",
+        version="3.4.0",
         description=(
             "Auditable multimodal RAG for public medical knowledge and medical-device evidence. "
             "Educational use only; not medical advice."

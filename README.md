@@ -1,10 +1,11 @@
-# MedOps Medical Knowledge Agent RAG V3.3
+# MedOps Medical Knowledge Agent RAG V3.4
 
-[中文说明](README_CN.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v2](docs/v3/ADAPTIVE_CHALLENGE_V2_EVALUATION.md) · [Held-out adaptive evaluation](docs/v3/ADAPTIVE_HELDOUT_EVALUATION.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [Summary Provider policy](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped Agent RAG assistant for **public medical knowledge and medical-device evidence**.
-V3.3 moves online answers to a shared AsyncClient path with tenant-fair scheduling, classified retries, a circuit
-breaker, Provider runtime telemetry, and a second independent adaptive challenge set. It retains the admin-only
+V3.4 adds one end-to-end Provider deadline across queueing, HTTP attempts and backoff, bounded `Retry-After`,
+exponential jitter, process-local global/per-tenant retry budgets, and an honestly harder adaptive challenge v3.
+It retains V3.3's tenant-fair AsyncClient path, circuit breaker, explicit overload behavior, and the admin-only
 retrieval laboratory, tenant/actor-scoped Agent control checkpoints, Vue 3 enterprise console,
 explainable adaptive retrieval, DeepSeek V4 Flash, token/cost telemetry,
 and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
@@ -24,7 +25,8 @@ the bright clinical console.
 - DeepSeek V4 Flash OpenAI-compatible API defaults, with the API key read only from the local environment;
   production `/answer` uses a lifespan-scoped shared `httpx.AsyncClient`, tenant round-robin scheduling,
   bounded global/per-tenant active and waiting budgets, classified retries, a closed/open/half-open breaker,
-  explicit `503` responses, bounded shutdown, token accounting, and controlled offline fallback.
+  a queue/HTTP/backoff deadline with explicit `504`, bounded `Retry-After` plus jitter, process-local retry token
+  buckets, explicit overload `503`, bounded shutdown, token accounting, and controlled offline fallback.
 - a Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 enterprise console for knowledge spaces, bounded-parallel uploads, cited Q&A,
   health and tenant-scoped operational metrics; the document catalog uses metadata-only server pagination and
   title/source filtering instead of sending every document body to the browser;
@@ -64,11 +66,11 @@ the bright clinical console.
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
 - request IDs, `Server-Timing`, dependency-free `/live`, database-aware `/ready`, tenant-scoped routing metrics,
-  process-local Provider capacity/breaker telemetry, 187 tests,
+  process-local Provider capacity/breaker/deadline/retry-budget telemetry, 205 tests,
   and repeatable ingestion/retrieval/concurrency benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a Docker Compose definition with API, ingestion worker, summary worker, health checks and persistent
-  data/model volumes; the prior V3 image gate was verified, while the V3.3 async/frontend image still needs
+  data/model volumes; the prior V3 image gate was verified, while the V3.4 async/frontend image still needs
   revalidation on a host with the Docker Linux engine available;
 - two idempotent starter knowledge bases for clinical fundamentals and medical-device safety, derived from public FDA, CDC, WHO and MedlinePlus material and kept strictly educational.
 
@@ -162,7 +164,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 187 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 205 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 
@@ -192,6 +194,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_routing.py
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_heldout_zh.py --repetitions 3
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_challenge_v2.py --repetitions 1
+.\.venv\Scripts\python.exe .\evals\benchmark_adaptive_challenge_v3.py --repetitions 5
 .\.venv\Scripts\python.exe .\evals\benchmark_concurrency_v3.py
 ```
 
@@ -207,6 +210,13 @@ the tuning set and held-out v1. On 24 single-source cases, BM25, parent-child, a
 Hit@1; RRF reached `0.9583`. All four strategies reached full two-source coverage@3 on eight cases, which is
 reported as insufficient discriminative difficulty rather than a universal win. Eight unanswerable cases are
 route-only, while eight real SQLite tenant probes produced zero leaks and hid every foreign KB ID (`8/8`).
+
+The frozen challenge v3 deliberately adds typo/noise, low lexical overlap, and three-source conflict/combination
+cases. Adaptive reached Hit@1 `0.8000` and Hit@5 `1.0000` on 20 single-source cases, but only `0.6000` Hit@1 on
+the low-overlap subset. On eight three-source cases it reached Recall@5 `0.8333` and full coverage@5 `0.6250`;
+fixed BM25 was better at `0.8750` and `0.7500`. All exact, near-duplicate, source-name, and content-hash overlaps
+against the three previous datasets were zero. This exposes a real retrieval gap rather than tuning the router
+after seeing the scores; provider/application calls remained zero.
 
 The [V3 Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) isolates framework overhead on 600 calls
 per mode and records a paid live `deepseek-v4-flash` run on 8 official-corpus cases, 3 repetitions and 24 runs

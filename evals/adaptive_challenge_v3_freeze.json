@@ -1,0 +1,17 @@
+{
+  "dataset": "medops-adaptive-routing-challenge-zh-v3",
+  "dataset_version": "3.0.0",
+  "frozen_at": "2026-09-10T15:15:47.584Z",
+  "frozen_before_engine_run": true,
+  "files": {
+    "adaptive_challenge_v3_documents_zh.jsonl": {
+      "sha256": "3799bb095cc1174ff23b4391420a0662dd3951f2a73d8555ae9f71b10e94df59",
+      "rows": 28
+    },
+    "adaptive_challenge_v3_cases_zh.jsonl": {
+      "sha256": "0aaf0a4fb345977db5da7458a8db563d5eb88fd1933109e3c0979f60ea1e5e93",
+      "rows": 36
+    }
+  },
+  "policy": "Dataset files are immutable for this run. Any hash mismatch aborts evaluation; routing thresholds and application code are not tuned against V3."
+}
