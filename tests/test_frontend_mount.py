@@ -31,7 +31,12 @@ def test_ordinary_answer_ui_does_not_expose_engine_controls():
     root = Path(__file__).resolve().parents[1] / "frontend" / "src"
     user_surface = (root / "views" / "AnswerView.vue").read_text(encoding="utf-8")
 
-    for technical_control in ("text_strategy", "visual_strategy", "orchestration"):
+    for technical_control in (
+        "text_strategy",
+        "query_transform",
+        "visual_strategy",
+        "orchestration",
+    ):
         assert technical_control not in user_surface
 
 
@@ -42,4 +47,6 @@ def test_engine_controls_exist_only_in_admin_operations_surface():
 
     for technical_control in ("text_strategy", "visual_strategy", "orchestration"):
         assert technical_control in admin_surface
+    assert "对比核心文本引擎" in admin_surface
+    assert "Promise.all" in admin_surface
     assert "role !== 'admin'" in shell

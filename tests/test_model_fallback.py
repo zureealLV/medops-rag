@@ -22,16 +22,26 @@ def test_settings_accept_existing_deepseek_api_key_alias(monkeypatch, tmp_path: 
 def test_settings_load_provider_backpressure_limits(monkeypatch, tmp_path: Path):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'limits.db'}")
     monkeypatch.setenv("MODEL_MAX_CONCURRENCY", "7")
+    monkeypatch.setenv("MODEL_MAX_CONCURRENCY_PER_TENANT", "3")
     monkeypatch.setenv("MODEL_MAX_QUEUE_WAITERS", "11")
+    monkeypatch.setenv("MODEL_MAX_QUEUE_WAITERS_PER_TENANT", "5")
     monkeypatch.setenv("MODEL_QUEUE_TIMEOUT_SECONDS", "0.4")
     monkeypatch.setenv("MODEL_OVERLOAD_RETRY_AFTER_SECONDS", "3")
+    monkeypatch.setenv("MODEL_CIRCUIT_FAILURE_THRESHOLD", "9")
+    monkeypatch.setenv("MODEL_CIRCUIT_RECOVERY_SECONDS", "12")
+    monkeypatch.setenv("MODEL_SHUTDOWN_TIMEOUT_SECONDS", "4")
 
     settings = Settings.from_env()
 
     assert settings.model_max_concurrency == 7
+    assert settings.model_max_concurrency_per_tenant == 3
     assert settings.model_max_queue_waiters == 11
+    assert settings.model_max_queue_waiters_per_tenant == 5
     assert settings.model_queue_timeout_seconds == 0.4
     assert settings.model_overload_retry_after_seconds == 3
+    assert settings.model_circuit_failure_threshold == 9
+    assert settings.model_circuit_recovery_seconds == 12
+    assert settings.model_shutdown_timeout_seconds == 4
 
 
 def test_provider_failure_uses_bounded_offline_fallback(tmp_path: Path):

@@ -3,6 +3,7 @@
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.security.audit import write_audit
 from app.services.ingestion_jobs import process_next as process_ingestion
 from app.services.summary_jobs import process_next as process_summary
 
@@ -45,6 +46,29 @@ def test_metrics_snapshot_aggregates_tenant_scoped_pipeline_facts(
     )
     assert summary.status_code == 202
     assert process_summary(settings.database_path, settings, "metrics-summary") == summary.json()["id"]
+    write_audit(
+        settings.database_path,
+        request_id="metrics-overload-01",
+        actor="tester",
+        tenant_id="hospital-a",
+        action="answer",
+        resource="rag",
+        result="rejected",
+        details={
+            "reason": "model_provider_overloaded",
+            "overload_reason": "queue_timeout",
+        },
+    )
+    write_audit(
+        settings.database_path,
+        request_id="metrics-circuit-01",
+        actor="tester",
+        tenant_id="hospital-a",
+        action="answer",
+        resource="rag",
+        result="rejected",
+        details={"reason": "model_provider_circuit_open", "circuit_state": "open"},
+    )
 
     response = client.get("/system/metrics", headers=tenant_headers)
     assert response.status_code == 200
@@ -62,6 +86,23 @@ def test_metrics_snapshot_aggregates_tenant_scoped_pipeline_facts(
     assert payload["pipeline_stages"]["summary.reduce_model"]["count"] == 1
     assert payload["pipeline_providers"]["offline-extractive"] == 1
     assert payload["pipeline_providers"]["offline-map-reduce"] == 1
+    assert payload["rag_routing"]["event_count"] >= 2
+    assert payload["rag_routing"]["strategies"]["bm25"] >= 2
+    search_reason = search.json()["routing"]["reason_code"]
+    answer_reason = answer.json()["retrieval_routing"]["reason_code"]
+    assert payload["rag_routing"]["reasons"][search_reason] >= 1
+    assert payload["rag_routing"]["reasons"][answer_reason] >= 1
+    assert payload["rag_routing"]["orchestrations"]["langgraph"] >= 1
+    assert payload["rag_routing"]["overload_rejections"] == 1
+    assert payload["rag_routing"]["overload_reasons"] == {"queue_timeout": 1}
+    assert payload["rag_routing"]["circuit_rejections"] == 1
+    assert payload["rag_routing"]["circuit_states"] == {"open": 1}
+    assert payload["rag_routing"]["malformed_audit_details"] == 0
+    assert payload["provider_runtime"]["scope"] == "process_local"
+    assert payload["provider_runtime"]["capacity"]["max_concurrency"] == 4
+    assert payload["provider_runtime"]["capacity"]["max_concurrency_per_tenant"] == 2
+    assert payload["provider_runtime"]["capacity"]["max_queue_waiters_per_tenant"] == 4
+    assert payload["provider_runtime"]["circuit"]["state"] == "closed"
 
 
 def test_metrics_do_not_cross_tenant_boundary(
@@ -72,3 +113,4 @@ def test_metrics_do_not_cross_tenant_boundary(
     other = client.get("/system/metrics", headers={"X-Tenant-ID": "hospital-b"})
     assert other.status_code == 200
     assert other.json()["requests"]["count"] == 0
+    assert other.json()["rag_routing"]["event_count"] == 0

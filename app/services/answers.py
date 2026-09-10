@@ -3,13 +3,28 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
-from app.agents.model import ModelProvider, generate_detailed
+from anyio import to_thread
+
+from app.agents.model import (
+    GenerationResult,
+    ModelProvider,
+    generate_detailed,
+    generate_detailed_async,
+)
 from app.config import Settings
 from app.models.answers import AnswerRequest, AnswerResponse, Citation, VisualCitation
 from app.models.artifacts import VisualEvidence, VisualSearchRequest
-from app.models.retrieval import AdaptiveRoutingTrace, Evidence, RetrievalStrategy, SearchRequest
+from app.models.retrieval import (
+    AdaptiveRoutingTrace,
+    Evidence,
+    QueryTransform,
+    RetrievalStrategy,
+    SearchRequest,
+)
 from app.retrieval.query_routing import ResolvedProfile, route_query
 from app.security.policies import is_medical_advice_request, is_supported_domain_query
 from app.security.prompt_injection import has_injection_signals
@@ -102,6 +117,8 @@ def _response(
     prompt_tokens: int = 0,
     completion_tokens: int = 0,
     cached_prompt_tokens: int = 0,
+    query_transform: QueryTransform = "none",
+    transformed_queries: list[str] | None = None,
 ) -> AnswerResponse:
     return AnswerResponse(
         answer=answer_text,
@@ -131,6 +148,8 @@ def _response(
         retrieval_profile=resolved_profile,
         retrieval_strategy=retrieval_strategy,
         retrieval_routing=retrieval_routing,
+        query_transform=query_transform,
+        transformed_queries=transformed_queries or [],
         abstained=abstained,
         reason=reason,
         provider=provider,
@@ -143,13 +162,33 @@ def _response(
     )
 
 
-def answer(
+@dataclass(frozen=True, slots=True)
+class GenerationPlan:
+    """Fully retrieved and policy-checked input waiting only on model I/O."""
+
+    question: str
+    text_evidence: list[Evidence]
+    all_text_evidence: list[Evidence]
+    visual_evidence: list[VisualEvidence]
+    all_visual_evidence: list[VisualEvidence]
+    visual_payloads: list[tuple[VisualEvidence, bytes]]
+    resolved_profile: ResolvedProfile
+    retrieval_ms: float
+    retrieval_strategy: RetrievalStrategy
+    retrieval_routing: AdaptiveRoutingTrace | None
+    query_transform: QueryTransform
+    transformed_queries: list[str]
+
+
+def prepare_answer(
     path: Path,
     settings: Settings,
     tenant_id: str,
     request: AnswerRequest,
-    model_provider: ModelProvider | None = None,
-) -> AnswerResponse | None:
+) -> GenerationPlan | AnswerResponse | None:
+    """Run all SQLite, retrieval, artifact I/O, and policy work synchronously."""
+
+
     resolved_profile = route_query(request.question, request.retrieval_profile)
     if is_medical_advice_request(request.question):
         return _response(
@@ -186,6 +225,7 @@ def answer(
             knowledge_base_id=request.knowledge_base_id,
             top_k=request.top_k,
             strategy=request.text_strategy,
+            query_transform=request.query_transform,
         ),
         settings,
     )
@@ -276,30 +316,87 @@ def answer(
         )
     payload_evidence = [item for item, _ in payloads]
     answer_text_evidence = accepted_text[:3]
-    generation = generate_detailed(
-        request.question,
-        answer_text_evidence,
-        settings,
-        payloads,
-        model_provider,
-    )
-    response_text = _strip_inline_citation_markers(generation.answer)
-    return _response(
-        answer_text=response_text,
+    return GenerationPlan(
+        question=request.question,
         text_evidence=answer_text_evidence,
         all_text_evidence=text_result.results,
         visual_evidence=payload_evidence,
         all_visual_evidence=all_visual,
+        visual_payloads=payloads,
         resolved_profile=resolved_profile,
-        abstained=False,
-        reason=None,
-        provider=generation.provider,
         retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
         retrieval_strategy=text_result.strategy,
         retrieval_routing=text_result.routing,
+        query_transform=text_result.query_transform,
+        transformed_queries=text_result.transformed_queries,
+    )
+
+
+def _finalize_generation(plan: GenerationPlan, generation: GenerationResult) -> AnswerResponse:
+    response_text = _strip_inline_citation_markers(generation.answer)
+    return _response(
+        answer_text=response_text,
+        text_evidence=plan.text_evidence,
+        all_text_evidence=plan.all_text_evidence,
+        visual_evidence=plan.visual_evidence,
+        all_visual_evidence=plan.all_visual_evidence,
+        resolved_profile=plan.resolved_profile,
+        abstained=False,
+        reason=None,
+        provider=generation.provider,
+        retrieval_ms=plan.retrieval_ms,
+        retrieval_strategy=plan.retrieval_strategy,
+        retrieval_routing=plan.retrieval_routing,
+        query_transform=plan.query_transform,
+        transformed_queries=plan.transformed_queries,
         model_ms=generation.model_ms,
         token_usage=generation.usage.total_tokens,
         prompt_tokens=generation.usage.prompt_tokens,
         completion_tokens=generation.usage.completion_tokens,
         cached_prompt_tokens=generation.usage.cached_prompt_tokens,
     )
+
+
+def answer(
+    path: Path,
+    settings: Settings,
+    tenant_id: str,
+    request: AnswerRequest,
+    model_provider: ModelProvider | None = None,
+) -> AnswerResponse | None:
+    """Synchronous compatibility path used by batch workers and benchmarks."""
+    prepared = prepare_answer(path, settings, tenant_id, request)
+    if not isinstance(prepared, GenerationPlan):
+        return prepared
+    generation = generate_detailed(
+        prepared.question,
+        prepared.text_evidence,
+        settings,
+        prepared.visual_payloads,
+        model_provider,
+    )
+    return _finalize_generation(prepared, generation)
+
+
+async def answer_async(
+    path: Path,
+    settings: Settings,
+    tenant_id: str,
+    request: AnswerRequest,
+    model_provider: ModelProvider,
+) -> AnswerResponse | None:
+    """Event-loop-safe API path: sync retrieval is offloaded, model I/O is async."""
+    prepared = await to_thread.run_sync(
+        partial(prepare_answer, path, settings, tenant_id, request)
+    )
+    if not isinstance(prepared, GenerationPlan):
+        return prepared
+    generation = await generate_detailed_async(
+        prepared.question,
+        prepared.text_evidence,
+        settings,
+        prepared.visual_payloads,
+        tenant_id=tenant_id,
+        provider=model_provider,
+    )
+    return await to_thread.run_sync(partial(_finalize_generation, prepared, generation))

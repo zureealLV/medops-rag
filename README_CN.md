@@ -1,9 +1,9 @@
-# MedOps 医疗健康知识 Agent RAG V3.2
+# MedOps 医疗健康知识 Agent RAG V3.3
 
-[English README](README.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [独立中文留出集](docs/v3/ADAPTIVE_HELDOUT_EVALUATION.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V2](docs/v3/ADAPTIVE_CHALLENGE_V2_EVALUATION.md) · [独立中文留出集](docs/v3/ADAPTIVE_HELDOUT_EVALUATION.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.2 新增
-管理员专用检索实验室、独立中文留出集、共享有界模型客户端，以及按租户/操作者隔离的 Agent 控制检查点；并保留 Vue 3 企业控制台、可解释自适应检索与受控 LangGraph 编排、
+这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.3 将在线回答改为
+共享 AsyncClient 的真正异步模型路径，加入租户公平调度、分类重试、熔断器、Provider 运行面板和独立挑战集 V2；并保留管理员专用检索实验室、Agent 控制检查点、Vue 3 企业控制台、可解释自适应检索与受控 LangGraph 编排、
 DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 的 6 份中国政府哈希固定 PDF、15,000 条 Huatuo-26M
 中文研究语料、NLM MedlinePlus、多模态证据、SQLite FTS5 中文索引和明亮 Web 控制台。
 
@@ -16,8 +16,8 @@ DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 
 - 实验性 V3 受控 Agent 层：同一 `/answer` 接口可对比 Classic Python、LangChain LCEL 与 LangGraph；
   托管路径最多选择两个代码所有的只读工具（证据回答与引用租户复核），执行安全/引用门禁并展示节点路径；
   SQLite 只保存有界控制状态，不保存问题、Prompt、证据或答案；
-- DeepSeek V4 Flash 官方 OpenAI-compatible API 预配置，API Key 只从本地环境读取，保留有限重试、
-  进程生命周期共享 `httpx.Client`、Provider 并发/等待上限、显式过载 `503`、缓存命中/输入/输出 Token 统计和离线降级；
+- DeepSeek V4 Flash 官方 OpenAI-compatible API 预配置，API Key 只从本地环境读取；在线 `/answer` 使用
+  lifespan 共享 `httpx.AsyncClient`、租户间 round-robin、公平的活动/等待配额、分类有限重试、closed/open/half-open 熔断器、显式 `503` 和有界关闭；
 - Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 企业控制台：知识空间、并发受控上传、带引用问答、健康状态和租户指标；
   文档目录使用服务端元数据分页和标题/来源筛选，不再把整个知识库正文一次性塞进浏览器；
 - 普通 viewer/editor 只能提交业务问题，文本/视觉检索、`top_k`、证据策略与编排引擎均由后端自动管理；
@@ -51,11 +51,11 @@ DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 
 - 可选 scrypt 哈希 API Key、即时吊销、服务端租户绑定，以及 viewer/editor/admin 三级权限；
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
-- 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 160 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取、检索与并发基准；
+- 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback/路由指标和进程内 Provider 容量/熔断状态；
+- 187 个 API/安全/解析器/迁移/任务队列/UI/异步竞态测试，以及可重复的摄取、检索与并发基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - Docker Compose 已覆盖 API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；旧 V3 镜像曾完成真实构建，
-  但 V3.2 加入前端构建阶段后的新镜像仍需在 Docker Linux Engine 可用的主机上重新验证；
+  但 V3.3 异步 Provider 与前端构建阶段后的新镜像仍需在 Docker Linux Engine 可用的主机上重新验证；
 - 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
 
 ## Windows 快速启动
@@ -148,12 +148,16 @@ Token/成本遥测，不拿八个不同问题伪装成宽泛、稳定的框架�
 Adaptive 在 32 个正例中选择 BM25/RRF/父子分片 `16/10/6` 次，22 次避开了稠密查询成本。该结果只衡量
 来源排序，不等于生成答案正确、生产流量或临床验证；测试未复用阈值调优问题，且强制本地离线模型、零 Provider/API 调用。
 
+第二套独立挑战集 V2 再加入 28 篇文档和 48 个用例，并与调参集、留出集 V1 保持规范化问题/来源名
+`0/0` 重复。24 个单来源题上 BM25/Parent-Child/Adaptive Hit@1 均为 `1.0000`，RRF 为 `0.9583`；
+8 个双来源题四策略 Recall@3 均为 `1.0000`，说明这组多来源题区分力仍不足，不能硬吹成全面胜利。8 个不可回答题只统计路由，不冒充拒答准确率；8 个真实 SQLite 租户探针泄漏 `0`、外租户 KB 隐藏 `8/8`。
+
 单进程、15,000 文档、2,304 次离线并发测量中没有请求错误；完整回答路径吞吐在并发 16 达到峰值
 `67.655 req/s`，但 P95 已从并发 4 的 `141.483 ms` 增至 `309.240 ms`，并发 32 又恶化至
 `973.943 ms`。这证明需要背压和容量门禁，不代表真实 DeepSeek 能达到同样吞吐。详见
 [`docs/v3/CONCURRENCY_OPTIONS.md`](docs/v3/CONCURRENCY_OPTIONS.md)。
 
-一条命令执行发布核心门禁（Ruff、160 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
+一条命令执行发布核心门禁（Ruff、187 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell
@@ -181,6 +185,7 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_official_chunk_profiles.py
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_routing.py
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_heldout_zh.py --repetitions 3
+.\.venv\Scripts\python.exe .\evals\benchmark_adaptive_challenge_v2.py --repetitions 1
 .\.venv\Scripts\python.exe .\evals\benchmark_concurrency_v3.py
 ```
 

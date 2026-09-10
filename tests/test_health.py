@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 def test_health_is_public_and_reports_database(client: TestClient):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "3.2.0", "database": "ok"}
+    assert response.json() == {"status": "ok", "version": "3.3.0", "database": "ok"}
     assert response.headers["X-Request-ID"]
 
 
@@ -16,7 +16,7 @@ def test_liveness_is_dependency_free_and_not_persisted(client: TestClient):
     response = client.get("/live")
     ready = client.get("/ready")
     assert response.status_code == ready.status_code == 200
-    assert response.json() == {"status": "ok", "version": "3.2.0"}
+    assert response.json() == {"status": "ok", "version": "3.3.0"}
 
     database = client.app.state.settings.database_path
     with transaction(database) as connection:

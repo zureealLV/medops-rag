@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -146,59 +147,67 @@ def test_answer_overload_returns_explicit_503_and_retry_headers(
     max_queue_waiters: int,
     expected_reason: str,
 ) -> None:
-    entered = threading.Event()
-    release = threading.Event()
+    async def scenario() -> None:
+        entered = asyncio.Event()
+        release = asyncio.Event()
 
-    def blocked(request: httpx.Request) -> httpx.Response:
-        entered.set()
-        assert release.wait(5)
-        return _success(request)
+        async def blocked(request: httpx.Request) -> httpx.Response:
+            entered.set()
+            await asyncio.wait_for(release.wait(), 2)
+            return _success(request)
 
-    settings = Settings(
-        database_path=tmp_path / "api.db",
-        model_api_key="test",
-        model_max_concurrency=1,
-        model_max_queue_waiters=max_queue_waiters,
-        model_queue_timeout_seconds=0.01,
-        model_overload_retry_after_seconds=2,
-        model_max_retries=0,
-    )
-    app = create_app(settings, model_transport=httpx.MockTransport(blocked))
-    headers = {"X-Tenant-ID": "hospital-a", "X-Actor-ID": "tester"}
-    with TestClient(app) as client:
-        kb = client.post(
-            "/knowledge-bases",
-            headers=headers,
-            json={"name": "Operations", "description": "Synthetic runbooks"},
-        ).json()
-        document = client.post(
-            f"/knowledge-bases/{kb['id']}/documents",
-            headers=headers,
-            json={
-                "title": "LIS Timeout",
-                "source": "lis.md",
-                "content": "LIS 接口连续超时时，先检查接口网关健康状态和消息队列积压。",
-            },
+        settings = Settings(
+            database_path=tmp_path / "api.db",
+            model_api_key="test",
+            model_max_concurrency=1,
+            model_max_concurrency_per_tenant=1,
+            model_max_queue_waiters=max_queue_waiters,
+            model_queue_timeout_seconds=0.01,
+            model_overload_retry_after_seconds=2,
+            model_max_retries=0,
         )
-        assert document.status_code == 201
-        payload = {
-            "question": "LIS 接口连续超时时先检查什么？",
-            "knowledge_base_id": kb["id"],
-        }
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            first = executor.submit(client.post, "/answer", headers=headers, json=payload)
-            assert entered.wait(2)
-            overloaded = client.post("/answer", headers=headers, json=payload)
-            assert overloaded.status_code == 503
-            assert overloaded.headers["retry-after"] == "2"
-            assert overloaded.headers["x-medops-provider-overloaded"] == "true"
-            assert overloaded.headers["x-medops-overload-reason"] == expected_reason
-            assert overloaded.json()["code"] == "model_provider_overloaded"
-            assert overloaded.json()["details"]["reason"] == expected_reason
-            audit = client.get("/audit-logs", headers=headers).json()
-            rejected = next(event for event in audit if event["result"] == "rejected")
-            assert json.loads(rejected["details"])["overload_reason"] == expected_reason
-            release.set()
-            completed = first.result(timeout=3)
-            assert completed.status_code == 200
-            assert completed.headers["x-medops-provider"] == "openai-compatible"
+        app = create_app(settings, model_async_transport=httpx.MockTransport(blocked))
+        headers = {"X-Tenant-ID": "hospital-a", "X-Actor-ID": "tester"}
+        async with app.router.lifespan_context(app):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app), base_url="http://test"
+            ) as client:
+                kb = (
+                    await client.post(
+                        "/knowledge-bases",
+                        headers=headers,
+                        json={"name": "Operations", "description": "Synthetic runbooks"},
+                    )
+                ).json()
+                document = await client.post(
+                    f"/knowledge-bases/{kb['id']}/documents",
+                    headers=headers,
+                    json={
+                        "title": "LIS Timeout",
+                        "source": "lis.md",
+                        "content": "LIS 接口连续超时时，先检查接口网关健康状态和消息队列积压。",
+                    },
+                )
+                assert document.status_code == 201
+                payload = {
+                    "question": "LIS 接口连续超时时先检查什么？",
+                    "knowledge_base_id": kb["id"],
+                }
+                first = asyncio.create_task(client.post("/answer", headers=headers, json=payload))
+                await asyncio.wait_for(entered.wait(), 2)
+                overloaded = await client.post("/answer", headers=headers, json=payload)
+                assert overloaded.status_code == 503
+                assert overloaded.headers["retry-after"] == "2"
+                assert overloaded.headers["x-medops-provider-overloaded"] == "true"
+                assert overloaded.headers["x-medops-overload-reason"] == expected_reason
+                assert overloaded.json()["code"] == "model_provider_overloaded"
+                assert overloaded.json()["details"]["reason"] == expected_reason
+                audit = (await client.get("/audit-logs", headers=headers)).json()
+                rejected = next(event for event in audit if event["result"] == "rejected")
+                assert json.loads(rejected["details"])["overload_reason"] == expected_reason
+                release.set()
+                completed = await first
+                assert completed.status_code == 200
+                assert completed.headers["x-medops-provider"] == "openai-compatible"
+
+    asyncio.run(scenario())

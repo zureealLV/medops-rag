@@ -1,19 +1,21 @@
 """Grounded question-answering HTTP endpoint."""
 
+from functools import partial
 from pathlib import Path
 from typing import Annotated
 
+from anyio import to_thread
 from fastapi import APIRouter, Header, Response
 
 from app.agents.checkpoints import CheckpointSession, new_or_validated_thread_id
-from app.agents.model import ModelProviderOverloadedError
-from app.agents.orchestration import orchestrate_answer
+from app.agents.model import ModelProviderCircuitOpenError, ModelProviderOverloadedError
+from app.agents.orchestration import orchestrate_answer_async
 from app.api.deps import ModelProviderDep, RequestIdDep, SettingsDep, TenantContext
 from app.exceptions import AppError
 from app.models.answers import AnswerRequest, AnswerResponse
 from app.repositories.documents import get as get_document
 from app.security.audit import write_audit
-from app.services.answers import answer
+from app.services.answers import answer_async
 
 router = APIRouter(prefix="/answer", tags=["answers"])
 
@@ -49,6 +51,7 @@ def _effective_request(data: AnswerRequest, context: TenantContext) -> AnswerReq
             "top_k": 5,
             "retrieval_profile": "auto",
             "text_strategy": "auto",
+            "query_transform": "auto",
             "visual_strategy": "fusion",
             "orchestration": "langgraph",
         }
@@ -56,7 +59,7 @@ def _effective_request(data: AnswerRequest, context: TenantContext) -> AnswerReq
 
 
 @router.post("")
-def grounded_answer(
+async def grounded_answer(
     data: AnswerRequest,
     response: Response,
     context: TenantContext,
@@ -70,18 +73,21 @@ def grounded_answer(
         thread_id = new_or_validated_thread_id(thread_id_header)
     except ValueError as exc:
         raise AppError(422, "invalid_thread_id", str(exc)) from exc
-    checkpoint = CheckpointSession(
-        settings.database_path,
-        tenant_id=context.tenant_id,
-        actor=context.actor,
-        thread_id=thread_id,
-        run_id=request_id,
+    checkpoint = await to_thread.run_sync(
+        partial(
+            CheckpointSession,
+            settings.database_path,
+            tenant_id=context.tenant_id,
+            actor=context.actor,
+            thread_id=thread_id,
+            run_id=request_id,
+        )
     )
     try:
-        result = orchestrate_answer(
+        result = await orchestrate_answer_async(
             effective.orchestration,
             effective,
-            lambda: answer(
+            lambda: answer_async(
                 settings.database_path,
                 settings,
                 context.tenant_id,
@@ -94,22 +100,25 @@ def grounded_answer(
             checkpoint=checkpoint,
         )
     except ModelProviderOverloadedError as exc:
-        write_audit(
-            settings.database_path,
-            request_id=request_id,
-            actor=context.actor,
-            tenant_id=context.tenant_id,
-            action="answer",
-            resource="rag",
-            result="rejected",
-            details={
-                "question": effective.question,
-                "reason": "model_provider_overloaded",
-                "overload_reason": exc.reason,
-                "max_concurrency": exc.max_concurrency,
-                "max_queue_waiters": exc.max_queue_waiters,
-                "waited_ms": exc.waited_ms,
-            },
+        await to_thread.run_sync(
+            partial(
+                write_audit,
+                settings.database_path,
+                request_id=request_id,
+                actor=context.actor,
+                tenant_id=context.tenant_id,
+                action="answer",
+                resource="rag",
+                result="rejected",
+                details={
+                    "question": effective.question,
+                    "reason": "model_provider_overloaded",
+                    "overload_reason": exc.reason,
+                    "max_concurrency": exc.max_concurrency,
+                    "max_queue_waiters": exc.max_queue_waiters,
+                    "waited_ms": exc.waited_ms,
+                },
+            )
         )
         raise AppError(
             503,
@@ -125,6 +134,34 @@ def grounded_answer(
                 "Retry-After": str(exc.retry_after_seconds),
                 "X-MedOps-Provider-Overloaded": "true",
                 "X-MedOps-Overload-Reason": exc.reason,
+            },
+        ) from exc
+    except ModelProviderCircuitOpenError as exc:
+        await to_thread.run_sync(
+            partial(
+                write_audit,
+                settings.database_path,
+                request_id=request_id,
+                actor=context.actor,
+                tenant_id=context.tenant_id,
+                action="answer",
+                resource="rag",
+                result="rejected",
+                details={
+                    "question": effective.question,
+                    "reason": "model_provider_circuit_open",
+                    "circuit_state": exc.state,
+                },
+            )
+        )
+        raise AppError(
+            503,
+            "model_provider_circuit_open",
+            "Model provider circuit is open; retry later",
+            details={"state": exc.state},
+            headers={
+                "Retry-After": str(exc.retry_after_seconds),
+                "X-MedOps-Circuit-State": exc.state,
             },
         ) from exc
     if result is None:
@@ -145,28 +182,34 @@ def grounded_answer(
     response.headers["X-MedOps-Run-Id"] = request_id
     if checkpoint.resumed_from_run_id:
         response.headers["X-MedOps-Resumed-From-Run-Id"] = checkpoint.resumed_from_run_id
-    write_audit(
-        settings.database_path,
-        request_id=request_id,
-        actor=context.actor,
-        tenant_id=context.tenant_id,
-        action="answer",
-        resource="rag",
-        result="abstained" if result.abstained else "ok",
-        details={
-            "question": effective.question,
-            "reason": result.reason,
-            "documents": [citation.document_id for citation in result.citations],
-            "chunks": [citation.chunk_id for citation in result.citations],
-            "artifacts": [citation.artifact_id for citation in result.visual_citations],
-            "retrieval_profile": result.retrieval_profile,
-            "retrieval_strategy": result.retrieval_strategy,
-            "routing_reason": (result.retrieval_routing.reason_code if result.retrieval_routing else None),
-            "text_strategy": effective.text_strategy,
-            "visual_strategy": effective.visual_strategy,
-            "provider": result.provider,
-            "orchestration": result.orchestration,
-            "agent_steps": [step.node for step in result.agent_steps],
-        },
+    await to_thread.run_sync(
+        partial(
+            write_audit,
+            settings.database_path,
+            request_id=request_id,
+            actor=context.actor,
+            tenant_id=context.tenant_id,
+            action="answer",
+            resource="rag",
+            result="abstained" if result.abstained else "ok",
+            details={
+                "question": effective.question,
+                "reason": result.reason,
+                "documents": [citation.document_id for citation in result.citations],
+                "chunks": [citation.chunk_id for citation in result.citations],
+                "artifacts": [citation.artifact_id for citation in result.visual_citations],
+                "retrieval_profile": result.retrieval_profile,
+                "retrieval_strategy": result.retrieval_strategy,
+                "routing_reason": (
+                    result.retrieval_routing.reason_code if result.retrieval_routing else None
+                ),
+                "text_strategy": effective.text_strategy,
+                "query_transform": effective.query_transform,
+                "visual_strategy": effective.visual_strategy,
+                "provider": result.provider,
+                "orchestration": result.orchestration,
+                "agent_steps": [step.node for step in result.agent_steps],
+            },
+        )
     )
     return result

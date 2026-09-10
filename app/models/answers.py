@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.models.artifacts import VisualEvidence, VisualStrategy
-from app.models.retrieval import AdaptiveRoutingTrace, Evidence, RetrievalStrategy
+from app.models.retrieval import AdaptiveRoutingTrace, Evidence, QueryTransform, RetrievalStrategy
 
 
 class AnswerRequest(BaseModel):
@@ -14,6 +14,7 @@ class AnswerRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=10)
     retrieval_profile: Literal["auto", "text", "visual"] = "auto"
     text_strategy: RetrievalStrategy = "auto"
+    query_transform: QueryTransform = "auto"
     visual_strategy: VisualStrategy = "fusion"
     orchestration: Literal["classic", "langchain", "langgraph"] = "langgraph"
 
@@ -51,6 +52,8 @@ class AnswerResponse(BaseModel):
     retrieval_profile: Literal["text", "visual"] = "text"
     retrieval_strategy: RetrievalStrategy | None = None
     retrieval_routing: AdaptiveRoutingTrace | None = None
+    query_transform: QueryTransform = "none"
+    transformed_queries: list[str] = Field(default_factory=list)
     abstained: bool
     reason: str | None = None
     provider: str

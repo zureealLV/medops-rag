@@ -92,6 +92,7 @@ export interface AdminAnswerRequest {
   top_k: number
   retrieval_profile: RetrievalProfile
   text_strategy: RetrievalStrategy
+  query_transform: QueryTransform
   visual_strategy: VisualStrategy
   orchestration: OrchestrationEngine
 }
@@ -137,6 +138,8 @@ export interface AnswerResponse {
   retrieval_profile: 'text' | 'visual'
   retrieval_strategy: string | null
   retrieval_routing: AdaptiveRoutingTrace | null
+  query_transform: QueryTransform
+  transformed_queries: string[]
   abstained: boolean
   reason: string | null
   provider: string
@@ -186,4 +189,34 @@ export interface Metrics {
   }
   pipeline_stages: Record<string, { count: number; error_count: number; avg_ms: number; p95_ms: number }>
   pipeline_providers: Record<string, number>
+  rag_routing: {
+    event_count: number
+    strategies: Record<string, number>
+    reasons: Record<string, number>
+    orchestrations: Record<string, number>
+    overload_rejections: number
+    overload_reasons: Record<string, number>
+    circuit_rejections: number
+    circuit_states: Record<string, number>
+    malformed_audit_details: number
+  }
+  provider_runtime: {
+    scope: 'process_local'
+    capacity: {
+      active: number
+      waiting: number
+      active_tenants: number
+      outstanding: number
+      max_concurrency: number
+      max_concurrency_per_tenant: number
+      max_queue_waiters: number
+      max_queue_waiters_per_tenant: number
+    }
+    circuit: {
+      state: 'closed' | 'open' | 'half_open'
+      consecutive_failures: number
+      epoch: number
+      half_open_probe_active: boolean
+    }
+  }
 }

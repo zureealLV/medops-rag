@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from datetime import UTC, datetime
+from functools import partial
 
+from anyio import to_thread
 from fastapi import APIRouter
 
-from app.api.deps import SettingsDep, TenantContext
+from app.api.deps import ModelProviderDep, SettingsDep, TenantContext
 from app.db import transaction
 
 router = APIRouter(prefix="/system", tags=["observability"])
@@ -21,8 +24,7 @@ def _percentile(values: list[float], percentile: float) -> float:
     return round(ordered[index], 3)
 
 
-@router.get("/metrics")
-def metrics_snapshot(context: TenantContext, settings: SettingsDep) -> dict[str, object]:
+def _tenant_metrics_snapshot(context: TenantContext, settings: SettingsDep) -> dict[str, object]:
     with transaction(settings.database_path) as connection:
         queue_rows = {}
         for table in ("ingestion_jobs", "summary_jobs"):
@@ -56,6 +58,14 @@ def metrics_snapshot(context: TenantContext, settings: SettingsDep) -> dict[str,
                ORDER BY id DESC LIMIT 1000""",
             (context.tenant_id,),
         ).fetchall()
+        rag_events = connection.execute(
+            """SELECT action,result,details
+               FROM audit_logs
+               WHERE tenant_id=? AND action IN ('answer','search')
+                 AND created_at >= datetime('now','-24 hours')
+               ORDER BY id DESC LIMIT 5000""",
+            (context.tenant_id,),
+        ).fetchall()
 
     request_latencies = [float(row["latency_ms"]) for row in requests]
     retrieval_latencies = [float(row["retrieval_ms"]) for row in requests if row["retrieval_ms"]]
@@ -75,6 +85,32 @@ def metrics_snapshot(context: TenantContext, settings: SettingsDep) -> dict[str,
             errors[key] += 1
         if row["provider"]:
             pipeline_providers[str(row["provider"])] += 1
+
+    route_strategies: dict[str, int] = defaultdict(int)
+    route_reasons: dict[str, int] = defaultdict(int)
+    orchestrations: dict[str, int] = defaultdict(int)
+    overload_reasons: dict[str, int] = defaultdict(int)
+    circuit_states: dict[str, int] = defaultdict(int)
+    malformed_audit_details = 0
+    for row in rag_events:
+        try:
+            details = json.loads(str(row["details"]))
+        except (json.JSONDecodeError, TypeError):
+            malformed_audit_details += 1
+            continue
+        strategy = details.get("retrieval_strategy") or details.get("strategy")
+        reason = details.get("routing_reason")
+        orchestration = details.get("orchestration")
+        if strategy:
+            route_strategies[str(strategy)] += 1
+        if reason:
+            route_reasons[str(reason)] += 1
+        if orchestration:
+            orchestrations[str(orchestration)] += 1
+        if details.get("reason") == "model_provider_overloaded":
+            overload_reasons[str(details.get("overload_reason") or "unknown")] += 1
+        if details.get("reason") == "model_provider_circuit_open":
+            circuit_states[str(details.get("circuit_state") or "unknown")] += 1
 
     return {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -109,4 +145,31 @@ def metrics_snapshot(context: TenantContext, settings: SettingsDep) -> dict[str,
             for key, values in sorted(grouped.items())
         },
         "pipeline_providers": dict(sorted(pipeline_providers.items())),
+        "rag_routing": {
+            "event_count": len(rag_events),
+            "strategies": dict(sorted(route_strategies.items())),
+            "reasons": dict(sorted(route_reasons.items())),
+            "orchestrations": dict(sorted(orchestrations.items())),
+            "overload_rejections": sum(overload_reasons.values()),
+            "overload_reasons": dict(sorted(overload_reasons.items())),
+            "circuit_rejections": sum(circuit_states.values()),
+            "circuit_states": dict(sorted(circuit_states.items())),
+            "malformed_audit_details": malformed_audit_details,
+        },
     }
+
+
+@router.get("/metrics")
+async def metrics_snapshot(
+    context: TenantContext,
+    settings: SettingsDep,
+    model_provider: ModelProviderDep,
+) -> dict[str, object]:
+    """Read SQLite off-loop and append this process's Provider runtime state."""
+    snapshot = await to_thread.run_sync(partial(_tenant_metrics_snapshot, context, settings))
+    snapshot["provider_runtime"] = {
+        "scope": "process_local",
+        "capacity": await model_provider.async_capacity_snapshot(),
+        "circuit": model_provider.circuit_snapshot(),
+    }
+    return snapshot

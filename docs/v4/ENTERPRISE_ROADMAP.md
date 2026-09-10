@@ -108,3 +108,17 @@ Every engine or model change must record:
 
 This prevents an attractive framework name or one favorable demo query from
 silently becoming the production default.
+
+## V3.3 progress checkpoint
+
+| Area | Current evidence | Remaining enterprise gate |
+|---|---|---|
+| Vue console | Admin-only engine lab, four-engine side-by-side run, route/reason and Provider runtime panels | SSO-driven identity, accessibility regression suite, deployed Docker image QA |
+| Adaptive routing | Tuning set, independent held-out v1, and independent challenge v2; challenge v2 has 28 documents/48 cases, zero normalized overlap, and real SQLite tenant probes | Production-log blind set, typo/noise set, harder three-source cases, Chinese embedding bake-off |
+| Online concurrency | AsyncClient, `.ainvoke()`, off-loop SQLite/retrieval/checkpoint/audit work, bounded fair per-tenant scheduling, classified retry, circuit breaker, explicit 503 | End-to-end deadline, Retry-After+jitter, retry budgets, soak/open-loop tests |
+| Deployment-wide quota | Process-local limits are observable and explicitly labelled | Redis/gateway/provider-proxy lease with TTL, fencing and multi-worker socket tests |
+| Background model work | Ingestion/summary jobs retain durable SQLite lease semantics | Put summary model calls under a shared or explicitly partitioned Provider budget |
+| Data plane | SQLite WAL baseline remains reproducible | PostgreSQL/RLS migration, Qdrant decision gate, backup/restore and rollback drills |
+
+V3.3 is therefore a verified single-process resilience milestone, not a claim
+of production-scale horizontal deployment.

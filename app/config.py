@@ -56,9 +56,14 @@ class Settings:
     model_timeout_seconds: float = 8.0
     model_max_retries: int = 1
     model_max_concurrency: int = 4
+    model_max_concurrency_per_tenant: int = 2
     model_max_queue_waiters: int = 8
+    model_max_queue_waiters_per_tenant: int = 4
     model_queue_timeout_seconds: float = 0.25
     model_overload_retry_after_seconds: int = 1
+    model_circuit_failure_threshold: int = 5
+    model_circuit_recovery_seconds: float = 30.0
+    model_shutdown_timeout_seconds: float = 5.0
     summary_model_timeout_seconds: float = 30.0
 
     @classmethod
@@ -109,8 +114,23 @@ class Settings:
             model_timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "8")),
             model_max_retries=int(os.getenv("MODEL_MAX_RETRIES", "1")),
             model_max_concurrency=int(os.getenv("MODEL_MAX_CONCURRENCY", "4")),
+            model_max_concurrency_per_tenant=int(
+                os.getenv("MODEL_MAX_CONCURRENCY_PER_TENANT", "2")
+            ),
             model_max_queue_waiters=int(os.getenv("MODEL_MAX_QUEUE_WAITERS", "8")),
+            model_max_queue_waiters_per_tenant=int(
+                os.getenv("MODEL_MAX_QUEUE_WAITERS_PER_TENANT", "4")
+            ),
             model_queue_timeout_seconds=float(os.getenv("MODEL_QUEUE_TIMEOUT_SECONDS", "0.25")),
             model_overload_retry_after_seconds=int(os.getenv("MODEL_OVERLOAD_RETRY_AFTER_SECONDS", "1")),
+            model_circuit_failure_threshold=int(
+                os.getenv("MODEL_CIRCUIT_FAILURE_THRESHOLD", "5")
+            ),
+            model_circuit_recovery_seconds=float(
+                os.getenv("MODEL_CIRCUIT_RECOVERY_SECONDS", "30")
+            ),
+            model_shutdown_timeout_seconds=float(
+                os.getenv("MODEL_SHUTDOWN_TIMEOUT_SECONDS", "5")
+            ),
             summary_model_timeout_seconds=float(os.getenv("SUMMARY_MODEL_TIMEOUT_SECONDS", "30")),
         )

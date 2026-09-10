@@ -55,6 +55,7 @@ def test_non_admin_answer_controls_are_replaced_by_managed_defaults(tmp_path: Pa
                 "top_k": 1,
                 "retrieval_profile": "visual",
                 "text_strategy": "keyword",
+                "query_transform": "hyde",
                 "visual_strategy": "fusion",
                 "orchestration": "classic",
             },
@@ -78,6 +79,7 @@ def test_non_admin_answer_controls_are_replaced_by_managed_defaults(tmp_path: Pa
     assert body["retrieval_profile"] == "text"
     assert body["agent_steps"][0]["detail"].startswith("profile=text; strategy=auto;")
     assert body["retrieval_strategy"] == "bm25"
+    assert body["query_transform"] == "none"
     assert body["retrieval_routing"]["reason_code"]
 
     assert search.status_code == 200
@@ -94,15 +96,32 @@ def test_admin_can_use_explicit_answer_controls(tmp_path: Path):
     settings = Settings(database_path=database, auth_mode="api_key")
 
     with TestClient(create_app(settings)) as client:
+        kb = client.post(
+            "/knowledge-bases",
+            headers=_headers(admin_token),
+            json={"name": "Operations"},
+        ).json()
+        client.post(
+            f"/knowledge-bases/{kb['id']}/documents",
+            headers=_headers(admin_token),
+            json={
+                "title": "LIS Runbook",
+                "source": "lis.md",
+                "content": "LIS 接口超时时，先检查接口网关健康状态和消息队列积压。",
+            },
+        )
         response = client.post(
             "/answer",
             headers=_headers(admin_token),
             json={
                 "question": "LIS 接口超时先检查什么？",
+                "knowledge_base_id": kb["id"],
                 "text_strategy": "keyword",
+                "query_transform": "rewrite",
                 "orchestration": "classic",
             },
         )
 
     assert response.status_code == 200
     assert response.json()["orchestration"] == "classic"
+    assert response.json()["query_transform"] == "rewrite"

@@ -1,31 +1,38 @@
-# MedOps RAG V3 并发审计、实测与企业部署方案
+# MedOps RAG V3.3 并发审计、实测与企业部署方案
 
-> 审计基线：V3.2 工作树；测试日期：2026-09-10；Windows 10 / Python 3.11.5 / 20 logical CPUs。
-> 本文只对本机、单进程、离线可控负载负责，不把微基准包装成生产容量承诺。
+> 当前实现基线：V3.3 工作树；历史吞吐基线：V3.2；测试日期：2026-09-10；Windows 10 / Python 3.11.5 / 20 logical CPUs。
+> 本文只对本机、单进程、离线可控负载负责，不把微基准包装成生产容量承诺。V3.3 改变了回答路径的
+> 并发模型，因此第 3 节数字保留为改造前对照，而不是 V3.3 新容量结论。
 
 ## 1. 当前并发路径审计
 
-当前 API 使用 FastAPI，但主要路由是同步 `def`。Starlette/AnyIO 会把这些处理函数放入线程池，
-因此请求可以并行执行；这不等于路径已经具备无限并发能力：
+当前 API 使用 FastAPI。V3.3 已把生产 `/answer` 改为真正的异步网络路径；同步仓储、检索、检查点、
+引用复核和审计仍通过 AnyIO worker thread 隔离，不在事件循环内直接等待 SQLite：
 
 - `app/db.py` 为每次仓储操作创建并关闭 SQLite 连接，连接超时为 10 秒；
 - 每个连接执行 `foreign_keys=ON` 和 `journal_mode=WAL`；WAL 允许读写更好地并存，但同一时刻仍只有一个写者；
-- `/health` 会读 SQLite，且观测中间件会在每个请求结束时写一行 `request_metrics`；
+- `/health` 会读 SQLite，且观测中间件会在每个请求结束时写一行 `request_metrics`；V3.3 已把该写入
+  offload 到 worker thread，避免 SQLite 锁等待冻结事件循环，但响应仍会等待这次 best-effort 写入完成；
 - 文档分页接口执行知识库校验、`COUNT(*)` 和一页元数据查询，不再读取全部文档正文；
-- `/answer` 会进行策略检查、检索、LangGraph 编排、共享 `httpx.Client` 模型调用、审计写入和指标写入；
-- 模型调用仍占住一个 AnyIO 工作线程，但已设置进程内 Provider 并发上限、等待者上限和短等待 deadline；
-  租户级配额、异步网络调用与熔断器仍未实现；
+- `/answer` 使用 lifespan 管理的共享 `httpx.AsyncClient`、LangChain/LangGraph `.ainvoke()`，模型网络等待
+  不占 AnyIO 同步线程；
+- 单一租户感知调度器限制进程内总活动请求、每租户活动请求、全局等待者和每租户等待者；同租户 FIFO，
+  租户之间 round-robin，避免热租户把全部等待预算占满；
+- 重试只覆盖 timeout、网络错误、429 与 5xx；backoff 时释放 HTTP attempt slot，但保留有界 outstanding
+  reservation；400/401/403 不重试；
+- Provider 具有 monotonic clock + epoch 的 closed/open/half-open 熔断器，OPEN 与 HALF_OPEN 冲突显式
+  返回 `503 model_provider_circuit_open`，不会伪装成正常模型回答；
 - Dockerfile 当前启动一个 Uvicorn worker；仓库已有 SQLite lease worker，以及 Celery/Redis 可选依赖和队列基准，
   但在线 `/answer` 尚未自动转为异步队列任务。
 
-这意味着当前实现适合开发、演示和受控低并发部署；它还不是经过容量规划的横向扩展架构。
+这意味着当前实现已具备更安全的单进程在线并发路径；它仍不是经过容量规划的横向扩展架构。
 
-本轮已落地两个单机保护层。第一，新增无数据库访问、无持久化指标写入的 `/live` 进程探针，
+已落地的单机保护层包括：无数据库访问、无持久化指标写入的 `/live` 进程探针，
 新增检查 SQLite 的 `/ready` 依赖探针，并让 Docker Compose 使用 `/live`。原 `/health` 保持兼容且仍等价于
-readiness。第二，应用 lifespan 持有并关闭一个共享 `httpx.Client`；默认同一进程最多 4 个活动模型调用和
-8 个等待者，等待 250ms 未取得执行槽或 admission 已满时返回显式 `503 model_provider_overloaded`，携带
+readiness。应用 lifespan 持有并有界关闭共享 `httpx.AsyncClient`；默认同一进程最多 4 个活动模型调用、
+每租户最多 2 个活动调用、全局 8 个等待者、每租户 4 个等待者。等待 250ms 未取得执行槽或 admission 已满时返回显式 `503 model_provider_overloaded`，携带
 `Retry-After`、`X-MedOps-Provider-Overloaded` 与具体 `queue_full`/`queue_timeout` 原因。完整有限重试和退避始终
-持有同一个并发槽，不会通过重试绕开 Provider 预算。以上默认值是安全起点，不是容量承诺。
+保留 outstanding 预算，但退避阶段释放 attempt slot，使其他租户仍可探测和运行。以上默认值是安全起点，不是容量承诺。
 
 ## 2. 可复现的离线并发基准
 
@@ -127,15 +134,14 @@ uv run python evals/benchmark_concurrency_v3.py `
 
 建议优先做，不需要等数据库迁移：
 
-1. **已实现第一步**：复用 lifespan 管理的同步 `httpx.Client`；下一步再将回答路径和适配器整体异步化为
-   `httpx.AsyncClient`，使网络等待不占 AnyIO 同步线程；
-2. **已实现 Provider 级**：独立 `BoundedSemaphore` 控制活动调用，并用另一道 admission gate 限制活动加
-   等待总数；尚未实现按租户公平配额；
-3. **已实现**：等待信号量设置短 deadline，队列已满或等待超时时返回 `503`、稳定错误码与 `Retry-After`；
-4. **部分实现**：已有 Provider timeout 和有限重试，且完整重试循环持有并发槽；总体请求 deadline、带 jitter
-   退避和 Token 预算门禁尚未实现；
-5. 健康探针拆为轻量 liveness 和数据库 readiness，避免编排系统高频探针持续写 `request_metrics`；
-6. 指标写入可改为有界异步批量通道；通道满时允许丢弃低价值指标，但不能阻塞业务请求。
+1. **已实现**：lifespan 管理共享 `httpx.AsyncClient`，在线回答网络等待不占 AnyIO 同步线程；
+2. **已实现**：全局 outstanding、总活动数、每租户活动数、全局等待者和每租户等待者均有界；单一调度器
+   保证同租户 FIFO 与租户间 round-robin，不用两把嵌套 semaphore 囤积 permit；
+3. **已实现**：短 queue deadline，满载/超时返回稳定 `503`、`Retry-After` 与审计原因；
+4. **已实现基础版**：timeout/network/429/5xx 才有限重试，backoff 释放 attempt slot；monotonic + epoch
+   熔断器支持 closed/open/half-open。总体请求 deadline、jitter、`Retry-After` 解析和 Token 重试预算仍待实现；
+5. **已实现**：liveness/readiness 分离；SQLite 检索、检查点、引用复核、审计和请求指标写均移出事件循环；
+6. **待实现**：指标有界内存队列与后台批量 writer；当前虽不阻塞事件循环，响应仍等待 worker 写入结束。
 
 ### 方案 B：单机多 Uvicorn worker
 
@@ -193,10 +199,10 @@ payload 在 Qdrant。通过 transactional outbox 发布索引事件，消费者�
 
 ### 第一阶段：单机安全上线门槛
 
-- `[已实现同步版]` lifespan 复用并关闭模型客户端；`[待实现]` 端到端异步模型调用；
-- `[已实现 Provider 级]` 并发信号量、有界等待者、短等待超时和显式 503；`[待实现]` 租户公平配额；
-- liveness/readiness 分离；
-- 指标批量写；
+- `[已实现]` lifespan 共享 AsyncClient、异步网络调用和有界关闭；
+- `[已实现进程内]` 租户公平调度、有界等待、退避释放 attempt slot、显式 503 与熔断器；
+- `[已实现 offload]` liveness/readiness 分离，SQLite/检索/检查点/审计/指标写不阻塞事件循环；
+- `[待实现]` 指标批量 writer、总体 deadline、retry budget、Retry-After+jitter；
 - 用真实 DeepSeek 测试 4/8/16 并发，但使用独立测试配额和明确成本上限；
 - 加 10–30 分钟 soak、突发流量、Provider 429/超时/断网故障注入。
 
@@ -229,9 +235,14 @@ payload 在 Qdrant。通过 transactional outbox 发布索引事件，消费者�
 | 环境变量 | 默认值 | 含义 |
 |---|---:|---|
 | `MODEL_MAX_CONCURRENCY` | `4` | 单进程内可同时占用 Provider 的请求数；每个 Uvicorn worker 独立计算 |
+| `MODEL_MAX_CONCURRENCY_PER_TENANT` | `2` | 单租户同时进行的 Provider HTTP attempt 上限 |
 | `MODEL_MAX_QUEUE_WAITERS` | `8` | 除活动请求外允许等待执行槽的最大请求数 |
+| `MODEL_MAX_QUEUE_WAITERS_PER_TENANT` | `4` | 单租户允许占用的等待预算上限 |
 | `MODEL_QUEUE_TIMEOUT_SECONDS` | `0.25` | 等待执行槽的最大时间；超过后返回 `queue_timeout` |
 | `MODEL_OVERLOAD_RETRY_AFTER_SECONDS` | `1` | 503 `Retry-After` 秒数，由入口层据真实退避策略调整 |
+| `MODEL_CIRCUIT_FAILURE_THRESHOLD` | `5` | 连续 Provider 故障达到该值后 OPEN |
+| `MODEL_CIRCUIT_RECOVERY_SECONDS` | `30` | OPEN 后进入单探针 HALF_OPEN 前的冷却时间 |
+| `MODEL_SHUTDOWN_TIMEOUT_SECONDS` | `5` | 应用关闭时等待活动异步请求的最大时间 |
 
 当活动加等待总数已满时立即返回 `queue_full`；当 admission 成功但未能及时取得执行槽时返回
 `queue_timeout`。两者都会写入审计日志，且绝不会转成 `offline-fallback` 的 200 响应。当前 gate 是**进程内**的：

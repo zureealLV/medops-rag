@@ -253,14 +253,16 @@ async def benchmark(
             # Keep this above the largest load level so this historical throughput
             # benchmark remains comparable. Dedicated tests cover overload behavior.
             model_max_concurrency=max(concurrency_levels),
+            model_max_concurrency_per_tenant=max(concurrency_levels),
             model_max_queue_waiters=max(concurrency_levels),
+            model_max_queue_waiters_per_tenant=max(concurrency_levels),
         )
         substitute = OfflineModelSubstitute(model_delay_ms)
         application = create_app(
             settings,
             model_transport=httpx.MockTransport(substitute),
         )
-        try:
+        async with application.router.lifespan_context(application):
             transport = httpx.ASGITransport(app=application, raise_app_exceptions=False)
             async with httpx.AsyncClient(
                 transport=transport,
@@ -305,9 +307,6 @@ async def benchmark(
                             for _ in range(repetitions)
                         ]
                         measured[scenario_name][str(concurrency)] = _combine_runs(runs)
-        finally:
-            application.state.model_provider.close()
-
         expected_model_calls = 1 + requests_per_level * repetitions * len(concurrency_levels)
         if substitute.calls != expected_model_calls:
             raise RuntimeError(
@@ -330,7 +329,10 @@ async def benchmark(
             "processor_count": os.cpu_count(),
             "transport": "httpx.ASGITransport (in-process, no socket)",
             "application_processes": 1,
-            "fastapi_endpoints": "synchronous def endpoints executed in Starlette/AnyIO thread pool",
+            "fastapi_endpoints": (
+                "async /answer with SQLite, retrieval and checkpoint stages worker-offloaded; "
+                "mixed sync/async supporting endpoints"
+            ),
             "database": "temporary SQLite",
             "sqlite_journal_mode": journal_mode,
             "sqlite_connection_timeout_seconds": 10,

@@ -1,9 +1,11 @@
 """FastAPI application factory."""
 
 from contextlib import asynccontextmanager
+from functools import partial
 from pathlib import Path
 
 import httpx
+from anyio import to_thread
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -42,21 +44,29 @@ def create_app(
     settings: Settings | None = None,
     *,
     model_transport: httpx.BaseTransport | None = None,
+    model_async_transport: httpx.AsyncBaseTransport | None = None,
 ) -> FastAPI:
     resolved = settings or Settings.from_env()
-    model_provider = ModelProvider(resolved, transport=model_transport)
+    if model_async_transport is None and isinstance(model_transport, httpx.MockTransport):
+        model_async_transport = model_transport
+    model_provider = ModelProvider(
+        resolved,
+        transport=model_transport,
+        async_transport=model_async_transport,
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         try:
-            initialize(resolved.database_path)
+            await model_provider.start()
+            await to_thread.run_sync(partial(initialize, resolved.database_path))
             yield
         finally:
-            model_provider.close()
+            await model_provider.aclose()
 
     application = FastAPI(
         title="MedOps RAG",
-        version="3.2.0",
+        version="3.3.0",
         description=(
             "Auditable multimodal RAG for public medical knowledge and medical-device evidence. "
             "Educational use only; not medical advice."
