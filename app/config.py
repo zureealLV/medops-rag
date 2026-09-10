@@ -55,6 +55,10 @@ class Settings:
     model_max_visual_bytes: int = 6_000_000
     model_timeout_seconds: float = 8.0
     model_max_retries: int = 1
+    model_max_concurrency: int = 4
+    model_max_queue_waiters: int = 8
+    model_queue_timeout_seconds: float = 0.25
+    model_overload_retry_after_seconds: int = 1
     summary_model_timeout_seconds: float = 30.0
 
     @classmethod
@@ -65,9 +69,7 @@ class Settings:
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             auth_mode=os.getenv("AUTH_MODE", "trusted_headers"),
             retrieval_threshold=float(os.getenv("RETRIEVAL_THRESHOLD", "0.20")),
-            retrieval_keyword_threshold=float(
-                os.getenv("RETRIEVAL_KEYWORD_THRESHOLD", "0.28")
-            ),
+            retrieval_keyword_threshold=float(os.getenv("RETRIEVAL_KEYWORD_THRESHOLD", "0.28")),
             retrieval_dense_threshold=float(os.getenv("RETRIEVAL_DENSE_THRESHOLD", "0.40")),
             chunk_size=int(os.getenv("CHUNK_SIZE", "600")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "80")),
@@ -80,29 +82,20 @@ class Settings:
                 "TEXT_EMBEDDING_MODEL",
                 "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
             ),
-            hyde_auto_enabled=os.getenv("HYDE_AUTO_ENABLED", "false").lower()
-            in {"1", "true", "yes", "on"},
+            hyde_auto_enabled=os.getenv("HYDE_AUTO_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
             max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", "10000000")),
             max_image_pixels=int(os.getenv("MAX_IMAGE_PIXELS", "25000000")),
             max_archive_entries=int(os.getenv("MAX_ARCHIVE_ENTRIES", "2048")),
-            max_archive_uncompressed_bytes=int(
-                os.getenv("MAX_ARCHIVE_UNCOMPRESSED_BYTES", "50000000")
-            ),
+            max_archive_uncompressed_bytes=int(os.getenv("MAX_ARCHIVE_UNCOMPRESSED_BYTES", "50000000")),
             max_archive_entry_bytes=int(os.getenv("MAX_ARCHIVE_ENTRY_BYTES", "20000000")),
-            max_archive_compression_ratio=float(
-                os.getenv("MAX_ARCHIVE_COMPRESSION_RATIO", "200")
-            ),
+            max_archive_compression_ratio=float(os.getenv("MAX_ARCHIVE_COMPRESSION_RATIO", "200")),
             max_pdf_pages=int(os.getenv("MAX_PDF_PAGES", "200")),
             ocr_enabled=os.getenv("OCR_ENABLED", "true").lower() in {"1", "true", "yes", "on"},
             ocr_min_confidence=float(os.getenv("OCR_MIN_CONFIDENCE", "0.50")),
             image_embedding_enabled=os.getenv("IMAGE_EMBEDDING_ENABLED", "false").lower()
             in {"1", "true", "yes", "on"},
-            image_embedding_model=os.getenv(
-                "IMAGE_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-vision"
-            ),
-            image_text_embedding_model=os.getenv(
-                "IMAGE_TEXT_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-text"
-            ),
+            image_embedding_model=os.getenv("IMAGE_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-vision"),
+            image_text_embedding_model=os.getenv("IMAGE_TEXT_EMBEDDING_MODEL", "Qdrant/clip-ViT-B-32-text"),
             model_cache_dir=Path(os.getenv("MODEL_CACHE_DIR", "data/models/fastembed")),
             visual_similarity_threshold=float(os.getenv("VISUAL_SIMILARITY_THRESHOLD", "0.28")),
             visual_similarity_margin=float(os.getenv("VISUAL_SIMILARITY_MARGIN", "0.002")),
@@ -115,7 +108,9 @@ class Settings:
             model_max_visual_bytes=int(os.getenv("MODEL_MAX_VISUAL_BYTES", "6000000")),
             model_timeout_seconds=float(os.getenv("MODEL_TIMEOUT_SECONDS", "8")),
             model_max_retries=int(os.getenv("MODEL_MAX_RETRIES", "1")),
-            summary_model_timeout_seconds=float(
-                os.getenv("SUMMARY_MODEL_TIMEOUT_SECONDS", "30")
-            ),
+            model_max_concurrency=int(os.getenv("MODEL_MAX_CONCURRENCY", "4")),
+            model_max_queue_waiters=int(os.getenv("MODEL_MAX_QUEUE_WAITERS", "8")),
+            model_queue_timeout_seconds=float(os.getenv("MODEL_QUEUE_TIMEOUT_SECONDS", "0.25")),
+            model_overload_retry_after_seconds=int(os.getenv("MODEL_OVERLOAD_RETRY_AFTER_SECONDS", "1")),
+            summary_model_timeout_seconds=float(os.getenv("SUMMARY_MODEL_TIMEOUT_SECONDS", "30")),
         )

@@ -62,6 +62,40 @@ export interface Evidence {
   heading?: string | null
 }
 
+export type RetrievalStrategy = 'auto' | 'keyword' | 'vector' | 'weighted' | 'bm25' | 'rrf' | 'parent_child'
+export type QueryTransform = 'auto' | 'none' | 'rewrite' | 'multi_query' | 'hyde'
+export type RetrievalProfile = 'auto' | 'text' | 'visual'
+export type VisualStrategy = 'ocr' | 'image' | 'fusion'
+export type OrchestrationEngine = 'classic' | 'langchain' | 'langgraph'
+
+export interface SearchRequest {
+  query: string
+  knowledge_base_id: number
+  top_k: number
+  strategy: RetrievalStrategy
+  query_transform: QueryTransform
+}
+
+export interface SearchResponse {
+  query: string
+  strategy: RetrievalStrategy
+  results: Evidence[]
+  retrieval_ms: number
+  query_transform: QueryTransform
+  transformed_queries: string[]
+  routing: AdaptiveRoutingTrace | null
+}
+
+export interface AdminAnswerRequest {
+  question: string
+  knowledge_base_id: number
+  top_k: number
+  retrieval_profile: RetrievalProfile
+  text_strategy: RetrievalStrategy
+  visual_strategy: VisualStrategy
+  orchestration: OrchestrationEngine
+}
+
 export interface Citation {
   source: string
   document_id: number
@@ -99,6 +133,7 @@ export interface AnswerResponse {
   citations: Citation[]
   visual_citations: VisualCitation[]
   retrieved_chunks: Evidence[]
+  retrieved_artifacts: VisualEvidence[]
   retrieval_profile: 'text' | 'visual'
   retrieval_strategy: string | null
   retrieval_routing: AdaptiveRoutingTrace | null
@@ -111,7 +146,21 @@ export interface AnswerResponse {
   prompt_tokens: number
   completion_tokens: number
   cached_prompt_tokens: number
+  orchestration: OrchestrationEngine
   agent_steps: AgentStep[]
+}
+
+export interface VisualEvidence extends VisualCitation {
+  score: number
+  ocr_score: number
+  image_score: number | null
+  image_similarity: number | null
+  mime_type: string
+  width: number
+  height: number
+  ocr_text: string
+  metadata: Record<string, string | number | boolean | null>
+  embedding_model: string | null
 }
 
 export interface QueueMetric {

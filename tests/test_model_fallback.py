@@ -4,7 +4,7 @@ from pathlib import Path
 
 import httpx
 
-from app.agents.model import generate, generate_detailed
+from app.agents.model import ModelProvider, generate, generate_detailed
 from app.config import Settings
 from app.models.retrieval import Evidence
 
@@ -19,15 +19,29 @@ def test_settings_accept_existing_deepseek_api_key_alias(monkeypatch, tmp_path: 
     assert settings.model_api_key == "alias-secret"
 
 
-def test_provider_failure_uses_bounded_offline_fallback(monkeypatch, tmp_path: Path):
+def test_settings_load_provider_backpressure_limits(monkeypatch, tmp_path: Path):
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'limits.db'}")
+    monkeypatch.setenv("MODEL_MAX_CONCURRENCY", "7")
+    monkeypatch.setenv("MODEL_MAX_QUEUE_WAITERS", "11")
+    monkeypatch.setenv("MODEL_QUEUE_TIMEOUT_SECONDS", "0.4")
+    monkeypatch.setenv("MODEL_OVERLOAD_RETRY_AFTER_SECONDS", "3")
+
+    settings = Settings.from_env()
+
+    assert settings.model_max_concurrency == 7
+    assert settings.model_max_queue_waiters == 11
+    assert settings.model_queue_timeout_seconds == 0.4
+    assert settings.model_overload_retry_after_seconds == 3
+
+
+def test_provider_failure_uses_bounded_offline_fallback(tmp_path: Path):
     attempts = 0
 
-    def fail(*args, **kwargs):
+    def fail(request: httpx.Request):
         nonlocal attempts
         attempts += 1
-        raise httpx.TimeoutException("synthetic timeout")
+        raise httpx.TimeoutException("synthetic timeout", request=request)
 
-    monkeypatch.setattr(httpx, "post", fail)
     settings = Settings(
         database_path=tmp_path / "unused.db",
         model_api_key="test",
@@ -47,7 +61,10 @@ def test_provider_failure_uses_bounded_offline_fallback(monkeypatch, tmp_path: P
             text="LIS 接口超时先检查网关。",
         )
     ]
-    answer, provider, _, token_usage = generate("LIS 超时检查什么？", evidence, settings)
+    with ModelProvider(settings, transport=httpx.MockTransport(fail)) as runtime:
+        answer, provider, _, token_usage = generate(
+            "LIS 超时检查什么？", evidence, settings, provider=runtime
+        )
     assert attempts == 2
     assert provider == "offline-fallback"
     assert "网关" in answer
@@ -85,14 +102,18 @@ def test_offline_extractor_keeps_quantities_and_class_lists(tmp_path: Path):
     assert "5g" in answer
 
 
-def test_deepseek_v4_flash_openai_compatible_payload(monkeypatch, tmp_path: Path):
+def test_deepseek_v4_flash_openai_compatible_payload(tmp_path: Path):
     captured = {}
 
-    def succeed(url, *, headers, json, timeout):
-        captured.update(url=url, headers=headers, json=json, timeout=timeout)
+    def succeed(request: httpx.Request):
+        captured.update(
+            url=str(request.url),
+            headers=dict(request.headers),
+            json=__import__("json").loads(request.content),
+        )
         return httpx.Response(
             200,
-            request=httpx.Request("POST", url),
+            request=request,
             json={
                 "choices": [{"message": {"content": "证据回答 [source:1]"}}],
                 "usage": {
@@ -104,7 +125,6 @@ def test_deepseek_v4_flash_openai_compatible_payload(monkeypatch, tmp_path: Path
             },
         )
 
-    monkeypatch.setattr(httpx, "post", succeed)
     settings = Settings(database_path=tmp_path / "unused.db", model_api_key="secret")
     evidence = [
         Evidence(
@@ -119,16 +139,18 @@ def test_deepseek_v4_flash_openai_compatible_payload(monkeypatch, tmp_path: Path
         )
     ]
 
-    answer, provider, _, token_usage = generate("资料说了什么？", evidence, settings)
+    with ModelProvider(settings, transport=httpx.MockTransport(succeed)) as runtime:
+        answer, provider, _, token_usage = generate("资料说了什么？", evidence, settings, provider=runtime)
 
     assert captured["url"] == "https://api.deepseek.com/chat/completions"
     assert captured["json"]["model"] == "deepseek-v4-flash"
-    assert captured["headers"] == {"Authorization": "Bearer secret"}
+    assert captured["headers"]["authorization"] == "Bearer secret"
     assert answer == "证据回答 [source:1]"
     assert provider == "openai-compatible"
     assert token_usage == 42
 
-    detailed = generate_detailed("资料说了什么？", evidence, settings)
+    with ModelProvider(settings, transport=httpx.MockTransport(succeed)) as runtime:
+        detailed = generate_detailed("资料说了什么？", evidence, settings, provider=runtime)
     assert detailed.usage.prompt_tokens == 30
     assert detailed.usage.completion_tokens == 12
     assert detailed.usage.cached_prompt_tokens == 8

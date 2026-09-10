@@ -34,7 +34,6 @@ import httpx
 for _secret_name in ("MODEL_API_KEY", "DEEPSEEK_API_KEY", "OPENAI_API_KEY"):
     os.environ.pop(_secret_name, None)
 
-from app.agents import model as model_module  # noqa: E402
 from app.config import Settings  # noqa: E402
 from app.db import initialize  # noqa: E402
 from app.main import create_app  # noqa: E402
@@ -66,33 +65,28 @@ def _latency_summary(samples: list[float]) -> dict[str, float | int]:
     }
 
 
-class _OfflineModelResponse:
-    def raise_for_status(self) -> None:
-        return None
-
-    def json(self) -> dict[str, Any]:
-        return {
-            "choices": [
-                {
-                    "message": {
-                        "content": (
-                            "LIS 接口连续超时时，应检查接口网关、消息队列积压、"
-                            "连接池占用和最近配置变更。"
-                        )
-                    }
+def _offline_model_body() -> dict[str, Any]:
+    return {
+        "choices": [
+            {
+                "message": {
+                    "content": (
+                        "LIS 接口连续超时时，应检查接口网关、消息队列积压、连接池占用和最近配置变更。"
+                    )
                 }
-            ],
-            "usage": {
-                "prompt_tokens": 180,
-                "completion_tokens": 32,
-                "total_tokens": 212,
-                "prompt_cache_hit_tokens": 0,
-            },
-        }
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 180,
+            "completion_tokens": 32,
+            "total_tokens": 212,
+            "prompt_cache_hit_tokens": 0,
+        },
+    }
 
 
 class OfflineModelSubstitute:
-    """Thread-safe replacement for ``httpx.post`` used by the model adapter."""
+    """Thread-safe ``httpx.MockTransport`` handler used by the model adapter."""
 
     def __init__(self, delay_ms: float) -> None:
         self.delay_seconds = delay_ms / 1000
@@ -104,13 +98,13 @@ class OfflineModelSubstitute:
         with self._lock:
             return self._calls
 
-    def __call__(self, url: str, **_: Any) -> _OfflineModelResponse:
-        if not url.startswith("https://offline-model.invalid/"):
-            raise RuntimeError(f"network safety guard rejected model URL: {url}")
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        if not str(request.url).startswith("https://offline-model.invalid/"):
+            raise RuntimeError(f"network safety guard rejected model URL: {request.url}")
         time.sleep(self.delay_seconds)
         with self._lock:
             self._calls += 1
-        return _OfflineModelResponse()
+        return httpx.Response(200, request=request, json=_offline_model_body())
 
 
 def _seed(database: Path, document_count: int) -> int:
@@ -128,8 +122,7 @@ def _seed(database: Path, document_count: int) -> int:
                 TENANT_HEADERS["X-Tenant-ID"],
                 f"Medical operations document {index:05d}",
                 (
-                    "LIS 接口连续超时时，先检查接口网关健康状态、消息队列积压、"
-                    "连接池占用和最近配置变更。"
+                    "LIS 接口连续超时时，先检查接口网关健康状态、消息队列积压、连接池占用和最近配置变更。"
                     if index == 0
                     else f"医疗知识库归档记录 {index:05d}，用于分页并发基准。"
                 ),
@@ -151,10 +144,7 @@ def _seed(database: Path, document_count: int) -> int:
             """INSERT INTO chunks
                (document_id,knowledge_base_id,tenant_id,chunk_index,text,embedding_json)
                VALUES (?,?,?,?,?,?)""",
-            [
-                (row[0], kb_id, TENANT_HEADERS["X-Tenant-ID"], 0, row[1], "[]")
-                for row in rows
-            ],
+            [(row[0], kb_id, TENANT_HEADERS["X-Tenant-ID"], 0, row[1], "[]") for row in rows],
         )
     return kb_id
 
@@ -215,9 +205,7 @@ def _combine_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "median_throughput_requests_per_second": round(
             statistics.median(run["throughput_requests_per_second"] for run in runs), 3
         ),
-        "median_client_p95_ms": round(
-            statistics.median(run["client_latency"]["p95_ms"] for run in runs), 3
-        ),
+        "median_client_p95_ms": round(statistics.median(run["client_latency"]["p95_ms"] for run in runs), 3),
         "total_success_count": sum(run["success_count"] for run in runs),
         "total_error_count": sum(run["error_count"] for run in runs),
         "runs": runs,
@@ -262,11 +250,16 @@ async def benchmark(
             model_base_url="https://offline-model.invalid/v1",
             model_name="deterministic-delay-substitute",
             model_max_retries=0,
+            # Keep this above the largest load level so this historical throughput
+            # benchmark remains comparable. Dedicated tests cover overload behavior.
+            model_max_concurrency=max(concurrency_levels),
+            model_max_queue_waiters=max(concurrency_levels),
         )
-        application = create_app(settings)
         substitute = OfflineModelSubstitute(model_delay_ms)
-        original_post = model_module.httpx.post
-        model_module.httpx.post = substitute
+        application = create_app(
+            settings,
+            model_transport=httpx.MockTransport(substitute),
+        )
         try:
             transport = httpx.ASGITransport(app=application, raise_app_exceptions=False)
             async with httpx.AsyncClient(
@@ -313,7 +306,7 @@ async def benchmark(
                         ]
                         measured[scenario_name][str(concurrency)] = _combine_runs(runs)
         finally:
-            model_module.httpx.post = original_post
+            application.state.model_provider.close()
 
         expected_model_calls = 1 + requests_per_level * repetitions * len(concurrency_levels)
         if substitute.calls != expected_model_calls:

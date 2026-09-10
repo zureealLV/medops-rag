@@ -14,12 +14,18 @@ from typing import Literal, TypedDict
 from langchain_core.runnables import RunnableBranch, RunnableLambda
 from langgraph.graph import END, START, StateGraph
 
+from app.agents.checkpoints import CheckpointSession
+from app.agents.tools import (
+    MAX_AGENT_GRAPH_STEPS,
+    MAX_AGENT_TOOL_CALLS,
+    READ_ONLY_AGENT_TOOLS,
+    select_read_only_tools,
+)
 from app.models.answers import AgentStep, AnswerRequest, AnswerResponse
 from app.retrieval.query_routing import route_query
 from app.security.policies import is_medical_advice_request, is_supported_domain_query
 
 Orchestration = Literal["classic", "langchain", "langgraph"]
-READ_ONLY_AGENT_TOOLS = frozenset({"grounded_medical_answer"})
 
 
 class _ToolCall(TypedDict):
@@ -34,7 +40,10 @@ class _WorkflowState(TypedDict, total=False):
     route: str
     needs_tool: bool
     policy_reason: str | None
-    tool_call: _ToolCall
+    tool_plan: tuple[_ToolCall, ...]
+    tool_calls: int
+    citation_scope_checker: Callable[[AnswerResponse], bool] | None
+    checkpoint: CheckpointSession | None
     steps: list[AgentStep]
 
 
@@ -46,6 +55,8 @@ def _record(
     status: Literal["completed", "abstained", "failed"] = "completed",
     detail: str | None = None,
 ) -> list[AgentStep]:
+    if len(state.get("steps", [])) >= MAX_AGENT_GRAPH_STEPS:
+        raise RuntimeError("agent graph exceeded MAX_AGENT_GRAPH_STEPS")
     return [
         *state.get("steps", []),
         AgentStep(
@@ -57,6 +68,25 @@ def _record(
     ]
 
 
+def _checkpoint(
+    state: _WorkflowState,
+    phase: str,
+    *,
+    status: Literal["running", "completed", "failed", "abstained"] = "running",
+) -> _WorkflowState:
+    """Persist only bounded control metadata, never prompts, evidence, or answers."""
+    session = state.get("checkpoint")
+    if session is not None:
+        session.record(
+            phase=phase,
+            route=state.get("route"),
+            tool_plan=tuple(call["name"] for call in state.get("tool_plan", ())),
+            tool_calls=state.get("tool_calls", 0),
+            status=status,
+        )
+    return state
+
+
 def _prepare(state: _WorkflowState) -> _WorkflowState:
     started = time.perf_counter()
     request = state["request"]
@@ -66,7 +96,7 @@ def _prepare(state: _WorkflowState) -> _WorkflowState:
         policy_reason = "medical_advice_denied"
     elif route == "text" and not is_supported_domain_query(request.question):
         policy_reason = "insufficient_evidence"
-    return {
+    next_state: _WorkflowState = {
         **state,
         "route": route,
         "needs_tool": policy_reason is None,
@@ -81,72 +111,135 @@ def _prepare(state: _WorkflowState) -> _WorkflowState:
             ),
         ),
     }
+    return _checkpoint(next_state, "route_question")
 
 
 def _select_tool(state: _WorkflowState) -> _WorkflowState:
-    """Create one bounded, tenant-neutral tool call from validated request state."""
+    """Create a bounded plan exclusively from validated, server-owned state."""
     started = time.perf_counter()
     request = state["request"]
-    tool_call: _ToolCall = {
-        "name": "grounded_medical_answer",
-        "arguments": {
-            "question": request.question,
-            "knowledge_base_id": request.knowledge_base_id,
-            "top_k": request.top_k,
-            "retrieval_profile": state["route"],
-            "text_strategy": request.text_strategy,
-            "visual_strategy": request.visual_strategy,
-        },
-    }
-    return {
+    names = select_read_only_tools(
+        state["route"],
+        state.get("policy_reason"),
+        verify_citations=state.get("citation_scope_checker") is not None,
+    )
+    plan = tuple(
+        _ToolCall(
+            name=name,
+            arguments={
+                "knowledge_base_id": request.knowledge_base_id,
+                "top_k": request.top_k,
+                "retrieval_profile": state["route"],
+            },
+        )
+        for name in names
+    )
+    next_state: _WorkflowState = {
         **state,
-        "tool_call": tool_call,
+        "tool_plan": plan,
+        "tool_calls": 0,
         "steps": _record(
             state,
             "select_read_only_tool",
             started,
-            detail="tool=grounded_medical_answer; max_calls=1",
+            detail=f"tools={','.join(names)}; max_calls={MAX_AGENT_TOOL_CALLS}",
         ),
     }
+    return _checkpoint(next_state, "select_read_only_tools")
 
 
 def _execute_tool(state: _WorkflowState) -> _WorkflowState:
     started = time.perf_counter()
-    tool_call = state["tool_call"]
-    tool_name = tool_call["name"]
-    if tool_name not in READ_ONLY_AGENT_TOOLS:
-        return {
+    plan = state.get("tool_plan", ())
+    if not plan or len(plan) > MAX_AGENT_TOOL_CALLS:
+        failed: _WorkflowState = {
             **state,
             "result": None,
             "steps": _record(
                 state,
-                "execute_read_only_tool",
+                "execute_read_only_tools",
                 started,
                 status="failed",
-                detail=f"tool_not_allowed={tool_name}",
+                detail="invalid_or_empty_tool_plan",
             ),
         }
+        return _checkpoint(failed, "execute_read_only_tools", status="failed")
+    for call in plan:
+        if call["name"] not in READ_ONLY_AGENT_TOOLS:
+            failed = {
+                **state,
+                "result": None,
+                "steps": _record(
+                    state,
+                    "execute_read_only_tools",
+                    started,
+                    status="failed",
+                    detail=f"tool_not_allowed={call['name']}",
+                ),
+            }
+            return _checkpoint(failed, "execute_read_only_tools", status="failed")
+
+    primary_name = plan[0]["name"]
     result = state["runner"]()
+    tool_calls = 1
     status = "abstained" if result is not None and result.abstained else "completed"
-    detail = None if result is None else f"provider={result.provider}; profile={result.retrieval_profile}"
-    return {
+    detail = (
+        f"tool={primary_name}; provider={result.provider}; profile={result.retrieval_profile}"
+        if result is not None
+        else f"tool={primary_name}; knowledge_base_not_found"
+    )
+    steps = _record(
+        state,
+        f"execute_{primary_name}",
+        started,
+        status=status,
+        detail=detail,
+    )
+
+    if len(plan) == 2 and plan[1]["name"] == "verify_citation_scope" and result is not None:
+        scope_started = time.perf_counter()
+        tool_calls += 1
+        checker = state.get("citation_scope_checker")
+        try:
+            scoped = checker(result) if checker is not None else False
+        except Exception:
+            scoped = False
+        if not scoped:
+            result = result.model_copy(
+                update={
+                    "answer": "引用证据未通过当前租户权限校验，本次拒绝作答。",
+                    "citations": [],
+                    "visual_citations": [],
+                    "retrieved_chunks": [],
+                    "retrieved_artifacts": [],
+                    "abstained": True,
+                    "reason": "citation_scope_violation",
+                    "provider": "policy",
+                }
+            )
+        verification_state: _WorkflowState = {**state, "steps": steps}
+        steps = _record(
+            verification_state,
+            "verify_citation_scope",
+            scope_started,
+            status="completed" if scoped else "abstained",
+            detail=f"tenant_scoped={str(scoped).lower()}",
+        )
+
+    next_state = {
         **state,
         "result": result,
-        "steps": _record(
-            state,
-            "execute_grounded_medical_answer",
-            started,
-            status=status,
-            detail=detail,
-        ),
+        "tool_calls": tool_calls,
+        "steps": steps,
     }
+    return _checkpoint(next_state, "execute_read_only_tools")
 
 
 def _apply_policy(state: _WorkflowState) -> _WorkflowState:
     """Return the existing policy response without pretending a search tool ran."""
     started = time.perf_counter()
     result = state["runner"]()
-    return {
+    next_state: _WorkflowState = {
         **state,
         "result": result,
         "steps": _record(
@@ -157,13 +250,14 @@ def _apply_policy(state: _WorkflowState) -> _WorkflowState:
             detail=f"reason={state.get('policy_reason') or 'policy'}",
         ),
     }
+    return _checkpoint(next_state, "apply_safety_policy", status="abstained")
 
 
 def _verify_grounding(state: _WorkflowState) -> _WorkflowState:
     started = time.perf_counter()
     result = state.get("result")
     if result is None:
-        return {
+        next_state: _WorkflowState = {
             **state,
             "steps": _record(
                 state,
@@ -173,6 +267,7 @@ def _verify_grounding(state: _WorkflowState) -> _WorkflowState:
                 detail="knowledge_base_not_found",
             ),
         }
+        return _checkpoint(next_state, "verify_grounding", status="failed")
     grounded = result.abstained or bool(result.citations or result.visual_citations)
     if not grounded:
         result = result.model_copy(
@@ -183,7 +278,7 @@ def _verify_grounding(state: _WorkflowState) -> _WorkflowState:
                 "provider": "policy",
             }
         )
-    return {
+    next_state = {
         **state,
         "result": result,
         "steps": _record(
@@ -194,6 +289,11 @@ def _verify_grounding(state: _WorkflowState) -> _WorkflowState:
             detail=f"grounded={str(grounded).lower()}",
         ),
     }
+    return _checkpoint(
+        next_state,
+        "finished",
+        status="abstained" if result.abstained else "completed",
+    )
 
 
 _langchain_tool_path = RunnableLambda(_select_tool) | RunnableLambda(_execute_tool)
@@ -211,7 +311,7 @@ def _route_after_policy(state: _WorkflowState) -> Literal["tool", "policy"]:
 _graph_builder = StateGraph(_WorkflowState)
 _graph_builder.add_node("route_question", _prepare)
 _graph_builder.add_node("select_read_only_tool", _select_tool)
-_graph_builder.add_node("execute_grounded_medical_answer", _execute_tool)
+_graph_builder.add_node("execute_read_only_tools", _execute_tool)
 _graph_builder.add_node("apply_safety_policy", _apply_policy)
 _graph_builder.add_node("verify_grounding", _verify_grounding)
 _graph_builder.add_edge(START, "route_question")
@@ -220,8 +320,8 @@ _graph_builder.add_conditional_edges(
     _route_after_policy,
     {"tool": "select_read_only_tool", "policy": "apply_safety_policy"},
 )
-_graph_builder.add_edge("select_read_only_tool", "execute_grounded_medical_answer")
-_graph_builder.add_edge("execute_grounded_medical_answer", "verify_grounding")
+_graph_builder.add_edge("select_read_only_tool", "execute_read_only_tools")
+_graph_builder.add_edge("execute_read_only_tools", "verify_grounding")
 _graph_builder.add_edge("apply_safety_policy", "verify_grounding")
 _graph_builder.add_edge("verify_grounding", END)
 _langgraph_pipeline = _graph_builder.compile()
@@ -231,12 +331,23 @@ def orchestrate_answer(
     mode: Orchestration,
     request: AnswerRequest,
     runner: Callable[[], AnswerResponse | None],
+    *,
+    citation_scope_checker: Callable[[AnswerResponse], bool] | None = None,
+    checkpoint: CheckpointSession | None = None,
 ) -> AnswerResponse | None:
     """Run one grounded answer through a selected, measurable orchestrator."""
     started = time.perf_counter()
     if mode == "classic":
+        if checkpoint is not None:
+            checkpoint.record(
+                phase="classic_rag", route=None, tool_plan=(), tool_calls=0, status="running"
+            )
         result = runner()
         if result is None:
+            if checkpoint is not None:
+                checkpoint.record(
+                    phase="finished", route=None, tool_plan=(), tool_calls=0, status="failed"
+                )
             return None
         step = AgentStep(
             node="classic_rag",
@@ -244,14 +355,36 @@ def orchestrate_answer(
             duration_ms=round((time.perf_counter() - started) * 1000, 3),
             detail=f"provider={result.provider}; profile={result.retrieval_profile}",
         )
+        if checkpoint is not None:
+            checkpoint.record(
+                phase="finished",
+                route=result.retrieval_profile,
+                tool_plan=(),
+                tool_calls=0,
+                status="abstained" if result.abstained else "completed",
+            )
         return result.model_copy(update={"orchestration": mode, "agent_steps": [step]})
 
-    initial: _WorkflowState = {"request": request, "runner": runner, "steps": []}
-    state = (
-        _langchain_pipeline.invoke(initial)
-        if mode == "langchain"
-        else _langgraph_pipeline.invoke(initial)
-    )
+    initial: _WorkflowState = {
+        "request": request,
+        "runner": runner,
+        "steps": [],
+        "tool_calls": 0,
+        "citation_scope_checker": citation_scope_checker,
+        "checkpoint": checkpoint,
+    }
+    try:
+        state = (
+            _langchain_pipeline.invoke(initial)
+            if mode == "langchain"
+            else _langgraph_pipeline.invoke(initial)
+        )
+    except Exception:
+        if checkpoint is not None:
+            checkpoint.record(
+                phase="failed", route=None, tool_plan=(), tool_calls=0, status="failed"
+            )
+        raise
     result = state.get("result")
     if result is None:
         return None

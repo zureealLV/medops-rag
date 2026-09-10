@@ -3,10 +3,12 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.agents.model import ModelProvider
 from app.api.answers import router as answers_router
 from app.api.artifacts import router as artifacts_router
 from app.api.audit import router as audit_router
@@ -36,17 +38,25 @@ def _resolve_web_root() -> Path:
     return VUE_WEB_ROOT if (VUE_WEB_ROOT / "index.html").is_file() else LEGACY_WEB_ROOT
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    model_transport: httpx.BaseTransport | None = None,
+) -> FastAPI:
     resolved = settings or Settings.from_env()
+    model_provider = ModelProvider(resolved, transport=model_transport)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        initialize(resolved.database_path)
-        yield
+        try:
+            initialize(resolved.database_path)
+            yield
+        finally:
+            model_provider.close()
 
     application = FastAPI(
         title="MedOps RAG",
-        version="3.1.0",
+        version="3.2.0",
         description=(
             "Auditable multimodal RAG for public medical knowledge and medical-device evidence. "
             "Educational use only; not medical advice."
@@ -54,6 +64,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     application.state.settings = resolved
+    application.state.model_provider = model_provider
     for router in (
         health_router,
         auth_router,

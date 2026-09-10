@@ -14,6 +14,15 @@ router = APIRouter(tags=["visual evidence"])
 PositiveId = Annotated[int, Path(ge=1)]
 
 
+def _effective_visual_request(
+    data: VisualSearchRequest, context: TenantContext
+) -> VisualSearchRequest:
+    """Keep visual retrieval tuning behind the same admin boundary as text search."""
+    if context.role == "admin":
+        return data
+    return data.model_copy(update={"top_k": 5, "strategy": "fusion"})
+
+
 @router.get("/documents/{document_id}/artifacts")
 def list_document_artifacts(
     document_id: PositiveId, context: TenantContext, settings: SettingsDep
@@ -46,7 +55,8 @@ def visual_search(
     settings: SettingsDep,
     request_id: RequestIdDep,
 ) -> VisualSearchResponse:
-    result = service.search(settings.database_path, settings, context.tenant_id, data)
+    effective = _effective_visual_request(data, context)
+    result = service.search(settings.database_path, settings, context.tenant_id, effective)
     if result is None:
         raise AppError(404, "knowledge_base_not_found", "Knowledge base not found")
     write_audit(
@@ -57,6 +67,6 @@ def visual_search(
         action="visual_search",
         resource=str(data.knowledge_base_id or "all"),
         result="ok",
-        details={"strategy": data.strategy, "result_count": len(result.results)},
+        details={"strategy": effective.strategy, "result_count": len(result.results)},
     )
     return result

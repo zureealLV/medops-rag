@@ -60,6 +60,18 @@ def test_non_admin_answer_controls_are_replaced_by_managed_defaults(tmp_path: Pa
             },
         )
 
+        # Raw text and visual retrieval use the same managed-default boundary.
+        search = client.post(
+            "/search",
+            headers=_headers(viewer_token),
+            json={"query": "LIS 接口超时先检查什么？", "strategy": "keyword", "top_k": 1},
+        )
+        visual_search = client.post(
+            "/visual-search",
+            headers=_headers(viewer_token),
+            json={"query": "LIS 接口截图", "strategy": "ocr", "top_k": 1},
+        )
+
     assert response.status_code == 200
     body = response.json()
     assert body["orchestration"] == "langgraph"
@@ -68,15 +80,11 @@ def test_non_admin_answer_controls_are_replaced_by_managed_defaults(tmp_path: Pa
     assert body["retrieval_strategy"] == "bm25"
     assert body["retrieval_routing"]["reason_code"]
 
-    # Raw search is managed by the same server-side boundary.
-    search = client.post(
-        "/search",
-        headers=_headers(viewer_token),
-        json={"query": "LIS 接口超时先检查什么？", "strategy": "keyword", "top_k": 1},
-    )
     assert search.status_code == 200
     assert search.json()["strategy"] == "bm25"
     assert search.json()["routing"] is not None
+    assert visual_search.status_code == 200
+    assert visual_search.json()["strategy"] == "fusion"
 
 
 def test_admin_can_use_explicit_answer_controls(tmp_path: Path):

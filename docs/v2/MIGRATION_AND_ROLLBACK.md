@@ -7,13 +7,13 @@ Status: exact V1 schema fixture upgrade and rollback are covered by
 
 V2 keeps the original users, knowledge bases, documents, chunks, audit logs and request metrics in place.
 Initialization adds document provenance, normalized elements/artifacts, parent/child chunks, job queues,
-hashed credentials and pipeline metrics. Legacy fixed chunks are copied into one parent and one compatible
+hashed credentials, pipeline metrics and tenant/actor-scoped agent control checkpoints. Legacy fixed chunks are copied into one parent and one compatible
 child so they remain searchable without rewriting their text or embeddings.
 
-Successful initialization records both `PRAGMA user_version = 3` and
-`schema_metadata['schema_version'] = '3'`. Schema 3 adds a trigger-maintained
-FTS5 trigram candidate index while retaining an automatic full-scan fallback
-for SQLite builds without FTS5. The upgrade is idempotent.
+Successful initialization records both `PRAGMA user_version = 4` and
+`schema_metadata['schema_version'] = '4'`. Schema 3 added the trigger-maintained
+FTS5 trigram candidate index; schema 4 adds append-only bounded agent control checkpoints.
+SQLite builds without FTS5 still retain the automatic full-scan fallback. The upgrade is idempotent.
 
 ## Backup-first upgrade
 

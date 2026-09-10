@@ -274,6 +274,24 @@ CREATE TABLE IF NOT EXISTS pipeline_metrics (
 );
 CREATE INDEX IF NOT EXISTS idx_pipeline_metrics_tenant_time
     ON pipeline_metrics(tenant_id, created_at);
+CREATE TABLE IF NOT EXISTS agent_checkpoints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    thread_id TEXT NOT NULL,
+    run_id TEXT NOT NULL,
+    sequence INTEGER NOT NULL CHECK(sequence > 0),
+    phase TEXT NOT NULL,
+    route TEXT,
+    tool_plan_json TEXT NOT NULL DEFAULT '[]',
+    tool_calls INTEGER NOT NULL DEFAULT 0 CHECK(tool_calls BETWEEN 0 AND 2),
+    status TEXT NOT NULL CHECK(status IN ('running','completed','failed','abstained')),
+    resumed_from_run_id TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tenant_id, actor, thread_id, run_id, sequence)
+);
+CREATE INDEX IF NOT EXISTS idx_agent_checkpoints_identity
+    ON agent_checkpoints(tenant_id, actor, thread_id, id DESC);
 """
 
 
@@ -406,7 +424,7 @@ def initialize(path: Path) -> None:
         )
         connection.execute(
             """INSERT INTO schema_metadata(key,value,updated_at)
-               VALUES ('schema_version','3',CURRENT_TIMESTAMP)
-               ON CONFLICT(key) DO UPDATE SET value='3',updated_at=CURRENT_TIMESTAMP"""
+               VALUES ('schema_version','4',CURRENT_TIMESTAMP)
+               ON CONFLICT(key) DO UPDATE SET value='4',updated_at=CURRENT_TIMESTAMP"""
         )
-        connection.execute("PRAGMA user_version = 3")
+        connection.execute("PRAGMA user_version = 4")

@@ -3,6 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$env:PYTHONUTF8 = "1"
 $repo = Split-Path -Parent $PSScriptRoot
 Set-Location $repo
 $loadedNames = @()
@@ -12,7 +13,9 @@ if ($EnvFile) {
     $resolvedEnvFile = (Resolve-Path -LiteralPath $EnvFile).Path
     $allowedNames = @(
         "MODEL_API_KEY", "DEEPSEEK_API_KEY", "MODEL_BASE_URL", "MODEL_NAME",
-        "MODEL_TIMEOUT_SECONDS", "MODEL_MAX_RETRIES"
+        "MODEL_TIMEOUT_SECONDS", "MODEL_MAX_RETRIES", "MODEL_MAX_CONCURRENCY",
+        "MODEL_MAX_QUEUE_WAITERS", "MODEL_QUEUE_TIMEOUT_SECONDS",
+        "MODEL_OVERLOAD_RETRY_AFTER_SECONDS"
     )
     foreach ($line in Get-Content -LiteralPath $resolvedEnvFile -Encoding utf8) {
         if ($line -notmatch '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') { continue }

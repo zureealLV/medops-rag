@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from app.agents.model import generate_detailed
+from app.agents.model import ModelProvider, generate_detailed
 from app.config import Settings
 from app.models.answers import AnswerRequest, AnswerResponse, Citation, VisualCitation
 from app.models.artifacts import VisualEvidence, VisualSearchRequest
@@ -143,7 +143,13 @@ def _response(
     )
 
 
-def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerRequest) -> AnswerResponse | None:
+def answer(
+    path: Path,
+    settings: Settings,
+    tenant_id: str,
+    request: AnswerRequest,
+    model_provider: ModelProvider | None = None,
+) -> AnswerResponse | None:
     resolved_profile = route_query(request.question, request.retrieval_profile)
     if is_medical_advice_request(request.question):
         return _response(
@@ -275,6 +281,7 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
         answer_text_evidence,
         settings,
         payloads,
+        model_provider,
     )
     response_text = _strip_inline_citation_markers(generation.answer)
     return _response(

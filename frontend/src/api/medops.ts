@@ -1,5 +1,15 @@
 import { apiRequest, encodeQuery } from './client'
-import type { AnswerResponse, DocumentPage, Health, Identity, KnowledgeBase, Metrics } from '@/types/api'
+import type {
+  AdminAnswerRequest,
+  AnswerResponse,
+  DocumentPage,
+  Health,
+  Identity,
+  KnowledgeBase,
+  Metrics,
+  SearchRequest,
+  SearchResponse,
+} from '@/types/api'
 
 export const medopsApi = {
   health: () => apiRequest<Health>('/health'),
@@ -16,5 +26,9 @@ export const medopsApi = {
   },
   answer: (data: { question: string; knowledge_base_id: number; top_k: number }, signal?: AbortSignal) =>
     apiRequest<AnswerResponse>('/answer', { method: 'POST', body: JSON.stringify(data), signal }),
+  adminAnswer: (data: AdminAnswerRequest, signal?: AbortSignal) =>
+    apiRequest<AnswerResponse>('/answer', { method: 'POST', body: JSON.stringify(data), signal }),
+  search: (data: SearchRequest, signal?: AbortSignal) =>
+    apiRequest<SearchResponse>('/search', { method: 'POST', body: JSON.stringify(data), signal }),
   metrics: () => apiRequest<Metrics>('/system/metrics'),
 }

@@ -1,10 +1,11 @@
-# MedOps Medical Knowledge Agent RAG V3.1
+# MedOps Medical Knowledge Agent RAG V3.2
 
-[中文说明](README_CN.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive benchmark](reports/adaptive-routing-benchmark-v3.json) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [V3 acceptance](docs/v3/V3_ACCEPTANCE.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Held-out adaptive evaluation](docs/v3/ADAPTIVE_HELDOUT_EVALUATION.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped Agent RAG assistant for **public medical knowledge and medical-device evidence**.
-V3.1 adds a Vue 3 enterprise console, explainable adaptive retrieval, server-enforced admin controls, and a
-measured concurrency baseline on top of bounded LangGraph orchestration, DeepSeek V4 Flash, token/cost telemetry,
+V3.2 adds an admin-only retrieval laboratory, independent Chinese held-out routing evidence, a shared bounded
+model-provider client, and tenant/actor-scoped Agent control checkpoints on top of the Vue 3 enterprise console,
+explainable adaptive retrieval, DeepSeek V4 Flash, token/cost telemetry,
 and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
 PDFs, 15,000-record Huatuo research corpus, NLM MedlinePlus import, multimodal evidence, SQLite trigram FTS and
 the bright clinical console.
@@ -16,15 +17,18 @@ the bright clinical console.
 ## Current capabilities
 
 - Experimental V3 bounded-Agent layer: the same `/answer` endpoint compares Classic Python, LangChain LCEL,
-  and LangGraph; LangGraph uses a conditional policy edge, one allowlisted read-only evidence-search tool, a
-  grounding verifier, and a Web-visible node trace.
+  and LangGraph; the managed path selects at most two code-owned read-only tools (grounded answer plus citation
+  scope verification), applies safety/grounding gates, records a Web-visible trace, and persists bounded control
+  checkpoints without storing questions, prompts, evidence, or answers.
 - DeepSeek V4 Flash OpenAI-compatible API defaults, with the API key read only from the local environment plus
-  bounded retry, cache/prompt/completion token accounting, and offline fallback.
+  a lifespan-scoped shared `httpx.Client`, bounded retry, process-local concurrency/admission limits, explicit
+  overload `503` responses, cache/prompt/completion token accounting, and offline fallback.
 - a Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 enterprise console for knowledge spaces, bounded-parallel uploads, cited Q&A,
   health and tenant-scoped operational metrics; the document catalog uses metadata-only server pagination and
   title/source filtering instead of sending every document body to the browser;
 - viewer/editor callers submit business questions only; the server owns `top_k`, retrieval/evidence strategy,
-  and orchestration defaults, while administrators retain benchmark and incident-diagnosis overrides;
+  and orchestration defaults, while administrators retain benchmark and incident-diagnosis overrides in a
+  dedicated retrieval/answer laboratory; text search and visual search enforce the same server boundary;
 - FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
 - SQLite transactions, foreign keys, indexes and restart persistence;
 - knowledge-base and document CRUD with SHA-256 idempotent uploads;
@@ -57,11 +61,11 @@ the bright clinical console.
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, dependency-free `/live`, database-aware `/ready`, tenant-scoped metrics, 142 tests,
+- request IDs, `Server-Timing`, dependency-free `/live`, database-aware `/ready`, tenant-scoped metrics, 160 tests,
   and repeatable ingestion/retrieval/concurrency benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a Docker Compose definition with API, ingestion worker, summary worker, health checks and persistent
-  data/model volumes; the prior V3 image gate was verified, while the V3.1 frontend-enabled image still needs
+  data/model volumes; the prior V3 image gate was verified, while the V3.2 frontend-enabled image still needs
   revalidation on a host with the Docker Linux engine available;
 - two idempotent starter knowledge bases for clinical fundamentals and medical-device safety, derived from public FDA, CDC, WHO and MedlinePlus material and kept strictly educational.
 
@@ -155,7 +159,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 142 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 160 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 
@@ -183,8 +187,16 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_chunk_profiles.py
 .\.venv\Scripts\python.exe .\evals\benchmark_official_chunk_profiles.py
 .\.venv\Scripts\python.exe .\evals\benchmark_adaptive_routing.py
+.\.venv\Scripts\python.exe .\evals\benchmark_adaptive_heldout_zh.py --repetitions 3
 .\.venv\Scripts\python.exe .\evals\benchmark_concurrency_v3.py
 ```
+
+The independent Chinese held-out set contains 20 synthetic operations documents, 32 answerable questions and
+8 negatives. Adaptive routing reached `1.0000` Hit@1, tying fixed BM25 and parent-child rather than beating them;
+fixed RRF reached `0.9062`. Adaptive chose BM25/RRF/parent-child for `16/10/6` answerable cases and avoided dense
+query latency on 22 of 32 cases. This is source-ranking evidence only—not generated-answer accuracy, production
+traffic, or clinical validation. The threshold-tuning set was not reused and the benchmark forces local-only
+model loading with zero provider/API calls.
 
 The [V3 Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) isolates framework overhead on 600 calls
 per mode and records a paid live `deepseek-v4-flash` run on 8 official-corpus cases, 3 repetitions and 24 runs

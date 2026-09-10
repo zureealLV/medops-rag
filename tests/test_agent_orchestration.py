@@ -27,10 +27,14 @@ def test_default_answer_uses_langgraph_agent_trace(
     assert [step["node"] for step in body["agent_steps"]] == [
         "route_question",
         "select_read_only_tool",
-        "execute_grounded_medical_answer",
+        "execute_grounded_text_answer",
+        "verify_citation_scope",
         "verify_grounding",
     ]
-    assert body["agent_steps"][1]["detail"] == "tool=grounded_medical_answer; max_calls=1"
+    assert body["agent_steps"][1]["detail"] == (
+        "tools=grounded_text_answer,verify_citation_scope; max_calls=2"
+    )
+    assert body["agent_steps"][3]["detail"] == "tenant_scoped=true"
     assert body["citations"][0]["document_id"] == document["id"]
 
 
@@ -96,6 +100,7 @@ def test_langgraph_agent_does_not_call_search_tool_for_out_of_domain_question(
     assert response.status_code == 200
     body = response.json()
     assert body["reason"] == "insufficient_evidence"
-    assert "execute_grounded_medical_answer" not in {
+    assert not any(step["node"].startswith("execute_grounded_") for step in body["agent_steps"])
+    assert "verify_citation_scope" not in {
         step["node"] for step in body["agent_steps"]
     }

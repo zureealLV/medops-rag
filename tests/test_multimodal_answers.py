@@ -9,7 +9,7 @@ import httpx
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app.agents.model import generate
+from app.agents.model import ModelProvider, generate
 from app.config import Settings
 from app.main import create_app
 from app.models.artifacts import VisualEvidence
@@ -166,21 +166,20 @@ def test_visual_answer_abstains_when_image_exceeds_model_payload_budget(tmp_path
         assert response.json()["reason"] == "visual_payload_unavailable"
 
 
-def test_vision_enabled_provider_receives_inline_image_payload(monkeypatch, tmp_path: Path):
+def test_vision_enabled_provider_receives_inline_image_payload(tmp_path: Path):
     captured: dict = {}
 
-    def complete(*args, **kwargs):
-        captured.update(kwargs["json"])
+    def complete(request: httpx.Request):
+        captured.update(__import__("json").loads(request.content))
         return httpx.Response(
             200,
-            request=httpx.Request("POST", "https://model.invalid/v1/chat/completions"),
+            request=request,
             json={
                 "choices": [{"message": {"content": "Red warning icon [visual:7]"}}],
                 "usage": {"total_tokens": 42},
             },
         )
 
-    monkeypatch.setattr(httpx, "post", complete)
     settings = Settings(
         database_path=tmp_path / "unused.db",
         model_api_key="test",
@@ -202,9 +201,14 @@ def test_vision_enabled_provider_receives_inline_image_payload(monkeypatch, tmp_
         image_score=1.0,
         image_similarity=0.4,
     )
-    answer, provider, _, tokens = generate(
-        "What does the image show?", [], settings, [(visual, b"synthetic-image")]
-    )
+    with ModelProvider(settings, transport=httpx.MockTransport(complete)) as runtime:
+        answer, provider, _, tokens = generate(
+            "What does the image show?",
+            [],
+            settings,
+            [(visual, b"synthetic-image")],
+            runtime,
+        )
     assert provider == "openai-compatible"
     assert answer == "Red warning icon [visual:7]"
     assert tokens == 42
@@ -214,12 +218,11 @@ def test_vision_enabled_provider_receives_inline_image_payload(monkeypatch, tmp_
 
 
 def test_configured_text_model_is_not_called_for_visual_payload_when_vision_is_disabled(
-    monkeypatch, tmp_path: Path
+    tmp_path: Path,
 ):
-    def fail_if_called(*args, **kwargs):
+    def fail_if_called(_: httpx.Request):
         raise AssertionError("text-only model must not receive a visual question without the image")
 
-    monkeypatch.setattr(httpx, "post", fail_if_called)
     settings = Settings(
         database_path=tmp_path / "unused.db",
         model_api_key="test",
@@ -241,8 +244,13 @@ def test_configured_text_model_is_not_called_for_visual_payload_when_vision_is_d
         image_score=1.0,
         image_similarity=0.4,
     )
-    answer, provider, _, _ = generate(
-        "What does the image show?", [], settings, [(visual, b"synthetic-image")]
-    )
+    with ModelProvider(settings, transport=httpx.MockTransport(fail_if_called)) as runtime:
+        answer, provider, _, _ = generate(
+            "What does the image show?",
+            [],
+            settings,
+            [(visual, b"synthetic-image")],
+            runtime,
+        )
     assert provider == "offline-visual-locator"
     assert "[image:1]" in answer

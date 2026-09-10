@@ -72,10 +72,10 @@ def test_exact_v1_upgrade_preserves_rows_backfills_indexes_and_rolls_back(tmp_pa
     with sqlite3.connect(database) as connection:
         connection.row_factory = sqlite3.Row
         assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
         assert connection.execute(
             "SELECT value FROM schema_metadata WHERE key='schema_version'"
-        ).fetchone()[0] == "3"
+        ).fetchone()[0] == "4"
         document = connection.execute("SELECT * FROM documents WHERE id=1").fetchone()
         assert document["content"] == "PACS legacy recovery"
         assert document["mime_type"] == "text/plain"
@@ -84,6 +84,7 @@ def test_exact_v1_upgrade_preserves_rows_backfills_indexes_and_rolls_back(tmp_pa
         assert connection.execute("SELECT COUNT(*) FROM audit_logs").fetchone()[0] == 1
         assert connection.execute("SELECT tenant_id FROM request_metrics").fetchone()[0] is None
         assert connection.execute("SELECT COUNT(*) FROM parent_chunks").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM agent_checkpoints").fetchone()[0] == 0
         fts_exists = connection.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='chunks_fts'"
         ).fetchone()
@@ -121,4 +122,4 @@ def test_upgrade_new_database_needs_no_backup(tmp_path: Path):
     assert digest == database_sha256(database)
     initialize(database)
     with sqlite3.connect(database) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4

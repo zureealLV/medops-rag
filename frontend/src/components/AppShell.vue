@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DataAnalysis, Document, Files, Fold, House, Setting, User, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -23,6 +23,14 @@ const navItems = computed(() => baseNavItems.filter((item) => (
 )))
 
 const pageTitle = computed(() => String(route.meta.title ?? '系统总览'))
+
+watch(
+  [() => app.identity?.role, () => route.path],
+  ([role, path]) => {
+    if (role && role !== 'admin' && path === '/operations') void router.replace('/overview')
+  },
+  { immediate: true },
+)
 
 async function reconnect() {
   try {
