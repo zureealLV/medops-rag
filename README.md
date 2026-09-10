@@ -1,10 +1,11 @@
-# MedOps Medical Knowledge Agent RAG V3.0
+# MedOps Medical Knowledge Agent RAG V3.1
 
-[中文说明](README_CN.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [EnterpriseQA source review](docs/v3/ENTERPRISEQA_SOURCE_REVIEW.md) · [V3 acceptance](docs/v3/V3_ACCEPTANCE.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web console](docs/v2/WEB_CONSOLE.md) · [Chinese corpus benchmark](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [Engineering design](docs/v2/ENGINEERING_DESIGN.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Parser safety](docs/v2/PARSER_SECURITY.md) · [Observability](docs/v2/OBSERVABILITY.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Migration/rollback](docs/v2/MIGRATION_AND_ROLLBACK.md) · [Performance](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [Roadmap](docs/v2/ROADMAP.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive benchmark](reports/adaptive-routing-benchmark-v3.json) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [V3 acceptance](docs/v3/V3_ACCEPTANCE.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped Agent RAG assistant for **public medical knowledge and medical-device evidence**.
-V3.0 adds bounded LangGraph tool orchestration, a controlled LangChain/Classic comparison, DeepSeek V4 Flash,
-token/cost telemetry, and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
+V3.1 adds a Vue 3 enterprise console, explainable adaptive retrieval, server-enforced admin controls, and a
+measured concurrency baseline on top of bounded LangGraph orchestration, DeepSeek V4 Flash, token/cost telemetry,
+and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
 PDFs, 15,000-record Huatuo research corpus, NLM MedlinePlus import, multimodal evidence, SQLite trigram FTS and
 the bright clinical console.
 
@@ -19,9 +20,11 @@ the bright clinical console.
   grounding verifier, and a Web-visible node trace.
 - DeepSeek V4 Flash OpenAI-compatible API defaults, with the API key read only from the local environment plus
   bounded retry, cache/prompt/completion token accounting, and offline fallback.
-- a responsive, dependency-free Web console for knowledge spaces, synchronous demo uploads, cited Q&A,
+- a Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 enterprise console for knowledge spaces, bounded-parallel uploads, cited Q&A,
   health and tenant-scoped operational metrics; the document catalog uses metadata-only server pagination and
   title/source filtering instead of sending every document body to the browser;
+- viewer/editor callers submit business questions only; the server owns `top_k`, retrieval/evidence strategy,
+  and orchestration defaults, while administrators retain benchmark and incident-diagnosis overrides;
 - FastAPI application factory, typed routes, dependency injection, stable errors and OpenAPI;
 - SQLite transactions, foreign keys, indexes and restart persistence;
 - knowledge-base and document CRUD with SHA-256 idempotent uploads;
@@ -41,6 +44,8 @@ the bright clinical console.
 - deterministic hashing, keyword, BM25, weighted, and RRF retrieval strategies;
 - explicit rewrite, multi-query and deterministic template-HyDE transformations with policy-gated auto HyDE;
 - opt-in structure-aware `parent_child` retrieval that matches small children and reconstructs parent context;
+- deterministic adaptive routing between BM25, RRF, and parent-child, with an auditable reason, confidence,
+  extracted query features, and candidate scores;
 - cited extractive answers and evidence-threshold abstention, with natural answer text and numbered source/image cards below it instead of inline implementation locators;
 - reproducible import of the official NLM MedlinePlus bulk health-topic XML, with per-topic provenance and a local source manifest;
 - bounded, revision-pinned import of 12,000 Chinese medical knowledge-graph QA records and 3,000 Chinese medical encyclopedia QA records from Huatuo-26M;
@@ -52,21 +57,25 @@ the bright clinical console.
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
-- request IDs, `Server-Timing`, tenant-scoped request/queue/pipeline metrics, 120 API/security/parser/migration/job/UI tests and repeatable ingestion/retrieval benchmarks;
+- request IDs, `Server-Timing`, dependency-free `/live`, database-aware `/ready`, tenant-scoped metrics, 142 tests,
+  and repeatable ingestion/retrieval/concurrency benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
-- a verified Docker Compose image with API, ingestion worker, summary worker, health checks and persistent
-  data/model volumes;
+- a Docker Compose definition with API, ingestion worker, summary worker, health checks and persistent
+  data/model volumes; the prior V3 image gate was verified, while the V3.1 frontend-enabled image still needs
+  revalidation on a host with the Docker Linux engine available;
 - two idempotent starter knowledge bases for clinical fundamentals and medical-device safety, derived from public FDA, CDC, WHO and MedlinePlus material and kept strictly educational.
 
 ## Quick start (Windows / PowerShell)
 
-Requires Python 3.11+.
+Requires Python 3.11+. Building the Vue console also requires Node.js 20.19+, 22.12+, or 24
+(validated here with Node 24.15.0 and npm 11.14.1).
 
 ```powershell
 git clone https://github.com/zureealLV/medops-rag.git
 cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\scripts\build_frontend.ps1
 .\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
 .\.venv\Scripts\python.exe -m scripts.import_chinese_official
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
@@ -146,7 +155,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 120 tests, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 142 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 
@@ -173,6 +182,8 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_agent_orchestration.py --repetitions 20
 .\.venv\Scripts\python.exe .\evals\benchmark_chunk_profiles.py
 .\.venv\Scripts\python.exe .\evals\benchmark_official_chunk_profiles.py
+.\.venv\Scripts\python.exe .\evals\benchmark_adaptive_routing.py
+.\.venv\Scripts\python.exe .\evals\benchmark_concurrency_v3.py
 ```
 
 The [V3 Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) isolates framework overhead on 600 calls

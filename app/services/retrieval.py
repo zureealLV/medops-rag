@@ -6,9 +6,10 @@ import time
 from pathlib import Path
 
 from app.config import Settings
-from app.models.retrieval import SearchRequest, SearchResponse
+from app.models.retrieval import AdaptiveRoutingTrace, SearchRequest, SearchResponse
 from app.repositories.documents import lexical_candidate_rows, retrieval_rows
 from app.repositories.knowledge_bases import get as get_kb
+from app.retrieval.adaptive import AdaptiveRoutingPolicy, route_retrieval
 from app.retrieval.hybrid import rank
 from app.retrieval.query_transform import transform_queries
 from app.retrieval.text_embeddings import provider_from_settings
@@ -25,10 +26,20 @@ def search(
     started = time.perf_counter()
     # Tenant filtering happens in SQL, before any chunk can enter ranking or a model prompt.
     resolved_strategy = request.strategy
+    routing = None
+    if resolved_strategy == "auto":
+        decision = route_retrieval(
+            request.query,
+            policy=AdaptiveRoutingPolicy(
+                dense_available=bool(settings and settings.text_embedding_enabled),
+                parent_child_available=True,
+            ),
+        )
+        resolved_strategy = decision.strategy
+        routing = AdaptiveRoutingTrace.model_validate(decision.as_dict())
     use_parent_child = resolved_strategy == "parent_child"
     use_lexical_index = not use_parent_child and (
         resolved_strategy in {"keyword", "bm25"}
-        or (resolved_strategy == "auto" and not (settings and settings.text_embedding_enabled))
     )
     rows = (
         lexical_candidate_rows(
@@ -48,13 +59,6 @@ def search(
             request.knowledge_base_id,
             parent_child=use_parent_child,
         )
-    if resolved_strategy == "auto":
-        if settings and settings.text_embedding_enabled:
-            resolved_strategy = "rrf"
-        else:
-            # rank_bm25 can produce non-positive IDF for one/two-row corpora;
-            # preserve a meaningful score there instead of normalizing to zero.
-            resolved_strategy = "weighted" if len(rows) < 3 else "bm25"
     scoring_strategy = "bm25" if use_parent_child else resolved_strategy
     resolved_transform, queries = transform_queries(request.query, request.query_transform, settings)
     if scoring_strategy in {"vector", "weighted", "rrf"}:
@@ -107,4 +111,5 @@ def search(
         retrieval_ms=round((time.perf_counter() - started) * 1000, 3),
         query_transform=resolved_transform,
         transformed_queries=queries,
+        routing=routing,
     )

@@ -1,0 +1,1262 @@
+{
+  "schema_version": 1,
+  "benchmark": "medops-v3-offline-concurrency",
+  "generated_at": "2026-09-10T12:33:17.846056+08:00",
+  "environment": {
+    "platform": "Windows-10-10.0.22631-SP0",
+    "python": "3.11.5",
+    "processor_count": 20,
+    "transport": "httpx.ASGITransport (in-process, no socket)",
+    "application_processes": 1,
+    "fastapi_endpoints": "synchronous def endpoints executed in Starlette/AnyIO thread pool",
+    "database": "temporary SQLite",
+    "sqlite_journal_mode": "wal",
+    "sqlite_connection_timeout_seconds": 10,
+    "sqlite_observed_busy_timeout_ms": 5000,
+    "request_metrics_write_enabled": true,
+    "document_count": 15000,
+    "chunks": 15000,
+    "model_provider": "deterministic offline substitute",
+    "model_delay_ms": 75.0,
+    "model_substitute_calls": 769,
+    "real_api_key_loaded": false,
+    "network_model_calls": 0,
+    "requests_per_level_per_repetition": 64,
+    "repetitions": 3,
+    "concurrency_levels": [
+      1,
+      4,
+      16,
+      32
+    ],
+    "persisted_request_metric_rows": 2307
+  },
+  "scenarios": {
+    "health_db_read": {
+      "1": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 146.268,
+        "median_client_p95_ms": 7.702,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 0.196,
+            "throughput_requests_per_second": 325.858,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 3.05,
+              "median_ms": 2.983,
+              "p95_ms": 3.588,
+              "p99_ms": 3.757,
+              "min_ms": 2.778,
+              "max_ms": 3.82
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 1.422,
+              "median_ms": 1.37,
+              "p95_ms": 1.83,
+              "p99_ms": 1.89,
+              "min_ms": 1.26,
+              "max_ms": 1.91
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 0.484,
+            "throughput_requests_per_second": 132.114,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 7.157,
+              "median_ms": 7.066,
+              "p95_ms": 8.476,
+              "p99_ms": 8.717,
+              "min_ms": 6.079,
+              "max_ms": 8.992
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 2.855,
+              "median_ms": 2.825,
+              "p95_ms": 3.38,
+              "p99_ms": 3.66,
+              "min_ms": 2.38,
+              "max_ms": 3.66
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 0.438,
+            "throughput_requests_per_second": 146.268,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 6.817,
+              "median_ms": 6.77,
+              "p95_ms": 7.702,
+              "p99_ms": 8.044,
+              "min_ms": 6.019,
+              "max_ms": 8.399
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 2.753,
+              "median_ms": 2.705,
+              "p95_ms": 3.31,
+              "p99_ms": 3.47,
+              "min_ms": 2.35,
+              "max_ms": 3.6
+            }
+          }
+        ]
+      },
+      "4": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 167.882,
+        "median_client_p95_ms": 50.904,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 0.381,
+            "throughput_requests_per_second": 167.882,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 22.718,
+              "median_ms": 15.785,
+              "p95_ms": 51.773,
+              "p99_ms": 65.806,
+              "min_ms": 4.525,
+              "max_ms": 66.667
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 16.521,
+              "median_ms": 8.265,
+              "p95_ms": 45.27,
+              "p99_ms": 47.14,
+              "min_ms": 2.58,
+              "max_ms": 58.38
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 0.402,
+            "throughput_requests_per_second": 159.048,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 24.065,
+              "median_ms": 25.557,
+              "p95_ms": 49.121,
+              "p99_ms": 51.164,
+              "min_ms": 2.904,
+              "max_ms": 60.118
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 17.828,
+              "median_ms": 17.125,
+              "p95_ms": 42.65,
+              "p99_ms": 46.53,
+              "min_ms": 1.25,
+              "max_ms": 49.33
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 0.377,
+            "throughput_requests_per_second": 169.954,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 23.029,
+              "median_ms": 17.49,
+              "p95_ms": 50.904,
+              "p99_ms": 56.603,
+              "min_ms": 3.002,
+              "max_ms": 74.788
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 17.464,
+              "median_ms": 10.34,
+              "p95_ms": 43.87,
+              "p99_ms": 45.76,
+              "min_ms": 1.35,
+              "max_ms": 63.24
+            }
+          }
+        ]
+      },
+      "16": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 220.43,
+        "median_client_p95_ms": 92.961,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.271,
+            "throughput_requests_per_second": 236.389,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 61.663,
+              "median_ms": 59.353,
+              "p95_ms": 89.688,
+              "p99_ms": 90.808,
+              "min_ms": 27.351,
+              "max_ms": 91.495
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 44.552,
+              "median_ms": 40.765,
+              "p95_ms": 72.43,
+              "p99_ms": 79.97,
+              "min_ms": 17.8,
+              "max_ms": 84.58
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.3,
+            "throughput_requests_per_second": 213.011,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 68.804,
+              "median_ms": 66.255,
+              "p95_ms": 104.384,
+              "p99_ms": 106.44,
+              "min_ms": 19.951,
+              "max_ms": 108.423
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 50.028,
+              "median_ms": 45.41,
+              "p95_ms": 86.99,
+              "p99_ms": 95.33,
+              "min_ms": 8.31,
+              "max_ms": 99.44
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.29,
+            "throughput_requests_per_second": 220.43,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 64.548,
+              "median_ms": 62.479,
+              "p95_ms": 92.961,
+              "p99_ms": 94.08,
+              "min_ms": 3.2,
+              "max_ms": 105.719
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 47.64,
+              "median_ms": 47.53,
+              "p95_ms": 77.96,
+              "p99_ms": 84.57,
+              "min_ms": 1.49,
+              "max_ms": 99.9
+            }
+          }
+        ]
+      },
+      "32": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 187.955,
+        "median_client_p95_ms": 202.152,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 0.336,
+            "throughput_requests_per_second": 190.641,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 146.306,
+              "median_ms": 140.549,
+              "p95_ms": 202.152,
+              "p99_ms": 202.782,
+              "min_ms": 54.951,
+              "max_ms": 202.969
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 117.482,
+              "median_ms": 117.57,
+              "p95_ms": 178.94,
+              "p99_ms": 190.42,
+              "min_ms": 17.36,
+              "max_ms": 193.79
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 0.341,
+            "throughput_requests_per_second": 187.955,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 153.58,
+              "median_ms": 159.628,
+              "p95_ms": 192.908,
+              "p99_ms": 193.67,
+              "min_ms": 24.898,
+              "max_ms": 198.984
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 111.87,
+              "median_ms": 112.365,
+              "p95_ms": 172.06,
+              "p99_ms": 179.0,
+              "min_ms": 22.02,
+              "max_ms": 192.3
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 0.411,
+            "throughput_requests_per_second": 155.762,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 186.687,
+              "median_ms": 187.329,
+              "p95_ms": 228.179,
+              "p99_ms": 228.821,
+              "min_ms": 25.08,
+              "max_ms": 239.541
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 139.003,
+              "median_ms": 142.425,
+              "p95_ms": 212.33,
+              "p99_ms": 218.79,
+              "min_ms": 23.26,
+              "max_ms": 235.56
+            }
+          }
+        ]
+      }
+    },
+    "document_page_read": {
+      "1": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 49.903,
+        "median_client_p95_ms": 27.789,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 0.673,
+            "throughput_requests_per_second": 95.158,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 10.488,
+              "median_ms": 10.308,
+              "p95_ms": 11.742,
+              "p99_ms": 12.09,
+              "min_ms": 9.403,
+              "max_ms": 12.992
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 6.267,
+              "median_ms": 6.2,
+              "p95_ms": 7.14,
+              "p99_ms": 7.24,
+              "min_ms": 5.6,
+              "max_ms": 7.24
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 1.282,
+            "throughput_requests_per_second": 49.903,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 20.004,
+              "median_ms": 19.775,
+              "p95_ms": 29.204,
+              "p99_ms": 30.49,
+              "min_ms": 9.664,
+              "max_ms": 31.195
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 12.423,
+              "median_ms": 11.945,
+              "p95_ms": 18.52,
+              "p99_ms": 19.27,
+              "min_ms": 5.75,
+              "max_ms": 19.45
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 1.434,
+            "throughput_requests_per_second": 44.643,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 22.355,
+              "median_ms": 23.061,
+              "p95_ms": 27.789,
+              "p99_ms": 28.384,
+              "min_ms": 12.374,
+              "max_ms": 31.048
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 13.849,
+              "median_ms": 14.055,
+              "p95_ms": 18.25,
+              "p99_ms": 18.41,
+              "min_ms": 6.98,
+              "max_ms": 19.9
+            }
+          }
+        ]
+      },
+      "4": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 88.145,
+        "median_client_p95_ms": 82.155,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 0.696,
+            "throughput_requests_per_second": 91.894,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 42.208,
+              "median_ms": 42.43,
+              "p95_ms": 77.054,
+              "p99_ms": 90.809,
+              "min_ms": 9.07,
+              "max_ms": 91.313
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 32.556,
+              "median_ms": 30.955,
+              "p95_ms": 63.69,
+              "p99_ms": 74.33,
+              "min_ms": 6.7,
+              "max_ms": 81.46
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 0.726,
+            "throughput_requests_per_second": 88.145,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 43.728,
+              "median_ms": 40.798,
+              "p95_ms": 82.155,
+              "p99_ms": 92.291,
+              "min_ms": 6.918,
+              "max_ms": 100.117
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 34.568,
+              "median_ms": 33.98,
+              "p95_ms": 65.82,
+              "p99_ms": 86.77,
+              "min_ms": 4.58,
+              "max_ms": 95.06
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 0.748,
+            "throughput_requests_per_second": 85.543,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 45.918,
+              "median_ms": 42.842,
+              "p95_ms": 91.763,
+              "p99_ms": 111.424,
+              "min_ms": 10.372,
+              "max_ms": 117.063
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 35.693,
+              "median_ms": 31.21,
+              "p95_ms": 79.88,
+              "p99_ms": 89.43,
+              "min_ms": 7.46,
+              "max_ms": 100.04
+            }
+          }
+        ]
+      },
+      "16": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 104.8,
+        "median_client_p95_ms": 226.586,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.576,
+            "throughput_requests_per_second": 111.182,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 134.269,
+              "median_ms": 129.575,
+              "p95_ms": 212.993,
+              "p99_ms": 215.249,
+              "min_ms": 50.478,
+              "max_ms": 252.721
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 104.12,
+              "median_ms": 99.43,
+              "p95_ms": 180.83,
+              "p99_ms": 197.93,
+              "min_ms": 29.51,
+              "max_ms": 212.04
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.611,
+            "throughput_requests_per_second": 104.8,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 141.111,
+              "median_ms": 151.873,
+              "p95_ms": 226.586,
+              "p99_ms": 227.276,
+              "min_ms": 55.716,
+              "max_ms": 227.449
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 114.656,
+              "median_ms": 112.675,
+              "p95_ms": 168.88,
+              "p99_ms": 203.9,
+              "min_ms": 40.35,
+              "max_ms": 217.49
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.639,
+            "throughput_requests_per_second": 100.171,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 147.444,
+              "median_ms": 154.377,
+              "p95_ms": 228.012,
+              "p99_ms": 237.217,
+              "min_ms": 53.506,
+              "max_ms": 239.553
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 118.769,
+              "median_ms": 114.625,
+              "p95_ms": 191.21,
+              "p99_ms": 221.13,
+              "min_ms": 44.78,
+              "max_ms": 227.17
+            }
+          }
+        ]
+      },
+      "32": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 112.155,
+        "median_client_p95_ms": 319.702,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 0.539,
+            "throughput_requests_per_second": 118.789,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 221.642,
+              "median_ms": 203.598,
+              "p95_ms": 330.695,
+              "p99_ms": 332.355,
+              "min_ms": 108.525,
+              "max_ms": 332.366
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 189.152,
+              "median_ms": 183.405,
+              "p95_ms": 295.87,
+              "p99_ms": 315.8,
+              "min_ms": 99.38,
+              "max_ms": 319.88
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 0.571,
+            "throughput_requests_per_second": 112.155,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 250.927,
+              "median_ms": 267.706,
+              "p95_ms": 299.252,
+              "p99_ms": 303.138,
+              "min_ms": 39.186,
+              "max_ms": 390.451
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 209.137,
+              "median_ms": 213.1,
+              "p95_ms": 283.06,
+              "p99_ms": 294.53,
+              "min_ms": 36.35,
+              "max_ms": 308.62
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 0.577,
+            "throughput_requests_per_second": 110.914,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {},
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 248.203,
+              "median_ms": 252.657,
+              "p95_ms": 319.702,
+              "p99_ms": 319.961,
+              "min_ms": 125.069,
+              "max_ms": 360.369
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 211.0,
+              "median_ms": 213.665,
+              "p95_ms": 291.64,
+              "p99_ms": 302.67,
+              "min_ms": 97.81,
+              "max_ms": 328.82
+            }
+          }
+        ]
+      }
+    },
+    "answer_controlled_model": {
+      "1": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 9.561,
+        "median_client_p95_ms": 113.949,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 6.694,
+            "throughput_requests_per_second": 9.561,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 104.561,
+              "median_ms": 102.092,
+              "p95_ms": 120.573,
+              "p99_ms": 123.013,
+              "min_ms": 96.138,
+              "max_ms": 124.885
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 98.059,
+              "median_ms": 95.92,
+              "p95_ms": 112.82,
+              "p99_ms": 115.08,
+              "min_ms": 91.09,
+              "max_ms": 118.72
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 6.94,
+            "throughput_requests_per_second": 9.222,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 108.402,
+              "median_ms": 107.212,
+              "p95_ms": 113.949,
+              "p99_ms": 152.428,
+              "min_ms": 99.663,
+              "max_ms": 182.284
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 99.445,
+              "median_ms": 98.545,
+              "p95_ms": 106.64,
+              "p99_ms": 124.18,
+              "min_ms": 91.4,
+              "max_ms": 125.6
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 1,
+            "wall_seconds": 6.562,
+            "throughput_requests_per_second": 9.753,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 102.505,
+              "median_ms": 101.518,
+              "p95_ms": 108.044,
+              "p99_ms": 113.161,
+              "min_ms": 96.057,
+              "max_ms": 147.203
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 95.918,
+              "median_ms": 95.01,
+              "p95_ms": 100.77,
+              "p99_ms": 105.8,
+              "min_ms": 91.4,
+              "max_ms": 139.72
+            }
+          }
+        ]
+      },
+      "4": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 35.584,
+        "median_client_p95_ms": 141.483,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 1.872,
+            "throughput_requests_per_second": 34.191,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 113.641,
+              "median_ms": 108.726,
+              "p95_ms": 141.483,
+              "p99_ms": 169.117,
+              "min_ms": 94.61,
+              "max_ms": 172.865
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 105.814,
+              "median_ms": 100.17,
+              "p95_ms": 134.8,
+              "p99_ms": 162.82,
+              "min_ms": 88.96,
+              "max_ms": 163.62
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 1.799,
+            "throughput_requests_per_second": 35.584,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 110.544,
+              "median_ms": 106.714,
+              "p95_ms": 143.257,
+              "p99_ms": 155.283,
+              "min_ms": 89.49,
+              "max_ms": 162.92
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 102.91,
+              "median_ms": 100.35,
+              "p95_ms": 135.78,
+              "p99_ms": 146.36,
+              "min_ms": 86.52,
+              "max_ms": 151.57
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 4,
+            "wall_seconds": 1.763,
+            "throughput_requests_per_second": 36.311,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 107.604,
+              "median_ms": 101.931,
+              "p95_ms": 140.524,
+              "p99_ms": 150.726,
+              "min_ms": 94.218,
+              "max_ms": 170.465
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 100.482,
+              "median_ms": 95.635,
+              "p95_ms": 124.31,
+              "p99_ms": 146.32,
+              "min_ms": 88.25,
+              "max_ms": 157.68
+            }
+          }
+        ]
+      },
+      "16": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 67.655,
+        "median_client_p95_ms": 309.24,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.968,
+            "throughput_requests_per_second": 66.087,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 213.65,
+              "median_ms": 210.628,
+              "p95_ms": 309.24,
+              "p99_ms": 339.909,
+              "min_ms": 116.173,
+              "max_ms": 463.8
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 201.049,
+              "median_ms": 199.89,
+              "p95_ms": 305.48,
+              "p99_ms": 335.97,
+              "min_ms": 96.31,
+              "max_ms": 455.0
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.89,
+            "throughput_requests_per_second": 71.89,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 196.47,
+              "median_ms": 190.362,
+              "p95_ms": 282.263,
+              "p99_ms": 356.036,
+              "min_ms": 94.596,
+              "max_ms": 371.851
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 186.631,
+              "median_ms": 177.73,
+              "p95_ms": 276.78,
+              "p99_ms": 345.21,
+              "min_ms": 89.57,
+              "max_ms": 350.63
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 16,
+            "wall_seconds": 0.946,
+            "throughput_requests_per_second": 67.655,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 209.631,
+              "median_ms": 207.921,
+              "p95_ms": 324.144,
+              "p99_ms": 349.895,
+              "min_ms": 96.433,
+              "max_ms": 384.061
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 197.961,
+              "median_ms": 186.86,
+              "p95_ms": 311.44,
+              "p99_ms": 346.65,
+              "min_ms": 93.94,
+              "max_ms": 377.75
+            }
+          }
+        ]
+      },
+      "32": {
+        "repetitions": 3,
+        "median_throughput_requests_per_second": 58.284,
+        "median_client_p95_ms": 973.943,
+        "total_success_count": 192,
+        "total_error_count": 0,
+        "runs": [
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 1.098,
+            "throughput_requests_per_second": 58.284,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 491.555,
+              "median_ms": 461.41,
+              "p95_ms": 973.943,
+              "p99_ms": 991.486,
+              "min_ms": 220.021,
+              "max_ms": 1064.645
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 452.834,
+              "median_ms": 435.16,
+              "p95_ms": 877.84,
+              "p99_ms": 985.94,
+              "min_ms": 196.5,
+              "max_ms": 1058.72
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 1.026,
+            "throughput_requests_per_second": 62.388,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 451.234,
+              "median_ms": 384.67,
+              "p95_ms": 729.428,
+              "p99_ms": 933.842,
+              "min_ms": 211.498,
+              "max_ms": 984.668
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 420.972,
+              "median_ms": 374.765,
+              "p95_ms": 723.1,
+              "p99_ms": 894.81,
+              "min_ms": 185.83,
+              "max_ms": 981.85
+            }
+          },
+          {
+            "request_count": 64,
+            "concurrency": 32,
+            "wall_seconds": 1.519,
+            "throughput_requests_per_second": 42.124,
+            "success_count": 64,
+            "error_count": 0,
+            "status_codes": {
+              "200": 64
+            },
+            "providers_or_exceptions": {
+              "openai-compatible": 64
+            },
+            "client_latency": {
+              "count": 64,
+              "mean_ms": 436.489,
+              "median_ms": 263.34,
+              "p95_ms": 1283.094,
+              "p99_ms": 1396.141,
+              "min_ms": 138.673,
+              "max_ms": 1516.881
+            },
+            "server_latency": {
+              "count": 64,
+              "mean_ms": 421.836,
+              "median_ms": 257.9,
+              "p95_ms": 1280.14,
+              "p99_ms": 1392.21,
+              "min_ms": 115.09,
+              "max_ms": 1506.11
+            }
+          }
+        ]
+      }
+    }
+  },
+  "limitations": [
+    "Closed-loop load: each virtual user sends another request only after its prior request finishes.",
+    "In-process ASGI transport excludes TCP, TLS, reverse-proxy and cross-process serialization cost.",
+    "One application process is measured; this report does not claim multi-worker scaling.",
+    "The controlled model has deterministic latency and no provider-side queueing, rate limits or network jitter.",
+    "SQLite telemetry writes occur after every request, so even the read scenarios include one best-effort write.",
+    "Results describe this host and seeded dataset only; production sizing needs deployment-specific load tests."
+  ]
+}

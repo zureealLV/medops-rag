@@ -46,10 +46,14 @@ def rank(
     bm25_raw = [float(value) for value in BM25Okapi(corpus_tokens).get_scores(query_tokens)]
     bm25_scores = _normalize(bm25_raw)
     keyword_scores = [keyword_score(query, row["text"]) for row in materialized]
+    # rank_bm25 can yield only non-positive IDF values on tiny corpora.  Keep
+    # the BM25 route useful for one/two-row knowledge spaces without changing
+    # the externally reported strategy or bypassing the lexical confidence gate.
+    effective_bm25_scores = bm25_scores if any(bm25_scores) else keyword_scores
     vector_scores = [
         vector_score(query_vector, json.loads(row["embedding_json"])) for row in materialized
     ]
-    bm25_ranks = _ranks(bm25_scores)
+    bm25_ranks = _ranks(effective_bm25_scores)
     vector_ranks = _ranks(vector_scores)
     rrf_raw = [
         1.0 / (60 + sparse_rank) + 1.0 / (60 + dense_rank)
@@ -62,7 +66,7 @@ def rank(
         row_keys = set(row.keys()) if hasattr(row, "keys") else set()
         keyword = keyword_scores[index]
         vector = vector_scores[index]
-        bm25 = bm25_scores[index]
+        bm25 = effective_bm25_scores[index]
         score_by_strategy = {
             "keyword": keyword,
             "vector": vector,

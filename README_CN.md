@@ -1,10 +1,10 @@
-# MedOps 医疗健康知识 Agent RAG V3.0
+# MedOps 医疗健康知识 Agent RAG V3.1
 
-[English README](README.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [EnterpriseQA 源码审阅](docs/v3/ENTERPRISEQA_SOURCE_REVIEW.md) · [V3 验收记录](docs/v3/V3_ACCEPTANCE.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Web 控制台](docs/v2/WEB_CONSOLE.md) · [中文语料基准](docs/v2/BENCHMARK_REPORT_V2_3_CHINESE.md) · [工程设计](docs/v2/ENGINEERING_DESIGN.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [解析器安全](docs/v2/PARSER_SECURITY.md) · [可观测性](docs/v2/OBSERVABILITY.md) · [部署](docs/v2/DEPLOYMENT.md) · [迁移与回滚](docs/v2/MIGRATION_AND_ROLLBACK.md) · [性能报告](docs/v2/BENCHMARK_REPORT_PERFORMANCE.md) · [实施路线](docs/v2/ROADMAP.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应检索报告](reports/adaptive-routing-benchmark-v3.json) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent RAG V3](docs/v3/AGENT_RAG_UPGRADE.md) · [V3 验收记录](docs/v3/V3_ACCEPTANCE.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
 
-这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.0 新增
-受控 LangGraph 工具编排、LangChain/Classic 同变量对比、DeepSeek V4 Flash、Token/成本遥测，以及
-有实测数据的分片策略门禁；同时保留 V2.4 的 6 份中国政府哈希固定 PDF、15,000 条 Huatuo-26M
+这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.1 新增
+Vue 3 企业控制台、可解释自适应检索、服务端管理员控制边界与并发实测，并保留受控 LangGraph 编排、
+DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 的 6 份中国政府哈希固定 PDF、15,000 条 Huatuo-26M
 中文研究语料、NLM MedlinePlus、多模态证据、SQLite FTS5 中文索引和明亮 Web 控制台。
 
 > 本项目是教学与作品集案例，不是医疗器械；不提供诊断、处方或治疗建议，不处理真实患者资料，也不会执行改变系统状态的工具。
@@ -17,8 +17,9 @@
   LangGraph 使用条件式安全策略边、最多一次白名单只读证据检索工具、引用验证节点，并在 Web 控制台展示完整路径；
 - DeepSeek V4 Flash 官方 OpenAI-compatible API 预配置，API Key 只从本地环境读取，保留有限重试、
   缓存命中/输入/输出 Token 统计和离线降级；
-- 无需 Node 构建链的响应式 Web 控制台：知识空间、同步演示上传、带引用问答、健康状态和租户指标；
+- Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 企业控制台：知识空间、并发受控上传、带引用问答、健康状态和租户指标；
   文档目录使用服务端元数据分页和标题/来源筛选，不再把整个知识库正文一次性塞进浏览器；
+- 普通 viewer/editor 只能提交业务问题，`top_k`、检索/证据策略与编排引擎由后端自动管理；管理员保留基准与故障诊断覆盖能力；
 - FastAPI 应用工厂、类型化 Router、依赖注入、统一错误与 OpenAPI；
 - SQLite 事务、外键、索引和重启持久化；
 - 知识库与文档 CRUD，基于 SHA-256 的同租户/知识库幂等上传；
@@ -36,6 +37,7 @@
 - 哈希向量、关键词、BM25、加权及 RRF 五种可比较检索策略；
 - 显式 Rewrite、Multi-query、确定性模板 HyDE，以及受策略开关约束的自动 HyDE；
 - 可选的结构感知 `parent_child` 检索：小块命中，大块恢复回答上下文；
+- 确定性自适应路由会在 BM25、RRF 与父子分片间选择，并返回原因代码、置信度和候选分数供审计；
 - API 保留 `source`、`document_id`、`chunk_id` 的结构化溯源；正文不再插入来源标记，仅在下方来源卡片显示编号，也不暴露内部行号或匹配分数；
 - 可复现下载并导入 NLM 官方 MedlinePlus 健康主题全量 XML，每个主题保留 URL、主题 ID、语言、MeSH 与来源清单；
 - 固定数据版本导入 12,000 条 Huatuo-26M 中文医学知识图谱问答和 3,000 条中文医学百科问答，并生成本地哈希来源清单；
@@ -48,20 +50,22 @@
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback 指标；
-- 120 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取与检索基准；
+- 142 个 API/安全/解析器/迁移/任务队列/UI 测试，以及可重复的摄取、检索与并发基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
-- 已真实构建验证的 Docker Compose：API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；
+- Docker Compose 已覆盖 API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；旧 V3 镜像曾完成真实构建，
+  但 V3.1 加入前端构建阶段后的新镜像仍需在 Docker Linux Engine 可用的主机上重新验证；
 - 默认幂等创建“临床基础知识”和“医疗器械安全与维护”知识库，内容根据 FDA、CDC、WHO、MedlinePlus 公开资料重写，仅用于教学。
 
 ## Windows 快速启动
 
-需要 Python 3.11+。
+需要 Python 3.11+。构建 Vue 控制台还需要 Node.js 20.19+、22.12+ 或 24（本次验证使用 Node 24.15.0 / npm 11.14.1）。
 
 ```powershell
 git clone https://github.com/zureealLV/medops-rag.git
 cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\scripts\build_frontend.ps1
 .\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
 .\.venv\Scripts\python.exe -m scripts.import_chinese_official
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
@@ -133,7 +137,16 @@ LangChain LCEL 相比 Classic 平均增加 `0.901 ms`，LangGraph 增加 `1.986 
 `1.0000`，平均端到端耗时依次为 `2332.197 / 2269.603 / 2294.754 ms`。它用于证明兼容性和
 Token/成本遥测，不拿八个不同问题伪装成宽泛、稳定的框架性能排名。
 
-一条命令执行发布核心门禁（Ruff、120 项测试、30-case 回答/引用/拒答评测、摄取与检索基准）；
+自适应路由冻结集包含 120 个正例和 20 个负例：Adaptive Hit@1 为 `1.0000`，平均 `37.203 ms`；
+固定 BM25/RRF/父子分片 Hit@1 分别为 `0.9583 / 0.9917 / 0.9583`，平均耗时分别为
+`0.338 / 74.230 / 0.371 ms`。该阈值是在此集合上校准的 in-sample 结果，不是泛化保证。
+
+单进程、15,000 文档、2,304 次离线并发测量中没有请求错误；完整回答路径吞吐在并发 16 达到峰值
+`67.655 req/s`，但 P95 已从并发 4 的 `141.483 ms` 增至 `309.240 ms`，并发 32 又恶化至
+`973.943 ms`。这证明需要背压和容量门禁，不代表真实 DeepSeek 能达到同样吞吐。详见
+[`docs/v3/CONCURRENCY_OPTIONS.md`](docs/v3/CONCURRENCY_OPTIONS.md)。
+
+一条命令执行发布核心门禁（Ruff、142 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell
@@ -159,6 +172,8 @@ $env:PYTHONUTF8 = "1"
 .\.venv\Scripts\python.exe .\evals\benchmark_agent_orchestration.py --repetitions 20
 .\.venv\Scripts\python.exe .\evals\benchmark_chunk_profiles.py
 .\.venv\Scripts\python.exe .\evals\benchmark_official_chunk_profiles.py
+.\.venv\Scripts\python.exe .\evals\benchmark_adaptive_routing.py
+.\.venv\Scripts\python.exe .\evals\benchmark_concurrency_v3.py
 ```
 
 详细数据见 [`docs/v2/BENCHMARK_REPORT_ALPHA2.md`](docs/v2/BENCHMARK_REPORT_ALPHA2.md)。20 张无文字图标上，CLIP-B/32 英文 Hit@1 为 0.95，OCR-only 只有 0.05；但中文 Hit@1 仅 0.10，因此图片向量保持显式开启，不能冒充合格的中文生产方案。

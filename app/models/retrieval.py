@@ -35,6 +35,15 @@ class Evidence(BaseModel):
     embedding_model: str | None = None
 
 
+class AdaptiveRoutingTrace(BaseModel):
+    strategy: Literal["bm25", "rrf", "parent_child"]
+    reason_code: str
+    reason: str
+    confidence: float = Field(ge=0, le=1)
+    features: dict[str, int | bool]
+    candidate_scores: dict[str, float]
+
+
 class SearchResponse(BaseModel):
     query: str
     strategy: RetrievalStrategy
@@ -42,3 +51,4 @@ class SearchResponse(BaseModel):
     retrieval_ms: float
     query_transform: QueryTransform = "none"
     transformed_queries: list[str] = Field(default_factory=list)
+    routing: AdaptiveRoutingTrace | None = None

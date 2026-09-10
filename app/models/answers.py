@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.models.artifacts import VisualEvidence, VisualStrategy
-from app.models.retrieval import Evidence, RetrievalStrategy
+from app.models.retrieval import AdaptiveRoutingTrace, Evidence, RetrievalStrategy
 
 
 class AnswerRequest(BaseModel):
@@ -49,6 +49,8 @@ class AnswerResponse(BaseModel):
     retrieved_chunks: list[Evidence]
     retrieved_artifacts: list[VisualEvidence] = Field(default_factory=list)
     retrieval_profile: Literal["text", "visual"] = "text"
+    retrieval_strategy: RetrievalStrategy | None = None
+    retrieval_routing: AdaptiveRoutingTrace | None = None
     abstained: bool
     reason: str | None = None
     provider: str

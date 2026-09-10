@@ -59,11 +59,11 @@ def test_configured_embedding_provider_is_persisted_and_used_for_vector_query(
             )
             assert response.status_code == 201
 
-        response = client.post(
-            "/search",
-            headers=headers,
-            json={"query": "renew gateway credential", "top_k": 2},
-        )
+            response = client.post(
+                "/search",
+                headers=headers,
+                json={"query": "renew gateway credential", "top_k": 2, "strategy": "rrf"},
+            )
         assert response.status_code == 200
         results = response.json()["results"]
         assert response.json()["strategy"] == "rrf"

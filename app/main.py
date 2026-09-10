@@ -26,7 +26,14 @@ from app.exceptions import install_exception_handlers
 from app.logging import configure_logging
 from app.observability import install_observability
 
-WEB_ROOT = Path(__file__).resolve().parents[1] / "web"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+VUE_WEB_ROOT = REPOSITORY_ROOT / "frontend" / "dist"
+LEGACY_WEB_ROOT = REPOSITORY_ROOT / "web"
+
+
+def _resolve_web_root() -> Path:
+    """Prefer the production Vue bundle while keeping source checkouts runnable."""
+    return VUE_WEB_ROOT if (VUE_WEB_ROOT / "index.html").is_file() else LEGACY_WEB_ROOT
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -39,7 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title="MedOps RAG",
-        version="3.0.0",
+        version="3.1.0",
         description=(
             "Auditable multimodal RAG for public medical knowledge and medical-device evidence. "
             "Educational use only; not medical advice."
@@ -63,7 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         audit_router,
     ):
         application.include_router(router)
-    application.mount("/ui", StaticFiles(directory=WEB_ROOT, html=True), name="ui")
+    application.mount("/ui", StaticFiles(directory=_resolve_web_root(), html=True), name="ui")
 
     @application.get("/", include_in_schema=False)
     def web_console() -> RedirectResponse:

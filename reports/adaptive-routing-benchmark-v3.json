@@ -1,0 +1,1023 @@
+{
+  "benchmark": "medops-adaptive-routing-frozen-v1",
+  "generated_at": "2026-09-09T20:22:40.768479+08:00",
+  "dataset": {
+    "documents": 20,
+    "answerable_questions": 120,
+    "negative_questions": 20,
+    "sha256": {
+      "v2_retrieval_documents.jsonl": "f8c422ad6003e96d699591d69733c332ab61d9cc66f812894867aec5267b3861",
+      "v2_retrieval_cases.jsonl": "a53e04fc336d73c1a14c77d2bc5f2e3323919064c432cfb935822377d14d069c"
+    }
+  },
+  "model": {
+    "dense": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "dense_load_ms": 927.122,
+    "dense_index_ms": 2541.58
+  },
+  "policy": {
+    "dense_available": true,
+    "parent_child_available": true,
+    "semantic_score_threshold": 1.25,
+    "parent_score_threshold": 2.0,
+    "user_strategy_override": false
+  },
+  "results": {
+    "bm25": {
+      "hit_at_1": 0.9583,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9792,
+      "ndcg_at_5": 0.9846,
+      "mean_ms": 0.338,
+      "p95_ms": 0.81,
+      "hit_at_1_by_category": {
+        "choice": 1.0,
+        "distractor": 1.0,
+        "exact": 0.925,
+        "paraphrase": 0.95
+      }
+    },
+    "rrf": {
+      "hit_at_1": 0.9917,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9944,
+      "ndcg_at_5": 0.9958,
+      "mean_ms": 74.23,
+      "p95_ms": 88.9,
+      "hit_at_1_by_category": {
+        "choice": 0.95,
+        "distractor": 1.0,
+        "exact": 1.0,
+        "paraphrase": 1.0
+      }
+    },
+    "parent_child": {
+      "hit_at_1": 0.9583,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9792,
+      "ndcg_at_5": 0.9846,
+      "mean_ms": 0.371,
+      "p95_ms": 0.96,
+      "hit_at_1_by_category": {
+        "choice": 1.0,
+        "distractor": 1.0,
+        "exact": 0.925,
+        "paraphrase": 0.95
+      }
+    },
+    "adaptive": {
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "mean_ms": 37.203,
+      "p95_ms": 88.252,
+      "hit_at_1_by_category": {
+        "choice": 1.0,
+        "distractor": 1.0,
+        "exact": 1.0,
+        "paraphrase": 1.0
+      }
+    }
+  },
+  "adaptive_selection": {
+    "answerable_route_counts": {
+      "bm25": 60,
+      "rrf": 60
+    },
+    "all_query_route_counts": {
+      "bm25": 60,
+      "rrf": 80
+    },
+    "answerable_reason_counts": {
+      "exact_or_identifier_lookup": 35,
+      "lexical_default": 25,
+      "semantic_or_multi_concept_query": 60
+    },
+    "mean_confidence": 0.7473,
+    "quality_delta_hit_at_1_vs_best_fixed": 0.0083,
+    "trace": [
+      {
+        "case_id": "case-00-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-00-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-00-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-00-3",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.94
+      },
+      {
+        "case_id": "case-00-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.94
+      },
+      {
+        "case_id": "case-00-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-01-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-01-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "case-01-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-01-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-01-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-01-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-02-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-02-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-02-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-02-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-02-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-02-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-03-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-03-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "case-03-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-03-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-03-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-03-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-04-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-04-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "case-04-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-04-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-04-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-04-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.78
+      },
+      {
+        "case_id": "case-05-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-05-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-05-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-05-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-05-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-05-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-06-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-06-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-06-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-06-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-06-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-06-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.78
+      },
+      {
+        "case_id": "case-07-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-07-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-07-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-07-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-07-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-07-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.78
+      },
+      {
+        "case_id": "case-08-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-08-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-08-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-08-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-08-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-08-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-09-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-09-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-09-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-09-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-09-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-09-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.78
+      },
+      {
+        "case_id": "case-10-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-10-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-10-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-10-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-10-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-10-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-11-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-11-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-11-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-11-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-11-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-11-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-12-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-12-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-12-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-12-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-12-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-12-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-13-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-13-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-13-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-13-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-13-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-13-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.76
+      },
+      {
+        "case_id": "case-14-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-14-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "case-14-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-14-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-14-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-14-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-15-0",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-15-1",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "case-15-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-15-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "case-15-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "case-15-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-16-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-16-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-16-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-16-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-16-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-16-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-17-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-17-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-17-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-17-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-17-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-17-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-18-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-18-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-18-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-18-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-18-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-18-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "case-19-0",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-19-1",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.72
+      },
+      {
+        "case_id": "case-19-2",
+        "category": "choice",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-19-3",
+        "category": "exact",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "case-19-4",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "case-19-5",
+        "category": "distractor",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      }
+    ]
+  },
+  "route_probes": [
+    {
+      "strategy": "bm25",
+      "reason_code": "exact_or_identifier_lookup",
+      "reason": "The query is short, quoted, or identifier-heavy; use the low-latency BM25 path.",
+      "confidence": 0.94,
+      "features": {
+        "character_count": 28,
+        "token_count": 26,
+        "exact_identifier_count": 3,
+        "quoted_phrase_count": 0,
+        "semantic_cue_count": 0,
+        "long_context_cue_count": 0,
+        "multi_part": false
+      },
+      "candidate_scores": {
+        "bm25": 6.0,
+        "rrf": 0.0,
+        "parent_child": 0.5
+      }
+    },
+    {
+      "strategy": "rrf",
+      "reason_code": "semantic_or_multi_concept_query",
+      "reason": "The query is paraphrastic or relates multiple concepts; fuse BM25 and dense ranks with reciprocal-rank fusion.",
+      "confidence": 0.94,
+      "features": {
+        "character_count": 30,
+        "token_count": 54,
+        "exact_identifier_count": 0,
+        "quoted_phrase_count": 0,
+        "semantic_cue_count": 4,
+        "long_context_cue_count": 0,
+        "multi_part": true
+      },
+      "candidate_scores": {
+        "bm25": 0.0,
+        "rrf": 6.75,
+        "parent_child": 1.25
+      }
+    },
+    {
+      "strategy": "parent_child",
+      "reason_code": "broad_context_required",
+      "reason": "The query asks for cross-section or full-procedure context; retrieve small child matches and return their bounded parent context.",
+      "confidence": 0.98,
+      "features": {
+        "character_count": 40,
+        "token_count": 49,
+        "exact_identifier_count": 1,
+        "quoted_phrase_count": 0,
+        "semantic_cue_count": 1,
+        "long_context_cue_count": 5,
+        "multi_part": true
+      },
+      "candidate_scores": {
+        "bm25": 2.0,
+        "rrf": 2.5,
+        "parent_child": 11.25
+      }
+    }
+  ],
+  "findings": [
+    "The router is deterministic and exposes reason, confidence, features, and candidate scores.",
+    "Identifier-heavy queries prefer BM25; paraphrastic or multi-concept queries use RRF; explicit broad-context queries use parent-child retrieval.",
+    "The adaptive route must be connected behind the ordinary answer API; no user strategy override is part of the router interface.",
+    "Quality on this small template corpus is close to saturation, so a zero or small delta does not prove general superiority."
+  ],
+  "limitations": [
+    "Template-generated operations corpus, not production traffic or a clinical-validity evaluation.",
+    "Only 120 answerable and 20 negative questions with one relevant document per answerable query.",
+    "All frozen documents fit in one 350-character retrieval child, so parent-child collapses to document-level BM25 on this corpus.",
+    "The frozen set has no explicit cross-section questions; parent-child selection is demonstrated by deterministic route probes and separate existing long-context benchmarks.",
+    "Dense model files are cached and model download/load time is excluded from per-query latency.",
+    "The router does not perform abstention; domain, safety, score-threshold, and citation gates remain separate stages.",
+    "The deterministic threshold was calibrated while inspecting this frozen corpus; its quality result is in-sample and needs a separately held-out traffic set."
+  ]
+}

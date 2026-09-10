@@ -18,6 +18,8 @@ function Invoke-PythonStep {
 
 Invoke-PythonStep @("-m", "ruff", "check", "app", "tests", "scripts", "evals", "experiments")
 Invoke-PythonStep @("-m", "pytest", "-q")
+& ".\scripts\build_frontend.ps1"
+if ($LASTEXITCODE -ne 0) { throw "Vue frontend release gate failed" }
 Invoke-PythonStep @(".\evals\run_eval.py")
 Invoke-PythonStep @(
     ".\evals\benchmark_ingestion.py", "--repeats", "1",

@@ -9,7 +9,7 @@ from app.agents.model import generate_detailed
 from app.config import Settings
 from app.models.answers import AnswerRequest, AnswerResponse, Citation, VisualCitation
 from app.models.artifacts import VisualEvidence, VisualSearchRequest
-from app.models.retrieval import Evidence, SearchRequest
+from app.models.retrieval import AdaptiveRoutingTrace, Evidence, RetrievalStrategy, SearchRequest
 from app.retrieval.query_routing import ResolvedProfile, route_query
 from app.security.policies import is_medical_advice_request, is_supported_domain_query
 from app.security.prompt_injection import has_injection_signals
@@ -95,6 +95,8 @@ def _response(
     reason: str | None,
     provider: str,
     retrieval_ms: float,
+    retrieval_strategy: RetrievalStrategy | None = None,
+    retrieval_routing: AdaptiveRoutingTrace | None = None,
     model_ms: float = 0.0,
     token_usage: int = 0,
     prompt_tokens: int = 0,
@@ -127,6 +129,8 @@ def _response(
         retrieved_chunks=all_text_evidence,
         retrieved_artifacts=all_visual_evidence,
         retrieval_profile=resolved_profile,
+        retrieval_strategy=retrieval_strategy,
+        retrieval_routing=retrieval_routing,
         abstained=abstained,
         reason=reason,
         provider=provider,
@@ -238,6 +242,8 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
             reason="unsafe_evidence" if unsafe else insufficient_reason,
             provider="policy",
             retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
+            retrieval_strategy=text_result.strategy,
+            retrieval_routing=text_result.routing,
         )
 
     payloads = _visual_payloads(
@@ -259,6 +265,8 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
             reason="visual_payload_unavailable",
             provider="policy",
             retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
+            retrieval_strategy=text_result.strategy,
+            retrieval_routing=text_result.routing,
         )
     payload_evidence = [item for item, _ in payloads]
     answer_text_evidence = accepted_text[:3]
@@ -280,6 +288,8 @@ def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerReques
         reason=None,
         provider=generation.provider,
         retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
+        retrieval_strategy=text_result.strategy,
+        retrieval_routing=text_result.routing,
         model_ms=generation.model_ms,
         token_usage=generation.usage.total_tokens,
         prompt_tokens=generation.usage.prompt_tokens,
