@@ -1,6 +1,6 @@
 # MedOps Medical Knowledge Agent RAG V3.4
 
-[中文说明](README_CN.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [Summary Provider policy](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
+[中文说明](README_CN.md) · [RAG-Pro comparison and MCP migration](docs/v3/RAG_PRO_COMPARISON_AND_MIGRATION.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [Summary Provider policy](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
 
 An auditable, tenant-scoped Agent RAG assistant for **public medical knowledge and medical-device evidence**.
 V3.4 adds one end-to-end Provider deadline across queueing, HTTP attempts and backoff, bounded `Retry-After`,

@@ -1,6 +1,6 @@
 # MedOps 医疗健康知识 Agent RAG V3.4
 
-[English README](README.md) · [RAG-Pro 对比与迁移](docs/v3/RAG_PRO_COMPARISON_AND_MIGRATION.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [摘要 Provider 策略](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [RAG-Pro 对比与迁移](docs/v3/RAG_PRO_COMPARISON_AND_MIGRATION_CN.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [摘要 Provider 策略](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.4 在 V3.3 真异步、公平调度与熔断基础上，
 加入覆盖排队/HTTP/退避的总截止时间、受限 `Retry-After`、指数抖动、进程内全局/租户重试预算和更困难的独立挑战集 V3；并保留管理员专用检索实验室、Agent 控制检查点、Vue 3 企业控制台、可解释自适应检索与受控 LangGraph 编排、
