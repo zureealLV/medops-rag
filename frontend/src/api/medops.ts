@@ -31,4 +31,42 @@ export const medopsApi = {
   search: (data: SearchRequest, signal?: AbortSignal) =>
     apiRequest<SearchResponse>('/search', { method: 'POST', body: JSON.stringify(data), signal }),
   metrics: () => apiRequest<Metrics>('/system/metrics'),
+  mcpInitialize: () => apiRequest<McpInitializeResponse>('/mcp/', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json, text/event-stream',
+      'Mcp-Protocol-Version': '2025-11-25',
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-11-25',
+        capabilities: {},
+        clientInfo: { name: 'medops-console', version: '3.4.0' },
+      },
+    }),
+  }),
+  mcpListTools: () => apiRequest<McpToolsResponse>('/mcp/', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json, text/event-stream',
+      'Mcp-Protocol-Version': '2025-11-25',
+    },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }),
+  }),
+}
+
+export interface McpInitializeResponse {
+  result: {
+    protocolVersion: string
+    serverInfo: { name: string; version: string; description?: string }
+  }
+}
+
+export interface McpToolsResponse {
+  result: {
+    tools: Array<{ name: string; description: string; inputSchema: Record<string, unknown> }>
+  }
 }

@@ -30,6 +30,8 @@ the bright clinical console.
 - a Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 enterprise console for knowledge spaces, bounded-parallel uploads, cited Q&A,
   health and tenant-scoped operational metrics; the document catalog uses metadata-only server pagination and
   title/source filtering instead of sending every document body to the browser;
+- an MCP Python SDK 2.2 Streamable HTTP endpoint at `/mcp/`, exposing tenant-scoped knowledge-base listing,
+  evidence search and policy-controlled grounded answers with server-side API-key identity resolution and audit logging;
 - viewer/editor callers submit business questions only; the server owns `top_k`, retrieval/evidence strategy,
   and orchestration defaults, while administrators retain benchmark and incident-diagnosis overrides in a
   dedicated retrieval/answer laboratory; text search and visual search enforce the same server boundary;
@@ -66,7 +68,7 @@ the bright clinical console.
 - indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
 - request IDs, `Server-Timing`, dependency-free `/live`, database-aware `/ready`, tenant-scoped routing metrics,
-  process-local Provider capacity/breaker/deadline/retry-budget telemetry, 205 tests,
+  process-local Provider capacity/breaker/deadline/retry-budget telemetry, 210 tests,
   and repeatable ingestion/retrieval/concurrency benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a Docker Compose definition with API, ingestion worker, summary worker, health checks and persistent
@@ -164,7 +166,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 205 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 210 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 

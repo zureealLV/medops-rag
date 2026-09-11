@@ -1,6 +1,6 @@
 # MedOps 医疗健康知识 Agent RAG V3.4
 
-[English README](README.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [摘要 Provider 策略](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
+[English README](README.md) · [RAG-Pro 对比与迁移](docs/v3/RAG_PRO_COMPARISON_AND_MIGRATION.md) · [企业演进路线](docs/v4/ENTERPRISE_ROADMAP.md) · [自适应挑战集 V3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [摘要 Provider 策略](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [并发审计与方案](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent 工具与检查点](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent 编排基准](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [中国官方语料](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [鉴权设计](docs/v2/AUTHORIZATION.md) · [部署](docs/v2/DEPLOYMENT.md) · [威胁模型](THREAT_MODEL.md)
 
 这是一个面向**公开医疗知识与医疗器械证据**的可审计、多租户 Agent RAG 知识助手。V3.4 在 V3.3 真异步、公平调度与熔断基础上，
 加入覆盖排队/HTTP/退避的总截止时间、受限 `Retry-After`、指数抖动、进程内全局/租户重试预算和更困难的独立挑战集 V3；并保留管理员专用检索实验室、Agent 控制检查点、Vue 3 企业控制台、可解释自适应检索与受控 LangGraph 编排、
@@ -20,6 +20,8 @@ DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 
   lifespan 共享 `httpx.AsyncClient`、租户间 round-robin、公平的活动/等待配额、分类有限重试、closed/open/half-open 熔断器；排队、HTTP 与退避共享总 deadline，超时显式 `504`，并使用受限 `Retry-After`、指数 jitter、全局/租户重试 Token Bucket、过载 `503` 和有界关闭；
 - Vue 3.5 + TypeScript 5.9 + Vite 7 + Vue Router 4 + Pinia 3 + Element Plus 2 企业控制台：知识空间、并发受控上传、带引用问答、健康状态和租户指标；
   文档目录使用服务端元数据分页和标题/来源筛选，不再把整个知识库正文一次性塞进浏览器；
+- 基于官方 Python SDK 2.2 的 `/mcp/` Streamable HTTP 服务，暴露租户隔离的知识库列表、证据检索和受控回答工具；
+  API Key 模式复用服务端身份解析，工具调用保留角色降权、引用范围复核、医疗拒答和审计；
 - 普通 viewer/editor 只能提交业务问题，文本/视觉检索、`top_k`、证据策略与编排引擎均由后端自动管理；
   管理员在独立实验室保留基准、灰度与故障诊断覆盖能力；
 - FastAPI 应用工厂、类型化 Router、依赖注入、统一错误与 OpenAPI；
@@ -52,7 +54,7 @@ DeepSeek V4 Flash、Token/成本遥测和分片策略门禁；同时保留 V2.4 
 - 间接 Prompt Injection 隔离、PII 审计脱敏、医疗建议拒绝；
 - 三个只读白名单工具及非法工具/参数拒绝；
 - 请求 ID、`Server-Timing`，以及租户隔离的请求/队列/解析/OCR/模型/fallback/路由指标和进程内 Provider 容量/熔断/deadline/重试预算状态；
-- 205 个 API/安全/解析器/迁移/任务队列/UI/异步竞态测试，以及可重复的摄取、检索与并发基准；
+- 210 个 API/安全/解析器/迁移/任务队列/UI/MCP/异步竞态测试，以及可重复的摄取、检索与并发基准；
 - 先备份再执行的 V1→V2 迁移、显式 Schema 版本，以及经过测试的整库回滚路径；
 - Docker Compose 已覆盖 API、摄取 Worker、摘要 Worker、健康检查与持久化数据/模型卷；旧 V3 镜像曾完成真实构建，
   但 V3.4 异步 Provider 与前端构建阶段后的新镜像仍需在 Docker Linux Engine 可用的主机上重新验证；
@@ -91,6 +93,9 @@ python -m venv .venv
 X-Tenant-ID: hospital-a
 X-Actor-ID: local-demo
 ```
+
+MCP Streamable HTTP 地址为 `http://127.0.0.1:8000/mcp/`。控制台的“MCP 服务”页面会真实执行
+initialize 与 `tools/list`，可用于检查服务版本、协议协商和三个只读工具 Schema。
 
 这里的租户 Header 是方便本地演示的信任边界。若要让服务自身鉴权，先创建管理员 Key，再切换模式：
 
@@ -163,7 +168,7 @@ Provider/API 调用仍为 `0`。这次不是刷满分，而是把真实短板测
 `973.943 ms`。这证明需要背压和容量门禁，不代表真实 DeepSeek 能达到同样吞吐。详见
 [`docs/v3/CONCURRENCY_OPTIONS.md`](docs/v3/CONCURRENCY_OPTIONS.md)。
 
-一条命令执行发布核心门禁（Ruff、205 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
+一条命令执行发布核心门禁（Ruff、210 项测试、Vue 类型检查与生产构建、30-case 回答/引用/拒答评测、摄取与检索基准）；
 `-Full` 还会执行已缓存 MiniLM 的置信度校准与 BGE 性能剖面：
 
 ```powershell

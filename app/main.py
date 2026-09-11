@@ -1,6 +1,6 @@
 """FastAPI application factory."""
 
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from functools import partial
 from pathlib import Path
 
@@ -9,6 +9,7 @@ from anyio import to_thread
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from mcp.server.transport_security import TransportSecuritySettings
 
 from app.agents.model import ModelProvider
 from app.api.answers import router as answers_router
@@ -28,6 +29,7 @@ from app.config import Settings
 from app.db import initialize
 from app.exceptions import install_exception_handlers
 from app.logging import configure_logging
+from app.mcp import create_mcp_server
 from app.observability import install_observability
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -54,15 +56,26 @@ def create_app(
         transport=model_transport,
         async_transport=model_async_transport,
     )
+    mcp_server = create_mcp_server(resolved, model_provider)
+    mcp_app = mcp_server.streamable_http_app(
+        streamable_http_path="/",
+        json_response=True,
+        stateless_http=True,
+        max_request_body_size=1_048_576,
+        transport_security=TransportSecuritySettings(
+            allowed_hosts=list(resolved.mcp_allowed_hosts),
+            allowed_origins=list(resolved.mcp_allowed_origins),
+        ),
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
-        try:
+        async with AsyncExitStack() as stack:
             await model_provider.start()
+            stack.push_async_callback(model_provider.aclose)
+            await stack.enter_async_context(mcp_server.session_manager.run())
             await to_thread.run_sync(partial(initialize, resolved.database_path))
             yield
-        finally:
-            await model_provider.aclose()
 
     application = FastAPI(
         title="MedOps RAG",
@@ -75,6 +88,7 @@ def create_app(
     )
     application.state.settings = resolved
     application.state.model_provider = model_provider
+    application.state.mcp_server = mcp_server
     for router in (
         health_router,
         auth_router,
@@ -91,6 +105,7 @@ def create_app(
         audit_router,
     ):
         application.include_router(router)
+    application.mount("/mcp", mcp_app, name="mcp")
     application.mount("/ui", StaticFiles(directory=_resolve_web_root(), html=True), name="ui")
 
     @application.get("/", include_in_schema=False)

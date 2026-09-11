@@ -15,12 +15,29 @@ def _database_path(database_url: str) -> Path:
     return path if path.is_absolute() else Path.cwd() / path
 
 
+def _csv(value: str) -> tuple[str, ...]:
+    return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     database_path: Path
     app_env: str = "development"
     log_level: str = "INFO"
     auth_mode: str = "trusted_headers"
+    mcp_allowed_hosts: tuple[str, ...] = (
+        "localhost",
+        "localhost:*",
+        "127.0.0.1",
+        "127.0.0.1:*",
+        "[::1]",
+        "[::1]:*",
+    )
+    mcp_allowed_origins: tuple[str, ...] = (
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "http://[::1]:*",
+    )
     retrieval_threshold: float = 0.20
     retrieval_keyword_threshold: float = 0.28
     retrieval_dense_threshold: float = 0.40
@@ -82,6 +99,18 @@ class Settings:
             app_env=os.getenv("APP_ENV", "development"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             auth_mode=os.getenv("AUTH_MODE", "trusted_headers"),
+            mcp_allowed_hosts=_csv(
+                os.getenv(
+                    "MCP_ALLOWED_HOSTS",
+                    "localhost,localhost:*,127.0.0.1,127.0.0.1:*,[::1],[::1]:*",
+                )
+            ),
+            mcp_allowed_origins=_csv(
+                os.getenv(
+                    "MCP_ALLOWED_ORIGINS",
+                    "http://localhost:*,http://127.0.0.1:*,http://[::1]:*",
+                )
+            ),
             retrieval_threshold=float(os.getenv("RETRIEVAL_THRESHOLD", "0.20")),
             retrieval_keyword_threshold=float(os.getenv("RETRIEVAL_KEYWORD_THRESHOLD", "0.28")),
             retrieval_dense_threshold=float(os.getenv("RETRIEVAL_DENSE_THRESHOLD", "0.40")),

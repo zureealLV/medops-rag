@@ -8,6 +8,7 @@ from typing import Annotated
 
 from fastapi import Header, Request
 
+from app.config import Settings
 from app.exceptions import AppError
 from app.repositories.api_credentials import authenticate
 
@@ -53,13 +54,22 @@ def _authorize(context: RequestContext, method: str, path: str) -> None:
     raise AppError(403, "permission_denied", "This endpoint requires the editor role")
 
 
-def tenant_context(
-    request: Request,
-    tenant_id: Annotated[str | None, Header(alias="X-Tenant-ID")] = None,
-    actor: Annotated[str, Header(alias="X-Actor-ID")] = "demo-user",
-    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+def resolve_request_context(
+    settings: Settings,
+    *,
+    tenant_id: str | None,
+    actor: str = "demo-user",
+    authorization: str | None = None,
+    method: str = "GET",
+    path: str = "/",
 ) -> RequestContext:
-    settings = request.app.state.settings
+    """Resolve one authenticated tenant identity outside FastAPI dependency injection.
+
+    HTTP endpoints and mounted protocol adapters (such as MCP) must share the
+    same credential lookup and role policy. Keeping this logic here prevents an
+    adapter from accidentally turning client-supplied tenant metadata into a
+    production identity.
+    """
     if settings.auth_mode == "api_key":
         if authorization is None or not authorization.startswith("Bearer "):
             raise _unauthorized()
@@ -86,6 +96,24 @@ def tenant_context(
         )
     else:
         raise AppError(500, "invalid_auth_configuration", "AUTH_MODE is not supported")
-    _authorize(context, request.method, request.url.path)
+    _authorize(context, method, path)
+    return context
+
+
+def tenant_context(
+    request: Request,
+    tenant_id: Annotated[str | None, Header(alias="X-Tenant-ID")] = None,
+    actor: Annotated[str, Header(alias="X-Actor-ID")] = "demo-user",
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+) -> RequestContext:
+    settings = request.app.state.settings
+    context = resolve_request_context(
+        settings,
+        tenant_id=tenant_id,
+        actor=actor,
+        authorization=authorization,
+        method=request.method,
+        path=request.url.path,
+    )
     request.state.tenant_id = context.tenant_id
     return context

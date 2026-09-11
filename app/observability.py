@@ -96,6 +96,8 @@ def _record_request_metric(
 
 
 def install_observability(app: FastAPI) -> None:
+    database_path = app.state.settings.database_path
+
     @app.middleware("http")
     async def trace_request(request: Request, call_next):
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))[:100]
@@ -115,7 +117,7 @@ def install_observability(app: FastAPI) -> None:
                 await to_thread.run_sync(
                     partial(
                         _record_request_metric,
-                        request.app.state.settings.database_path,
+                        database_path,
                         request_id=request_id,
                         tenant_id=getattr(request.state, "tenant_id", None),
                         request_path=request.url.path,
