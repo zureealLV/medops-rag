@@ -13,6 +13,37 @@ export interface Health {
   database: string
 }
 
+export type ModelProviderName = 'deepseek' | 'openai' | 'qwen' | 'zhipu' | 'ollama' | 'custom'
+
+export interface ModelConfigView {
+  provider: ModelProviderName
+  model_name: string
+  base_url: string
+  api_key_configured: boolean
+  api_key_source: 'none' | 'environment' | 'runtime'
+  vision_enabled: boolean
+  activation_source: 'environment' | 'runtime'
+  session_only: boolean
+}
+
+export interface ModelConfigInput {
+  provider: ModelProviderName
+  model_name: string
+  base_url: string
+  api_key?: string
+  clear_api_key?: boolean
+  vision_enabled: boolean
+}
+
+export interface ModelConfigTestResult {
+  status: 'ok'
+  provider: ModelProviderName
+  model_name: string
+  endpoint: string
+  latency_ms: number
+  response_preview: string
+}
+
 export interface Identity {
   tenant_id: string
   actor: string

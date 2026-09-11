@@ -119,9 +119,16 @@ def create_mcp_server(
     model_provider: ModelProvider,
     *,
     identity_resolver: IdentityResolver | None = None,
+    settings_resolver: Callable[[], Settings] | None = None,
 ) -> MCPServer:
     """Create the mounted MCP server for one MedOps application instance."""
-    resolve_identity = identity_resolver or _default_identity_resolver(settings)
+    resolve_settings = settings_resolver or (lambda: settings)
+
+    def resolve_identity(ctx: Context, method: str, path: str) -> RequestContext:
+        if identity_resolver is not None:
+            return identity_resolver(ctx, method, path)
+        return _default_identity_resolver(resolve_settings())(ctx, method, path)
+
     server = MCPServer(
         name="MedOps RAG",
         description="Tenant-scoped medical and medical-device evidence retrieval.",
@@ -136,6 +143,7 @@ def create_mcp_server(
     @server.tool()
     def list_knowledge_bases(ctx: Context) -> dict[str, Any]:
         """List knowledge bases visible to the authenticated MedOps tenant."""
+        settings = resolve_settings()
         identity = resolve_identity(ctx, "GET", "/knowledge-bases")
         items = knowledge_base_service.list_all(settings.database_path, identity.tenant_id)
         return {"knowledge_bases": [item.model_dump() for item in items]}
@@ -148,6 +156,7 @@ def create_mcp_server(
         top_k: Annotated[int, Field(ge=1, le=10)] = 5,
     ) -> dict[str, Any]:
         """Search tenant-scoped medical evidence without generating an answer."""
+        settings = resolve_settings()
         identity = resolve_identity(ctx, "POST", "/search")
         request = _effective_search(
             SearchRequest(
@@ -202,6 +211,7 @@ def create_mcp_server(
         top_k: Annotated[int, Field(ge=1, le=10)] = 5,
     ) -> dict[str, Any]:
         """Generate a policy-checked answer grounded in the caller's MedOps evidence."""
+        settings = resolve_settings()
         identity = resolve_identity(ctx, "POST", "/answer")
         request = _effective_answer(
             AnswerRequest(

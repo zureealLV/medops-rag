@@ -7,6 +7,9 @@ import type {
   Identity,
   KnowledgeBase,
   Metrics,
+  ModelConfigInput,
+  ModelConfigTestResult,
+  ModelConfigView,
   SearchRequest,
   SearchResponse,
 } from '@/types/api'
@@ -31,6 +34,14 @@ export const medopsApi = {
   search: (data: SearchRequest, signal?: AbortSignal) =>
     apiRequest<SearchResponse>('/search', { method: 'POST', body: JSON.stringify(data), signal }),
   metrics: () => apiRequest<Metrics>('/system/metrics'),
+  modelConfig: () => apiRequest<ModelConfigView>('/system/model-config'),
+  applyModelConfig: (data: ModelConfigInput) =>
+    apiRequest<ModelConfigView>('/system/model-config', { method: 'PUT', body: JSON.stringify(data) }),
+  testModelConfig: (data: ModelConfigInput) =>
+    apiRequest<ModelConfigTestResult>('/system/model-config/test', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   mcpInitialize: () => apiRequest<McpInitializeResponse>('/mcp/', {
     method: 'POST',
     headers: {

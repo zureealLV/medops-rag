@@ -21,6 +21,7 @@ from app.api.health import router as health_router
 from app.api.jobs import router as jobs_router
 from app.api.knowledge_bases import router as knowledge_bases_router
 from app.api.metrics import router as metrics_router
+from app.api.model_config import router as model_config_router
 from app.api.search import router as search_router
 from app.api.summaries import router as summaries_router
 from app.api.tools import router as tools_router
@@ -56,7 +57,12 @@ def create_app(
         transport=model_transport,
         async_transport=model_async_transport,
     )
-    mcp_server = create_mcp_server(resolved, model_provider)
+    settings_ref = {"value": resolved}
+    mcp_server = create_mcp_server(
+        resolved,
+        model_provider,
+        settings_resolver=lambda: settings_ref["value"],
+    )
     mcp_app = mcp_server.streamable_http_app(
         streamable_http_path="/",
         json_response=True,
@@ -87,7 +93,9 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.settings = resolved
+    application.state.settings_ref = settings_ref
     application.state.model_provider = model_provider
+    application.state.model_test_transport = model_async_transport
     application.state.mcp_server = mcp_server
     for router in (
         health_router,
@@ -95,6 +103,7 @@ def create_app(
         users_router,
         knowledge_bases_router,
         metrics_router,
+        model_config_router,
         jobs_router,
         summaries_router,
         documents_router,

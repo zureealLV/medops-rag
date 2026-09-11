@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="730" viewBox="0 0 1400 730" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7f5"/><stop offset="0.52" stop-color="#f8fbff"/><stop offset="1" stop-color="#eafcff"/></linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5267f5"/><stop offset="1" stop-color="#20beb7"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#23335c" flood-opacity="0.10"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7d8bb4"/></marker>
+  </defs>
+  <rect width="1400" height="730" rx="28" fill="url(#bg)"/>
+  <text x="56" y="65" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="30" font-weight="800" fill="#233153" text-anchor="start" opacity="1.0">MEDOPS RAG · 从资料到可审计回答</text>
+<text x="56" y="98" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="16" font-weight="500" fill="#6d7895" text-anchor="start" opacity="1.0">同一条安全边界内完成摄取、检索、编排、引用与审计</text>
+<g filter="url(#shadow)"><rect x="56" y="145" width="250" height="112" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="56" y="145" width="8" height="112" rx="4" fill="#ff7065"/>
+<text x="84" y="189" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">资料 / 业务问题</text>
+<text x="84" y="221" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">PDF · Office · 图片 · API · MCP</text>
+<g filter="url(#shadow)"><rect x="390" y="145" width="250" height="112" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="390" y="145" width="8" height="112" rx="4" fill="#7a67ee"/>
+<text x="418" y="189" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">身份与租户边界</text>
+<text x="418" y="221" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">API Key · RBAC · SQL 前置隔离</text>
+<g filter="url(#shadow)"><rect x="724" y="145" width="250" height="112" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="724" y="145" width="8" height="112" rx="4" fill="#5267f5"/>
+<text x="752" y="189" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">策略路由</text>
+<text x="752" y="221" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">摄取路径 / 问答路径自动分流</text>
+<g filter="url(#shadow)"><rect x="1058" y="145" width="286" height="112" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="1058" y="145" width="8" height="112" rx="4" fill="#20beb7"/>
+<text x="1086" y="189" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">任务与可观测性</text>
+<text x="1086" y="221" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">队列 · Deadline · 熔断 · 指标</text>
+<path d="M306 201 H382" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M640 201 H716" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M974 201 H1050" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="80" y="330" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="16" font-weight="800" fill="#ff7065" text-anchor="start" opacity="1.0">A · 知识摄取</text>
+<g filter="url(#shadow)"><rect x="56" y="355" width="280" height="120" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="56" y="355" width="8" height="120" rx="4" fill="#ff7065"/>
+<text x="84" y="399" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">安全解析</text>
+<text x="84" y="431" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">格式门禁 · OCR · 元素/坐标</text>
+<g filter="url(#shadow)"><rect x="390" y="355" width="280" height="120" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="390" y="355" width="8" height="120" rx="4" fill="#ff9d64"/>
+<text x="418" y="399" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">语义分块</text>
+<text x="418" y="431" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">中文边界 · Parent–Child</text>
+<g filter="url(#shadow)"><rect x="724" y="355" width="280" height="120" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="724" y="355" width="8" height="120" rx="4" fill="#f6bb4b"/>
+<text x="752" y="399" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">索引与证据</text>
+<text x="752" y="431" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">FTS5 · BM25 · 向量 · 原图</text>
+<path d="M336 415 H382" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M670 415 H716" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="80" y="535" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="16" font-weight="800" fill="#5267f5" text-anchor="start" opacity="1.0">B · 证据问答</text>
+<g filter="url(#shadow)"><rect x="56" y="560" width="280" height="120" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="56" y="560" width="8" height="120" rx="4" fill="#5267f5"/>
+<text x="84" y="604" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">自适应检索</text>
+<text x="84" y="636" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">BM25 · RRF · Parent–Child</text>
+<g filter="url(#shadow)"><rect x="390" y="560" width="280" height="120" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="390" y="560" width="8" height="120" rx="4" fill="#7a67ee"/>
+<text x="418" y="604" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">证据与安全门禁</text>
+<text x="418" y="636" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">阈值拒答 · 注入隔离 · 引用复核</text>
+<g filter="url(#shadow)"><rect x="724" y="560" width="280" height="120" rx="22" fill="#ffffff" stroke="#dce4f5"/></g>
+<rect x="724" y="560" width="8" height="120" rx="4" fill="#8f5de7"/>
+<text x="752" y="604" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">受控 Agent</text>
+<text x="752" y="636" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="start" opacity="1.0">LangGraph · 只读工具 · Checkpoint</text>
+<g filter="url(#shadow)"><rect x="1058" y="457" width="286" height="223" rx="22" fill="#f4ffff" stroke="#dce4f5"/></g>
+<rect x="1058" y="457" width="8" height="223" rx="4" fill="#20beb7"/>
+<text x="1086" y="501" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">输出</text>
+<path d="M336 620 H382" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M670 620 H716" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M1004 620 H1050" stroke="#7d8bb4" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="1201" y="548" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="24" font-weight="800" fill="#233153" text-anchor="middle" opacity="1.0">回答正文</text>
+<text x="1201" y="585" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#5267f5" text-anchor="middle" opacity="1.0">+ 来源卡片</text>
+<text x="1201" y="622" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="22" font-weight="700" fill="#20a8a2" text-anchor="middle" opacity="1.0">+ 审计轨迹</text>
+<text x="1201" y="654" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#697897" text-anchor="middle" opacity="1.0">证据不足就不编</text>
+</svg>

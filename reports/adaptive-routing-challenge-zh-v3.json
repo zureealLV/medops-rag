@@ -2,7 +2,7 @@
   "benchmark": "medops-adaptive-routing-challenge-zh-v3",
   "benchmark_version": "3.0.0",
   "dataset_version": "3.0.0",
-  "generated_at": "2026-09-10T23:26:54.862900+08:00",
+  "generated_at": "2026-09-11T15:54:53.869100+08:00",
   "evaluation_contract": {
     "dataset_frozen_before_engine_run": true,
     "freeze_manifest_verified": true,
@@ -37,7 +37,7 @@
     },
     "freeze": {
       "frozen_at": "2026-09-10T15:15:47.584Z",
-      "manifest_sha256": "d176f747491af47153efa866316e54b27994ee56e524d19036879ec1f67003d9",
+      "manifest_sha256": "af8066a49e8922a20fd7014bc07aad98a413b307d80ba03b1bd22992e40172f1",
       "files": {
         "adaptive_challenge_v3_documents_zh.jsonl": {
           "sha256": "3799bb095cc1174ff23b4391420a0662dd3951f2a73d8555ae9f71b10e94df59",
@@ -103,15 +103,15 @@
     "sha256": {
       "adaptive_challenge_v3_documents_zh.jsonl": "3799bb095cc1174ff23b4391420a0662dd3951f2a73d8555ae9f71b10e94df59",
       "adaptive_challenge_v3_cases_zh.jsonl": "0aaf0a4fb345977db5da7458a8db563d5eb88fd1933109e3c0979f60ea1e5e93",
-      "adaptive_challenge_v3_freeze.json": "d176f747491af47153efa866316e54b27994ee56e524d19036879ec1f67003d9",
+      "adaptive_challenge_v3_freeze.json": "af8066a49e8922a20fd7014bc07aad98a413b307d80ba03b1bd22992e40172f1",
       "benchmark_adaptive_challenge_v3.py": "5dbc5210fc1d3bc9230e9d9c4b68a914378b729eabd68a5178e5f39744126f99",
       "app/retrieval/adaptive.py": "09ee92695a6dc86a840460028b37c77f386af3f7bd56e42d57a4ee7ff580761a"
     }
   },
   "runtime": {
     "project": "medops-rag",
-    "project_version": "3.3.0",
-    "git_commit": "c02a8b81cb429b1180fe981ea38974e890955b1e",
+    "project_version": "3.4.0",
+    "git_commit": "72b1971c55a3af4cc9786a3f75efc92017b448ce",
     "python": "3.11.5",
     "platform": "Windows-10-10.0.22631-SP0",
     "fastembed": "0.7.4",
@@ -122,7 +122,7 @@
     "dense_local_files_only": true,
     "hf_hub_offline": "1",
     "transformers_offline": "1",
-    "model_load_and_document_index_ms": 4248.758,
+    "model_load_and_document_index_ms": 4409.267,
     "query_repetitions": 5
   },
   "policy_snapshot": {
@@ -2223,27 +2223,27 @@
   "latency": {
     "bm25": {
       "samples": 140,
-      "mean_ms": 0.577,
-      "p50_ms": 0.565,
-      "p95_ms": 1.232
+      "mean_ms": 0.622,
+      "p50_ms": 0.567,
+      "p95_ms": 1.196
     },
     "rrf": {
       "samples": 140,
-      "mean_ms": 70.104,
-      "p50_ms": 70.183,
-      "p95_ms": 92.381
+      "mean_ms": 74.73,
+      "p50_ms": 75.101,
+      "p95_ms": 88.571
     },
     "parent_child": {
       "samples": 140,
-      "mean_ms": 0.55,
-      "p50_ms": 0.484,
-      "p95_ms": 1.157
+      "mean_ms": 0.612,
+      "p50_ms": 0.607,
+      "p95_ms": 1.097
     },
     "adaptive": {
       "samples": 140,
-      "mean_ms": 40.144,
-      "p50_ms": 64.248,
-      "p95_ms": 84.667
+      "mean_ms": 40.977,
+      "p50_ms": 63.702,
+      "p95_ms": 88.931
     }
   },
   "findings_scope": [

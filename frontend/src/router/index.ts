@@ -9,6 +9,7 @@ const router = createRouter({
     { path: '/documents', name: 'documents', component: () => import('@/views/DocumentsView.vue'), meta: { title: '知识文档' } },
     { path: '/operations', name: 'operations', component: () => import('@/views/OperationsView.vue'), meta: { title: '运行状态' } },
     { path: '/mcp', name: 'mcp', component: () => import('@/views/McpView.vue'), meta: { title: 'MCP 服务' } },
+    { path: '/settings', name: 'settings', component: () => import('@/views/SettingsView.vue'), meta: { title: 'API 配置' } },
     { path: '/:pathMatch(.*)*', redirect: '/overview' },
   ],
 })

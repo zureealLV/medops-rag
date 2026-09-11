@@ -29,9 +29,10 @@ const baseNavItems = [
   { path: '/answer', label: '智能问答', caption: 'Evidence QA', icon: ChatDotRound },
   { path: '/operations', label: '运行控制台', caption: 'Operations', icon: Operation },
   { path: '/mcp', label: 'MCP 服务', caption: 'Tool Gateway', icon: Connection },
+  { path: '/settings', label: 'API 配置', caption: 'Provider', icon: Setting },
 ]
 const navItems = computed(() => baseNavItems.filter((item) => (
-  item.path !== '/operations' || app.identity?.role === 'admin'
+  !['/operations', '/settings'].includes(item.path) || app.identity?.role === 'admin'
 )))
 
 const pageTitle = computed(() => String(route.meta.title ?? '系统总览'))
@@ -39,7 +40,7 @@ const pageTitle = computed(() => String(route.meta.title ?? '系统总览'))
 watch(
   [() => app.identity?.role, () => route.path],
   ([role, path]) => {
-    if (role && role !== 'admin' && path === '/operations') void router.replace('/overview')
+    if (role && role !== 'admin' && ['/operations', '/settings'].includes(path)) void router.replace('/overview')
   },
   { immediate: true },
 )
@@ -90,7 +91,7 @@ onMounted(reconnect)
         <button :class="['health-pill', { online: app.online, offline: app.connectionError }]" type="button" @click="reconnect">
           <i />{{ app.connecting ? '连接中' : app.online ? '服务正常' : '连接异常' }}
         </button>
-        <el-button class="settings-button" circle aria-label="连接设置" @click="settingsVisible = true"><el-icon><Setting /></el-icon></el-button>
+        <el-button class="settings-button" circle aria-label="API 配置" @click="navigate('/settings')"><el-icon><Setting /></el-icon></el-button>
         <button class="mobile-menu" type="button" aria-label="打开导航" @click="mobileNav = true">
           <el-icon><Fold /></el-icon>
         </button>

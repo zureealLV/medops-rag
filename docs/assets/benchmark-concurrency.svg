@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="545" viewBox="0 0 1200 545" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7f5"/><stop offset="0.52" stop-color="#f8fbff"/><stop offset="1" stop-color="#eafcff"/></linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5267f5"/><stop offset="1" stop-color="#20beb7"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#23335c" flood-opacity="0.10"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7d8bb4"/></marker>
+  </defs>
+  <rect width="1200" height="545" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="28" font-weight="800" fill="#233153" text-anchor="start" opacity="1.0">15,000 文档 · 完整回答路径并发剖面</text>
+<text x="50" y="90" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="15" font-weight="500" fill="#6d7895" text-anchor="start" opacity="1.0">单进程 ASGITransport；确定性离线模型延迟 75 ms；所有请求 0 错误</text>
+<text x="55" y="140" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="18" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">吞吐量 (req/s)</text>
+<line x1="55" y1="410" x2="555" y2="410" stroke="#b9c5dd" stroke-width="2"/>
+<circle cx="120" cy="363.70725" r="9" fill="#5267f5"/>
+<text x="120" y="343.70725" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">9.6</text>
+<text x="120" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 1</text>
+<circle cx="255" cy="292.144" r="9" fill="#5267f5"/>
+<text x="255" y="272.144" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">35.6</text>
+<text x="255" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 4</text>
+<circle cx="390" cy="203.94875" r="9" fill="#5267f5"/>
+<text x="390" y="183.94875" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">67.7</text>
+<text x="390" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 16</text>
+<circle cx="525" cy="229.719" r="9" fill="#5267f5"/>
+<text x="525" y="209.719" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">58.3</text>
+<text x="525" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 32</text>
+<polyline points="120,363.70725 255,292.144 390,203.94875 525,229.719" fill="none" stroke="#5267f5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="625" y="140" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="18" font-weight="700" fill="#233153" text-anchor="start" opacity="1.0">客户端 P95 (ms)</text>
+<line x1="625" y1="410" x2="1125" y2="410" stroke="#b9c5dd" stroke-width="2"/>
+<circle cx="690" cy="364.93122" r="9" fill="#ff7065"/>
+<text x="690" y="344.93122" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">113.9</text>
+<text x="690" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 1</text>
+<circle cx="825" cy="358.87374" r="9" fill="#ff7065"/>
+<text x="825" y="338.87374" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">141.5</text>
+<text x="825" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 4</text>
+<circle cx="960" cy="321.9672" r="9" fill="#ff7065"/>
+<text x="960" y="301.9672" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">309.2</text>
+<text x="960" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 16</text>
+<circle cx="1095" cy="175.73254" r="9" fill="#ff7065"/>
+<text x="1095" y="155.73254" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="700" fill="#233153" text-anchor="middle" opacity="1.0">973.9</text>
+<text x="1095" y="445" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="14" font-weight="500" fill="#65728e" text-anchor="middle" opacity="1.0">并发 32</text>
+<polyline points="690,364.93122 825,358.87374 960,321.9672 1095,175.73254" fill="none" stroke="#ff7065" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="50" y="505" font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif" font-size="15" font-weight="500" fill="#566582" text-anchor="start" opacity="1.0">并发 16 时吞吐达到 67.7 req/s；并发 32 的 P95 升至 973.9 ms，说明背压与容量门禁比盲目加并发更重要。</text>
+</svg>

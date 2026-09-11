@@ -76,6 +76,7 @@ Client
 medops-rag/
 ├─ README.md
 ├─ README_CN.md
+├─ README_EN.md
 ├─ .env.example
 ├─ pyproject.toml
 ├─ compose.yaml

@@ -2,7 +2,7 @@
   "benchmark": "medops-adaptive-routing-challenge-zh-v2",
   "benchmark_version": "2.0.0",
   "dataset_version": "2.0.0",
-  "generated_at": "2026-09-10T18:00:28.797957+08:00",
+  "generated_at": "2026-09-11T15:54:31.682306+08:00",
   "evaluation_contract": {
     "thresholds_changed_for_this_dataset": false,
     "user_strategy_override": false,
@@ -41,7 +41,7 @@
     "exact_normalized_question_overlap_with_tuning_and_heldout_v1": 0,
     "source_name_overlap_with_tuning_and_heldout_v1": 0,
     "sha256": {
-      "adaptive_challenge_v2_documents_zh.jsonl": "0f06fca87b2c60cefe2078659122fe5a09c3d059d5725c9a3e8a39df25279466",
+      "adaptive_challenge_v2_documents_zh.jsonl": "d298af4d743a47371f4a7ec1e0ad5182174f2d6ef4fe2c64782e9b10c8f41155",
       "adaptive_challenge_v2_cases_zh.jsonl": "0d8a6a84bd9272c8164df013402045b3426cd823c86580db8177d6dfdbf1f810",
       "benchmark_adaptive_challenge_v2.py": "1851516deb5f9fbee9843490359aca034846996614e167f7b4e15c9dd417b2c8",
       "app/retrieval/adaptive.py": "09ee92695a6dc86a840460028b37c77f386af3f7bd56e42d57a4ee7ff580761a"
@@ -49,8 +49,8 @@
   },
   "runtime": {
     "project": "medops-rag",
-    "project_version": "3.2.0",
-    "git_commit": "19d7a691a56b740c166bf217dd712034d222b06f",
+    "project_version": "3.4.0",
+    "git_commit": "72b1971c55a3af4cc9786a3f75efc92017b448ce",
     "python": "3.11.5",
     "platform": "Windows-10-10.0.22631-SP0",
     "fastembed": "0.7.4",
@@ -61,7 +61,7 @@
     "dense_local_files_only": true,
     "hf_hub_offline": "1",
     "transformers_offline": "1",
-    "model_load_and_document_index_ms": 4675.843,
+    "model_load_and_document_index_ms": 4494.912,
     "query_repetitions": 1
   },
   "policy_snapshot": {
@@ -577,7 +577,7 @@
             "scheduler-frozen-task.md",
             "order-accession-map.md",
             "ambulance-monitor-offload-full.md",
-            "oxygen-filter-bubble.md"
+            "endoscope-trace-full.md"
           ]
         },
         {
@@ -2500,27 +2500,27 @@
   "latency": {
     "bm25": {
       "samples": 32,
-      "mean_ms": 0.475,
-      "p50_ms": 0.473,
-      "p95_ms": 0.873
+      "mean_ms": 0.428,
+      "p50_ms": 0.42,
+      "p95_ms": 0.847
     },
     "rrf": {
       "samples": 32,
-      "mean_ms": 72.482,
-      "p50_ms": 75.036,
-      "p95_ms": 90.118
+      "mean_ms": 62.091,
+      "p50_ms": 61.762,
+      "p95_ms": 81.231
     },
     "parent_child": {
       "samples": 32,
-      "mean_ms": 0.545,
-      "p50_ms": 0.531,
-      "p95_ms": 1.006
+      "mean_ms": 0.518,
+      "p50_ms": 0.496,
+      "p95_ms": 1.042
     },
     "adaptive": {
       "samples": 32,
-      "mean_ms": 17.924,
-      "p50_ms": 0.496,
-      "p95_ms": 85.01
+      "mean_ms": 14.664,
+      "p50_ms": 0.482,
+      "p95_ms": 69.016
     }
   },
   "findings_scope": [

@@ -44,6 +44,7 @@ def _authorize(context: RequestContext, method: str, path: str) -> None:
         or path.startswith("/users/")
         or path.startswith("/audit-logs")
         or path.startswith("/system/metrics")
+        or path.startswith("/system/model-config")
         or path == "/tools/call"
     ):
         raise AppError(403, "permission_denied", "This endpoint requires the admin role")
