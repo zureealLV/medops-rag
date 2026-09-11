@@ -1,0 +1,520 @@
+{
+  "benchmark": "medops-adaptive-routing-heldout-zh-v1",
+  "generated_at": "2026-09-10T17:27:02.999334+08:00",
+  "evaluation_contract": {
+    "relationship_to_threshold_tuning_set": "independent_files_with_zero_exact_question_reuse",
+    "thresholds_changed_for_this_dataset": false,
+    "answerable_cases_used_for_hit_metrics": 32,
+    "negative_cases_used_for_hit_metrics": 0,
+    "negative_case_purpose": "route/reason distribution only; abstention is a later gate",
+    "provider_or_application_api_calls": 0
+  },
+  "dataset": {
+    "language": "zh-CN",
+    "documents": 20,
+    "answerable_questions": 32,
+    "negative_questions": 8,
+    "category_counts": {
+      "exact": 8,
+      "long_context": 8,
+      "multi_concept": 8,
+      "paraphrase": 8,
+      "unanswerable": 8
+    },
+    "long_context_source_characters": {
+      "clinical-device-cyber-incident.md": 394,
+      "cssd-batch-118.md": 364,
+      "dental-dose-report.md": 362,
+      "dialysis-water-anomaly.md": 379,
+      "lab-qc-lock-731.md": 389,
+      "mobile-rounds-conflict.md": 369,
+      "mri-quench-procedure.md": 436,
+      "sterile-recall-workflow.md": 398
+    },
+    "sha256": {
+      "adaptive_heldout_documents_zh.jsonl": "41a0153380947018ae3b45d5feaf6f69f7507fb76e099a5acdabd5d5461ef80d",
+      "adaptive_heldout_cases_zh.jsonl": "f84aeadb9caf80e0ff24c854da1138d7d0113f6220a4ba58dc442dab3c88c793"
+    }
+  },
+  "runtime": {
+    "python": "3.11.5",
+    "platform": "Windows-10-10.0.22631-SP0",
+    "fastembed": "0.7.4",
+    "rank_bm25": "0.2.2",
+    "numpy": "2.4.6",
+    "dense_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "dense_cache": "data/models/fastembed",
+    "dense_local_files_only": true,
+    "hf_hub_offline": "1",
+    "transformers_offline": "1",
+    "model_load_and_document_index_ms": 3922.137,
+    "query_repetitions": 3
+  },
+  "policy": {
+    "dense_available": true,
+    "parent_child_available": true,
+    "semantic_score_threshold": 1.25,
+    "parent_score_threshold": 2.0,
+    "user_strategy_override": false
+  },
+  "results": {
+    "bm25": {
+      "evaluated_answerable_questions": 32,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "long_context": 1.0,
+        "multi_concept": 1.0,
+        "paraphrase": 1.0
+      },
+      "latency": {
+        "samples": 96,
+        "mean_ms": 0.568,
+        "p50_ms": 0.547,
+        "p95_ms": 0.926
+      }
+    },
+    "rrf": {
+      "evaluated_answerable_questions": 32,
+      "hit_at_1": 0.9062,
+      "hit_at_3": 0.9688,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9453,
+      "ndcg_at_5": 0.9591,
+      "hit_at_1_by_category": {
+        "exact": 0.75,
+        "long_context": 0.875,
+        "multi_concept": 1.0,
+        "paraphrase": 1.0
+      },
+      "latency": {
+        "samples": 96,
+        "mean_ms": 73.764,
+        "p50_ms": 75.291,
+        "p95_ms": 86.704
+      }
+    },
+    "parent_child": {
+      "evaluated_answerable_questions": 32,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "long_context": 1.0,
+        "multi_concept": 1.0,
+        "paraphrase": 1.0
+      },
+      "latency": {
+        "samples": 96,
+        "mean_ms": 0.707,
+        "p50_ms": 0.699,
+        "p95_ms": 1.221
+      }
+    },
+    "adaptive": {
+      "evaluated_answerable_questions": 32,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "long_context": 1.0,
+        "multi_concept": 1.0,
+        "paraphrase": 1.0
+      },
+      "latency": {
+        "samples": 96,
+        "mean_ms": 24.064,
+        "p50_ms": 0.795,
+        "p95_ms": 81.143
+      }
+    }
+  },
+  "adaptive_selection": {
+    "answerable_route_counts": {
+      "bm25": 16,
+      "parent_child": 6,
+      "rrf": 10
+    },
+    "answerable_reason_counts": {
+      "broad_context_required": 6,
+      "exact_or_identifier_lookup": 7,
+      "lexical_default": 9,
+      "semantic_or_multi_concept_query": 10
+    },
+    "negative_route_counts": {
+      "bm25": 4,
+      "parent_child": 1,
+      "rrf": 3
+    },
+    "negative_reason_counts": {
+      "broad_context_required": 1,
+      "exact_or_identifier_lookup": 1,
+      "lexical_default": 3,
+      "semantic_or_multi_concept_query": 3
+    },
+    "hit_at_1_delta_vs_best_fixed": 0.0,
+    "trace": [
+      {
+        "case_id": "hd-exact-01",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82,
+        "top_source": "lab-qc-lock-731.md",
+        "expected_source": "lab-qc-lock-731.md"
+      },
+      {
+        "case_id": "hd-exact-02",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82,
+        "top_source": "negative-pressure-204.md",
+        "expected_source": "negative-pressure-204.md"
+      },
+      {
+        "case_id": "hd-exact-03",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82,
+        "top_source": "cssd-batch-118.md",
+        "expected_source": "cssd-batch-118.md"
+      },
+      {
+        "case_id": "hd-exact-04",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82,
+        "top_source": "pathology-calibration-507.md",
+        "expected_source": "pathology-calibration-507.md"
+      },
+      {
+        "case_id": "hd-exact-05",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82,
+        "top_source": "defib-selftest-902.md",
+        "expected_source": "defib-selftest-902.md"
+      },
+      {
+        "case_id": "hd-exact-06",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82,
+        "top_source": "adc-sync-440.md",
+        "expected_source": "adc-sync-440.md"
+      },
+      {
+        "case_id": "hd-exact-07",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.805,
+        "top_source": "mobile-rounds-conflict.md",
+        "expected_source": "mobile-rounds-conflict.md"
+      },
+      {
+        "case_id": "hd-exact-08",
+        "category": "exact",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "dialysis-water-anomaly.md",
+        "expected_source": "dialysis-water-anomaly.md"
+      },
+      {
+        "case_id": "hd-paraphrase-01",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75,
+        "top_source": "nurse-call-storm.md",
+        "expected_source": "nurse-call-storm.md"
+      },
+      {
+        "case_id": "hd-paraphrase-02",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "fetal-monitor-artifact.md",
+        "expected_source": "fetal-monitor-artifact.md"
+      },
+      {
+        "case_id": "hd-paraphrase-03",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "blood-bank-door-alarm.md",
+        "expected_source": "blood-bank-door-alarm.md"
+      },
+      {
+        "case_id": "hd-paraphrase-04",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "ultrasound-probe-reprocess.md",
+        "expected_source": "ultrasound-probe-reprocess.md"
+      },
+      {
+        "case_id": "hd-paraphrase-05",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75,
+        "top_source": "tube-conveyor-jam.md",
+        "expected_source": "tube-conveyor-jam.md"
+      },
+      {
+        "case_id": "hd-paraphrase-06",
+        "category": "paraphrase",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "dental-dose-report.md",
+        "expected_source": "dental-dose-report.md"
+      },
+      {
+        "case_id": "hd-paraphrase-07",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75,
+        "top_source": "mobile-rounds-conflict.md",
+        "expected_source": "mobile-rounds-conflict.md"
+      },
+      {
+        "case_id": "hd-paraphrase-08",
+        "category": "paraphrase",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75,
+        "top_source": "mri-quench-procedure.md",
+        "expected_source": "mri-quench-procedure.md"
+      },
+      {
+        "case_id": "hd-multi-01",
+        "category": "multi_concept",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.79,
+        "top_source": "infusion-telemetry-integrity.md",
+        "expected_source": "infusion-telemetry-integrity.md"
+      },
+      {
+        "case_id": "hd-multi-02",
+        "category": "multi_concept",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74,
+        "top_source": "telemedicine-media-fault.md",
+        "expected_source": "telemedicine-media-fault.md"
+      },
+      {
+        "case_id": "hd-multi-03",
+        "category": "multi_concept",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8,
+        "top_source": "critical-result-escalation.md",
+        "expected_source": "critical-result-escalation.md"
+      },
+      {
+        "case_id": "hd-multi-04",
+        "category": "multi_concept",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75,
+        "top_source": "adc-sync-440.md",
+        "expected_source": "adc-sync-440.md"
+      },
+      {
+        "case_id": "hd-multi-05",
+        "category": "multi_concept",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "negative-pressure-204.md",
+        "expected_source": "negative-pressure-204.md"
+      },
+      {
+        "case_id": "hd-multi-06",
+        "category": "multi_concept",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "ultrasound-probe-reprocess.md",
+        "expected_source": "ultrasound-probe-reprocess.md"
+      },
+      {
+        "case_id": "hd-multi-07",
+        "category": "multi_concept",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.79,
+        "top_source": "clinical-device-cyber-incident.md",
+        "expected_source": "clinical-device-cyber-incident.md"
+      },
+      {
+        "case_id": "hd-multi-08",
+        "category": "multi_concept",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74,
+        "top_source": "sterile-recall-workflow.md",
+        "expected_source": "sterile-recall-workflow.md"
+      },
+      {
+        "case_id": "hd-long-01",
+        "category": "long_context",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.96,
+        "top_source": "mri-quench-procedure.md",
+        "expected_source": "mri-quench-procedure.md"
+      },
+      {
+        "case_id": "hd-long-02",
+        "category": "long_context",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.83,
+        "top_source": "dialysis-water-anomaly.md",
+        "expected_source": "dialysis-water-anomaly.md"
+      },
+      {
+        "case_id": "hd-long-03",
+        "category": "long_context",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.88,
+        "top_source": "sterile-recall-workflow.md",
+        "expected_source": "sterile-recall-workflow.md"
+      },
+      {
+        "case_id": "hd-long-04",
+        "category": "long_context",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "clinical-device-cyber-incident.md",
+        "expected_source": "clinical-device-cyber-incident.md"
+      },
+      {
+        "case_id": "hd-long-05",
+        "category": "long_context",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.88,
+        "top_source": "lab-qc-lock-731.md",
+        "expected_source": "lab-qc-lock-731.md"
+      },
+      {
+        "case_id": "hd-long-06",
+        "category": "long_context",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8,
+        "top_source": "cssd-batch-118.md",
+        "expected_source": "cssd-batch-118.md"
+      },
+      {
+        "case_id": "hd-long-07",
+        "category": "long_context",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8,
+        "top_source": "dental-dose-report.md",
+        "expected_source": "dental-dose-report.md"
+      },
+      {
+        "case_id": "hd-long-08",
+        "category": "long_context",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62,
+        "top_source": "mobile-rounds-conflict.md",
+        "expected_source": "mobile-rounds-conflict.md"
+      }
+    ],
+    "negative_trace": [
+      {
+        "case_id": "hd-negative-01",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "hd-negative-02",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "hd-negative-03",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "hd-negative-04",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "hd-negative-05",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "hd-negative-06",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "hd-negative-07",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "hd-negative-08",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      }
+    ]
+  },
+  "findings_scope": [
+    "This measures retrieval ranking and deterministic route selection, not generated-answer correctness.",
+    "Hit@K, MRR, and nDCG exclude unanswerable cases because no relevant source exists for them.",
+    "Negative cases expose route behavior only; domain and abstention gates remain separate stages."
+  ],
+  "limitations": [
+    "The set is independent from the existing threshold-tuning files but was not blinded or preregistered.",
+    "It contains 20 synthetic Chinese operations documents and is not production traffic or clinical validation.",
+    "Each answerable question has one labeled relevant source; graded or multi-source relevance is not measured.",
+    "Latency is a single-machine snapshot and excludes model load/index time from per-query samples.",
+    "RRF uses a locally cached multilingual MiniLM encoder, not a separately selected Chinese embedding winner.",
+    "The routing policy does not itself decide abstention, tenant authorization, or citation sufficiency."
+  ]
+}

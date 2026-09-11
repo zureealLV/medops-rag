@@ -1,0 +1,40 @@
+{"id":"hd-exact-01","category":"exact","language":"zh","question":"事件码 LAB-QC-731 出现后，患者标本什么时候可以恢复检测？","expected_source":"lab-qc-lock-731.md","expected_abstain":false}
+{"id":"hd-exact-02","category":"exact","language":"zh","question":"ENV-NP-204 告警关闭前需要保留哪些证据？","expected_source":"negative-pressure-204.md","expected_abstain":false}
+{"id":"hd-exact-03","category":"exact","language":"zh","question":"CSSD-BD-118 批次标签无法关联装载清单，第一步是什么？","expected_source":"cssd-batch-118.md","expected_abstain":false}
+{"id":"hd-exact-04","category":"exact","language":"zh","question":"PATH-CAL-507 连续两次校准失败后能否靠软件修正偏色？","expected_source":"pathology-calibration-507.md","expected_abstain":false}
+{"id":"hd-exact-05","category":"exact","language":"zh","question":"AED-SELF-902 的设备维修返回后有哪些放行测试？","expected_source":"defib-selftest-902.md","expected_abstain":false}
+{"id":"hd-exact-06","category":"exact","language":"zh","question":"ADC-SYNC-440 延迟消息应当按照哪个标识补传？","expected_source":"adc-sync-440.md","expected_abstain":false}
+{"id":"hd-exact-07","category":"exact","language":"zh","question":"“同一幂等键”在移动查房记录同步中用来防止什么？","expected_source":"mobile-rounds-conflict.md","expected_abstain":false}
+{"id":"hd-exact-08","category":"exact","language":"zh","question":"透析水恢复供水时，停供和取样记录必须共用什么编号？","expected_source":"dialysis-water-anomaly.md","expected_abstain":false}
+{"id":"hd-paraphrase-01","category":"paraphrase","language":"zh","question":"一个病床不停弹出呼叫，怎样判断是网关在反复报同一件事，还是按钮一直没松开？","expected_source":"nurse-call-storm.md","expected_abstain":false}
+{"id":"hd-paraphrase-02","category":"paraphrase","language":"zh","question":"胎心读数和孕妇脉搏几乎重合，此时为何不该直接认定胎儿有变化？","expected_source":"fetal-monitor-artifact.md","expected_abstain":false}
+{"id":"hd-paraphrase-03","category":"paraphrase","language":"zh","question":"血制品冷藏设备一直提示门开着，按掉声音以后还要查什么？","expected_source":"blood-bank-door-alarm.md","expected_abstain":false}
+{"id":"hd-paraphrase-04","category":"paraphrase","language":"zh","question":"腔内探头上一轮消毒没有浓度数据，补一下接口记录就能继续给下一位患者用吗？","expected_source":"ultrasound-probe-reprocess.md","expected_abstain":false}
+{"id":"hd-paraphrase-05","category":"paraphrase","language":"zh","question":"轨道堵塞清理完以后，为什么不能马上把真实标本全部放回去？","expected_source":"tube-conveyor-jam.md","expected_abstain":false}
+{"id":"hd-paraphrase-06","category":"paraphrase","language":"zh","question":"牙科拍片已有图像却没有辐射剂量文件，是否应该再给患者拍一次来补齐？","expected_source":"dental-dose-report.md","expected_abstain":false}
+{"id":"hd-paraphrase-07","category":"paraphrase","language":"zh","question":"手机离线写的查房草稿遇到别人已经改过病历，系统该怎样避免静默覆盖？","expected_source":"mobile-rounds-conflict.md","expected_abstain":false}
+{"id":"hd-paraphrase-08","category":"paraphrase","language":"zh","question":"磁共振房里看到白雾，为什么还不能仅据此认定磁体失超？","expected_source":"mri-quench-procedure.md","expected_abstain":false}
+{"id":"hd-multi-01","category":"multi_concept","language":"zh","question":"输注数据晚到和中间序号缺失分别代表什么问题，两类告警需要怎样不同地关闭？","expected_source":"infusion-telemetry-integrity.md","expected_abstain":false}
+{"id":"hd-multi-02","category":"multi_concept","language":"zh","question":"远程会诊同时有声音断续与画面冻结时，应分别看哪些指标，并且什么时候只重建视频轨道？","expected_source":"telemedicine-media-fault.md","expected_abstain":false}
+{"id":"hd-multi-03","category":"multi_concept","language":"zh","question":"危急值的终端送达回执与医务人员确认有何区别，超时后又如何升级？","expected_source":"critical-result-escalation.md","expected_abstain":false}
+{"id":"hd-multi-04","category":"multi_concept","language":"zh","question":"药品柜发生账实差异后，延迟消息和没有流水的实物差异为什么不能按同一种方式处理？","expected_source":"adc-sync-440.md","expected_abstain":false}
+{"id":"hd-multi-05","category":"multi_concept","language":"zh","question":"负压病房报警时，门磁异常与排风反馈丢失各自对应什么处置，患者在室又限制了什么操作？","expected_source":"negative-pressure-204.md","expected_abstain":false}
+{"id":"hd-multi-06","category":"multi_concept","language":"zh","question":"探头再处理记录缺失时，信息部门修接口和感染控制决定放行的职责边界是什么？","expected_source":"ultrasound-probe-reprocess.md","expected_abstain":false}
+{"id":"hd-multi-07","category":"multi_concept","language":"zh","question":"临床设备出现可疑外联时，网络隔离与患者护理连续性该如何同时兼顾？","expected_source":"clinical-device-cyber-incident.md","expected_abstain":false}
+{"id":"hd-multi-08","category":"multi_concept","language":"zh","question":"灭菌召回里未使用物品、已经用于患者的物品和去向未明的物品分别怎么处理？","expected_source":"sterile-recall-workflow.md","expected_abstain":false}
+{"id":"hd-long-01","category":"long_context","language":"zh","question":"结合全文梳理磁共振疑似失超从识别、人员撤离、现场隔离到恢复临床使用的完整流程和后续验证。","expected_source":"mri-quench-procedure.md","expected_abstain":false}
+{"id":"hd-long-02","category":"long_context","language":"zh","question":"综合文档说明透析水电导异常的交叉核验、停供、技术排查以及最终恢复供水的所有条件。","expected_source":"dialysis-water-anomaly.md","expected_abstain":false}
+{"id":"hd-long-03","category":"long_context","language":"zh","question":"请依据全篇内容列出无菌物品批次召回从冻结库存到关闭批次的完整步骤，并说明已使用物品如何处置。","expected_source":"sterile-recall-workflow.md","expected_abstain":false}
+{"id":"hd-long-04","category":"long_context","language":"zh","question":"跨段落总结临床设备网络安全事件中风险判断、受控隔离、证据保存和恢复批准的先后关系。","expected_source":"clinical-device-cyber-incident.md","expected_abstain":false}
+{"id":"hd-long-05","category":"long_context","language":"zh","question":"从前提到后续验证，完整说明检验分析仪质控锁定后如何复测、升级和恢复患者标本检测。","expected_source":"lab-qc-lock-731.md","expected_abstain":false}
+{"id":"hd-long-06","category":"long_context","language":"zh","question":"结合文档的多个环节，说明灭菌批次追溯断链后如何冻结、核对、重新处理并解除冻结。","expected_source":"cssd-batch-118.md","expected_abstain":false}
+{"id":"hd-long-07","category":"long_context","language":"zh","question":"请综合全文描述口腔影像剂量报告缺失时的本地确认、接口排查、补发验证和禁止事项。","expected_source":"dental-dose-report.md","expected_abstain":false}
+{"id":"hd-long-08","category":"long_context","language":"zh","question":"梳理移动查房离线草稿从恢复网络到冲突确认、幂等提交和取得成功凭据的完整过程。","expected_source":"mobile-rounds-conflict.md","expected_abstain":false}
+{"id":"hd-negative-01","category":"unanswerable","language":"zh","question":"医院直升机停机坪夜航灯的年度检验周期是多少？","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-02","category":"unanswerable","language":"zh","question":"事件码 NUC-MED-663 对应的核医学废气阀复位口令是什么？","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-03","category":"unanswerable","language":"zh","question":"请给出儿科智能床垫固件 8.4.2 的蓝牙配对步骤。","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-04","category":"unanswerable","language":"zh","question":"为什么医院食堂本周三把低糖套餐改成了荞麦面？","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-05","category":"unanswerable","language":"zh","question":"综合全文说明无人机配送检验标本的起飞审批和坠落应急流程。","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-06","category":"unanswerable","language":"zh","question":"院内量子加密电话与普通分机在维修责任上有什么区别？","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-07","category":"unanswerable","language":"zh","question":"住院楼屋顶光伏逆变器的最大并网功率是多少千瓦？","expected_source":null,"expected_abstain":true}
+{"id":"hd-negative-08","category":"unanswerable","language":"zh","question":"门诊大厅机器人 RBT-GDE-909 丢失地图后如何重建导航？","expected_source":null,"expected_abstain":true}

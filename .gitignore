@@ -8,6 +8,11 @@ __pycache__/
 .venv/
 venv/
 
+# Vue/Vite frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
 # Secrets and local configuration
 .env
 .env.*
@@ -19,7 +24,10 @@ venv/
 *.db
 *.sqlite
 *.sqlite3
+*.bak
 data/runtime/
+data/models/
+data/external/
 uploads/
 vector_store/
 
@@ -28,6 +36,8 @@ htmlcov/
 .coverage
 reports/generated/
 logs/
+.codex-build/
+.codex-finalizer/
 
 # IDE / OS
 .idea/

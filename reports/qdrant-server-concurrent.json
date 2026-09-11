@@ -1,0 +1,39 @@
+{
+  "status": "pass",
+  "server": {
+    "url": "http://127.0.0.1:6333",
+    "version": "1.19.0",
+    "commit": "74f3e85b9473c62560006c043e13737ce6b48412",
+    "client_version": "1.19.0"
+  },
+  "environment": {
+    "platform": "Windows-10-10.0.22631-SP0",
+    "python": "3.11.5"
+  },
+  "workload": {
+    "vectors": 10000,
+    "dimensions": 64,
+    "tenants": 20,
+    "queries": 400,
+    "concurrency": 8,
+    "limit": 10,
+    "filter": "tenant_id equals the query tenant",
+    "hnsw_ef": 128
+  },
+  "results": {
+    "index_seconds": 14.329,
+    "points_count": 10000,
+    "wall_seconds": 5.131,
+    "throughput_qps": 77.959,
+    "latency_ms": {
+      "mean": 94.726,
+      "p50": 94.451,
+      "p95": 119.35,
+      "p99": 131.626,
+      "max": 143.032
+    },
+    "recall_at_limit": 1.0,
+    "tenant_filter_violations": 0
+  },
+  "decision": "Keep SQLite exact scan as the shipped default for the measured portfolio workload; Qdrant server is a validated scale-out option, not a production-readiness claim."
+}

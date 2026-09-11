@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
+from app.agents.model import ModelProvider
 from app.config import Settings
 from app.security.tenant import RequestContext, tenant_context
 
@@ -15,6 +16,13 @@ def settings_from_request(request: Request) -> Settings:
 
 
 SettingsDep = Annotated[Settings, Depends(settings_from_request)]
+
+
+def model_provider_from_request(request: Request) -> ModelProvider:
+    return request.app.state.model_provider
+
+
+ModelProviderDep = Annotated[ModelProvider, Depends(model_provider_from_request)]
 
 
 def request_id(request: Request) -> str:

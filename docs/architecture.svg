@@ -1,31 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title description">
-  <title id="title">MedOps RAG V1 architecture</title>
-  <desc id="description">FastAPI routes call services, tenant-scoped SQLite repositories, hybrid retrieval, a model fallback and allowlisted tools with security and observability controls.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">MedOps Multimodal RAG V2 production-shaped single-host architecture</title>
+  <desc id="desc">Authenticated FastAPI routes tenant-scoped synchronous retrieval and durable asynchronous ingestion and summary jobs through isolated workers into a persistent SQLite evidence and exact-vector store, with bounded parsers, grounded generation, audit, and operational metrics.</desc>
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#66e3ff"/></marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#1e293b" stroke-width=".6"/></pattern>
+    <marker id="cyan-arrow" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto"><path d="M0 0L8 3.5 0 7Z" fill="#22d3ee"/></marker>
+    <marker id="green-arrow" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto"><path d="M0 0L8 3.5 0 7Z" fill="#34d399"/></marker>
+    <marker id="orange-arrow" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto"><path d="M0 0L8 3.5 0 7Z" fill="#fb923c"/></marker>
+    <marker id="rose-arrow" markerWidth="9" markerHeight="9" refX="8" refY="3.5" orient="auto"><path d="M0 0L8 3.5 0 7Z" fill="#fb7185"/></marker>
     <style>
-      .box{fill:#161d2b;stroke:#66e3ff;stroke-width:2;rx:10}.security{fill:#251a32;stroke:#ff76c8;stroke-width:2;rx:10}
-      .title{fill:#f1f5ff;font:700 25px sans-serif}.label{fill:#e6ecff;font:600 17px sans-serif}.note{fill:#aab9d6;font:14px sans-serif}
-      .line{stroke:#66e3ff;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .heading{font:700 25px 'JetBrains Mono','Segoe UI',monospace;fill:#f8fafc}.subtitle{font:13px 'JetBrains Mono','Segoe UI',monospace;fill:#94a3b8}.lane{font:700 13px 'JetBrains Mono','Segoe UI',monospace;letter-spacing:1.4px;fill:#67e8f9}.label{font:700 15px 'JetBrains Mono','Segoe UI',monospace;fill:#f8fafc}.note{font:12px 'JetBrains Mono','Segoe UI',monospace;fill:#cbd5e1}.tiny{font:10px 'JetBrains Mono','Segoe UI',monospace;fill:#94a3b8}.boundary{fill:#07101f;stroke:#334155;stroke-width:1.2;rx:14}.backend{fill:#0b1f1c;stroke:#34d399;stroke-width:1.6;rx:8}.database{fill:#1b1235;stroke:#a78bfa;stroke-width:1.6;rx:8}.security{fill:#2a1020;stroke:#fb7185;stroke-width:1.6;rx:8}.queue{fill:#2b190c;stroke:#fb923c;stroke-width:1.6;rx:8}.external{fill:#111827;stroke:#94a3b8;stroke-width:1.4;rx:8;stroke-dasharray:6 4}.cyan{fill:#082b38;stroke:#22d3ee;stroke-width:1.6;rx:8}.line{fill:none;stroke:#22d3ee;stroke-width:1.8;marker-end:url(#cyan-arrow)}.gline{fill:none;stroke:#34d399;stroke-width:1.8;marker-end:url(#green-arrow)}.qline{fill:none;stroke:#fb923c;stroke-width:1.8;marker-end:url(#orange-arrow)}.sline{fill:none;stroke:#fb7185;stroke-width:1.7;stroke-dasharray:5 4;marker-end:url(#rose-arrow)}
     </style>
   </defs>
-  <rect width="1200" height="620" fill="#0d111b"/>
-  <text x="600" y="44" text-anchor="middle" class="title">MedOps RAG V1 — auditable, tenant-scoped, offline-first</text>
-  <rect class="box" x="40" y="100" width="170" height="95"/><text class="label" x="125" y="138" text-anchor="middle">Client</text><text class="note" x="125" y="166" text-anchor="middle">Swagger / HTTP</text>
-  <rect class="box" x="260" y="100" width="185" height="95"/><text class="label" x="352" y="138" text-anchor="middle">FastAPI API</text><text class="note" x="352" y="166" text-anchor="middle">validation + DI</text>
-  <rect class="box" x="500" y="100" width="185" height="95"/><text class="label" x="592" y="138" text-anchor="middle">Services</text><text class="note" x="592" y="166" text-anchor="middle">use cases + policy</text>
-  <path class="line" d="M210 148 H255"/><path class="line" d="M445 148 H495"/>
-  <rect class="box" x="770" y="80" width="190" height="95"/><text class="label" x="865" y="118" text-anchor="middle">Repositories</text><text class="note" x="865" y="146" text-anchor="middle">parameterized SQL</text>
-  <rect class="box" x="1000" y="80" width="160" height="95"/><text class="label" x="1080" y="118" text-anchor="middle">SQLite</text><text class="note" x="1080" y="146" text-anchor="middle">docs + chunks</text>
-  <path class="line" d="M685 132 H765"/><path class="line" d="M960 128 H995"/>
-  <rect class="box" x="770" y="230" width="190" height="120"/><text class="label" x="865" y="268" text-anchor="middle">Hybrid Retrieval</text><text class="note" x="865" y="296" text-anchor="middle">keyword + vector</text><text class="note" x="865" y="322" text-anchor="middle">ranked Evidence[]</text>
-  <rect class="box" x="1000" y="230" width="160" height="120"/><text class="label" x="1080" y="268" text-anchor="middle">Answer</text><text class="note" x="1080" y="296" text-anchor="middle">optional model</text><text class="note" x="1080" y="322" text-anchor="middle">offline fallback</text>
-  <path class="line" d="M685 160 C720 160 720 290 765 290"/><path class="line" d="M960 290 H995"/>
-  <rect class="box" x="500" y="260" width="185" height="90"/><text class="label" x="592" y="298" text-anchor="middle">Read-only tools</text><text class="note" x="592" y="326" text-anchor="middle">three allowlisted</text>
-  <path class="line" d="M592 195 V255"/>
-  <rect class="security" x="260" y="430" width="700" height="125"/><text class="label" x="610" y="468" text-anchor="middle">Security controls</text><text class="note" x="610" y="500" text-anchor="middle">tenant filter before retrieval · injection quarantine · PII redaction · evidence threshold · tool validation</text><text class="note" x="610" y="530" text-anchor="middle">audit events · medical-advice denial · bounded timeout/retry/fallback</text>
-  <path class="line" d="M352 195 V425"/><path class="line" d="M592 350 V425"/><path class="line" d="M865 350 V425"/>
-  <rect class="box" x="1000" y="430" width="160" height="125"/><text class="label" x="1080" y="468" text-anchor="middle">Observability</text><text class="note" x="1080" y="498" text-anchor="middle">request ID</text><text class="note" x="1080" y="522" text-anchor="middle">latency + tokens</text>
-  <path class="line" d="M960 493 H995"/>
-  <text class="note" x="40" y="594">Synthetic data only · educational system · not medical advice · not production authentication</text>
+  <rect width="1400" height="900" fill="#020617"/><rect width="1400" height="900" fill="url(#grid)"/>
+  <text x="700" y="42" text-anchor="middle" class="heading">MedOps Multimodal RAG V2 — evidence first, recoverable by design</text>
+  <text x="700" y="65" text-anchor="middle" class="subtitle">single-host profile · authenticated tenancy · durable workers · explicit non-claims</text>
+
+  <rect class="boundary" x="25" y="90" width="1350" height="155"/><text x="45" y="115" class="lane">EDGE + SYNCHRONOUS API</text>
+  <rect class="cyan" x="55" y="130" width="125" height="70"/><text x="117" y="158" text-anchor="middle" class="label">Client</text><text x="117" y="181" text-anchor="middle" class="tiny">Bearer / trusted gateway</text>
+  <rect class="security" x="235" y="125" width="220" height="80"/><text x="345" y="153" text-anchor="middle" class="label">Identity + RBAC</text><text x="345" y="176" text-anchor="middle" class="note">scrypt key · revoke</text><text x="345" y="194" text-anchor="middle" class="tiny">tenant + viewer/editor/admin</text>
+  <rect class="backend" x="510" y="125" width="235" height="80"/><text x="627" y="153" text-anchor="middle" class="label">FastAPI</text><text x="627" y="176" text-anchor="middle" class="note">stable errors · request ID</text><text x="627" y="194" text-anchor="middle" class="tiny">localhost-only Compose port</text>
+  <rect class="backend" x="800" y="112" width="225" height="62"/><text x="912" y="139" text-anchor="middle" class="label">Search / Answer</text><text x="912" y="160" text-anchor="middle" class="tiny">BM25 · RRF · parent context</text>
+  <rect class="queue" x="800" y="181" width="225" height="50"/><text x="912" y="211" text-anchor="middle" class="label">Job Commands</text>
+  <rect class="security" x="1080" y="112" width="270" height="62"/><text x="1215" y="139" text-anchor="middle" class="label">Evidence Gate</text><text x="1215" y="160" text-anchor="middle" class="tiny">tenant filter · injection · abstain</text>
+  <rect class="queue" x="1080" y="181" width="270" height="50"/><text x="1215" y="211" text-anchor="middle" class="label">SQLite Leased Queues</text>
+
+  <rect class="boundary" x="25" y="265" width="1350" height="215"/><text x="45" y="290" class="lane">ASYNCHRONOUS WORKERS</text>
+  <rect class="queue" x="100" y="305" width="270" height="75"/><text x="235" y="333" text-anchor="middle" class="label">Ingestion Job</text><text x="235" y="356" text-anchor="middle" class="note">idempotency · fenced lease</text><text x="235" y="374" text-anchor="middle" class="tiny">retry · cancel · crash recovery</text>
+  <rect class="backend" x="100" y="405" width="270" height="60"/><text x="235" y="432" text-anchor="middle" class="label">Ingestion Worker</text><text x="235" y="453" text-anchor="middle" class="tiny">parser/OCR → chunks · stage metrics</text>
+  <rect class="queue" x="500" y="305" width="270" height="75"/><text x="635" y="333" text-anchor="middle" class="label">Summary Job</text><text x="635" y="356" text-anchor="middle" class="note">persisted maps · partial state</text><text x="635" y="374" text-anchor="middle" class="tiny">30 s model-call cap</text>
+  <rect class="backend" x="500" y="405" width="270" height="60"/><text x="635" y="432" text-anchor="middle" class="label">Summary Worker</text><text x="635" y="453" text-anchor="middle" class="tiny">Map → persisted results → Reduce</text>
+  <rect class="external" x="935" y="340" width="350" height="75"/><text x="1110" y="370" text-anchor="middle" class="label">Optional Model API</text><text x="1110" y="393" text-anchor="middle" class="tiny">bounded retry · offline fallback · no tools</text>
+
+  <rect class="boundary" x="25" y="500" width="1350" height="155"/><text x="45" y="525" class="lane">PERSISTED EVIDENCE + INDEX</text>
+  <rect class="security" x="60" y="540" width="240" height="85"/><text x="180" y="570" text-anchor="middle" class="label">Parser Safety</text><text x="180" y="593" text-anchor="middle" class="note">bytes · pixels · pages · ZIP</text><text x="180" y="613" text-anchor="middle" class="tiny">path/macro/ratio rejection</text>
+  <rect class="backend" x="345" y="540" width="220" height="85"/><text x="455" y="570" text-anchor="middle" class="label">Normalized Evidence</text><text x="455" y="593" text-anchor="middle" class="note">text · table · image OCR</text><text x="455" y="613" text-anchor="middle" class="tiny">page / slide / bbox</text>
+  <rect class="database" x="610" y="500" width="165" height="125"/><text x="692" y="538" text-anchor="middle" class="label">SQLite WAL</text><text x="692" y="562" text-anchor="middle" class="note">exact vectors</text><text x="692" y="583" text-anchor="middle" class="note">jobs · audit</text><text x="692" y="604" text-anchor="middle" class="tiny">schema v2 + rollback</text>
+  <rect class="database" x="835" y="510" width="225" height="115"/><text x="947" y="545" text-anchor="middle" class="label">Artifact Store</text><text x="947" y="570" text-anchor="middle" class="note">tenant-local SHA-256 BLOB</text><text x="947" y="591" text-anchor="middle" class="tiny">original bytes + ETag + bbox</text>
+  <rect class="external" x="1120" y="515" width="225" height="105"/><text x="1232" y="550" text-anchor="middle" class="label">Model Cache</text><text x="1232" y="574" text-anchor="middle" class="note">FastEmbed / CLIP</text><text x="1232" y="596" text-anchor="middle" class="tiny">optional · persistent volume</text>
+
+  <rect class="boundary" x="25" y="675" width="1350" height="145"/><text x="45" y="700" class="lane">CONTROL + OPERATIONS</text>
+  <rect class="security" x="60" y="720" width="250" height="70"/><text x="185" y="748" text-anchor="middle" class="label">Audit Trail</text><text x="185" y="771" text-anchor="middle" class="tiny">PII-redacted actions + denials</text>
+  <rect class="database" x="365" y="720" width="250" height="70"/><text x="490" y="748" text-anchor="middle" class="label">Backup + Migration</text><text x="490" y="771" text-anchor="middle" class="tiny">integrity check · V1 restore</text>
+  <rect class="cyan" x="810" y="700" width="280" height="100"/><text x="950" y="731" text-anchor="middle" class="label">Operational Metrics</text><text x="950" y="755" text-anchor="middle" class="note">queue age · latency · errors</text><text x="950" y="777" text-anchor="middle" class="tiny">parser/OCR · model · fallback</text>
+  <rect class="external" x="1140" y="720" width="205" height="70"/><text x="1242" y="748" text-anchor="middle" class="label">Compose Runtime</text><text x="1242" y="771" text-anchor="middle" class="tiny">non-root · read-only · no caps</text>
+
+  <!-- routed only through gaps; boxes mask no flow labels -->
+  <path class="line" d="M180 165H235"/><path class="sline" d="M455 165H510"/>
+  <path class="line" d="M745 143H800"/><path class="qline" d="M745 187H800"/>
+  <path class="gline" d="M1025 143H1080"/><path class="qline" d="M1025 206H1080"/>
+  <path class="qline" d="M1215 231V270H80V342H100"/><path class="qline" d="M1215 231V280H790V342H770"/>
+  <path class="qline" d="M235 380V405"/><path class="qline" d="M635 380V405"/>
+  <path class="gline" d="M235 465V485H455V540"/><path class="gline" d="M235 465V490H180V540"/>
+  <path class="gline" d="M635 465V500"/><path class="sline" d="M770 435H900V378H935"/>
+  <path class="sline" d="M1215 174V325H1110V340"/>
+  <path class="gline" d="M565 582H610"/><path class="gline" d="M775 565H835"/><path class="line" d="M1060 565H1120"/>
+  <path class="line" d="M692 625V675H950V700"/><path class="sline" d="M627 205V255H480V700H810"/>
+
+  <rect x="25" y="842" width="1350" height="38" rx="8" fill="#2a1020" stroke="#fb7185" stroke-width="1.2"/>
+  <text x="700" y="866" text-anchor="middle" class="note">Synthetic hospital IT data only · not medical advice/compliance · no chart reasoning claim · single-host capacity only</text>
 </svg>

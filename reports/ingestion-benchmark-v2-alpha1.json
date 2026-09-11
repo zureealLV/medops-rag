@@ -1,0 +1,95 @@
+{
+  "benchmark": "generated-multiformat-fixtures-v1",
+  "generated_at": "2026-09-06T08:33:48.743952+00:00",
+  "machine_note": "Windows 10 local CPU; RapidOCR ONNX Runtime; OCR model already warm",
+  "repeats": 3,
+  "results": [
+    {
+      "filename": "runbook.md",
+      "bytes": 50,
+      "parser": "md",
+      "elements": 2,
+      "content_characters": 50,
+      "modalities": {
+        "text": 2
+      },
+      "latency_mean_ms": 0.412,
+      "latency_median_ms": 0.029,
+      "latency_min_ms": 0.016,
+      "warnings": []
+    },
+    {
+      "filename": "native.pdf",
+      "bytes": 1470,
+      "parser": "pdf",
+      "elements": 1,
+      "content_characters": 105,
+      "modalities": {
+        "text": 1
+      },
+      "latency_mean_ms": 109.389,
+      "latency_median_ms": 1.152,
+      "latency_min_ms": 1.06,
+      "warnings": []
+    },
+    {
+      "filename": "runbook.docx",
+      "bytes": 45681,
+      "parser": "docx",
+      "elements": 4,
+      "content_characters": 156,
+      "modalities": {
+        "image_ocr": 1,
+        "table": 1,
+        "text": 2
+      },
+      "latency_mean_ms": 1350.387,
+      "latency_median_ms": 1345.708,
+      "latency_min_ms": 1229.608,
+      "warnings": []
+    },
+    {
+      "filename": "recovery.pptx",
+      "bytes": 37025,
+      "parser": "pptx",
+      "elements": 2,
+      "content_characters": 68,
+      "modalities": {
+        "image_ocr": 1,
+        "text": 1
+      },
+      "latency_mean_ms": 1541.399,
+      "latency_median_ms": 1505.882,
+      "latency_min_ms": 1471.465,
+      "warnings": []
+    },
+    {
+      "filename": "scan.png",
+      "bytes": 10092,
+      "parser": "png",
+      "elements": 1,
+      "content_characters": 26,
+      "modalities": {
+        "image_ocr": 1
+      },
+      "latency_mean_ms": 1461.576,
+      "latency_median_ms": 1456.99,
+      "latency_min_ms": 1394.093,
+      "warnings": []
+    },
+    {
+      "filename": "scan.pdf",
+      "bytes": 13953,
+      "parser": "pdf",
+      "elements": 1,
+      "content_characters": 26,
+      "modalities": {
+        "image_ocr": 1
+      },
+      "latency_mean_ms": 1621.495,
+      "latency_median_ms": 1651.417,
+      "latency_min_ms": 1546.069,
+      "warnings": []
+    }
+  ]
+}

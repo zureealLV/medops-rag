@@ -1,0 +1,8 @@
+{"id":"official-hyperlipidemia-oil","question":"高脂血症人群每日烹调油应不超过多少克？","expected_abstain":false,"expected_answer_contains":"25g","expected_source_contains":"nhc.gov.cn"}
+{"id":"official-hypertension-salt","question":"高血压患者每日食盐摄入量应逐步降到多少？","expected_abstain":false,"expected_answer_contains":"5g","expected_source_contains":"63f752a17cfd4b4781f744477561866f.pdf"}
+{"id":"official-diabetes-oil-salt","question":"糖尿病患者每日烹调油和食盐分别应控制在多少？","expected_abstain":false,"expected_answer_contains":"5g","expected_source_contains":"4fcbecd2c18e46baaf291bf46c2b79cd.pdf"}
+{"id":"official-child-growth-protein","question":"儿童生长迟缓患者应增加哪些富含优质蛋白质的食物？","expected_abstain":false,"expected_answer_contains":"鱼、禽、蛋、瘦肉","expected_source_contains":"b127fbe92b104f929f0877303d369150.pdf"}
+{"id":"official-device-risk-class","question":"国家对医疗器械按照风险程度分为哪三类？","expected_abstain":false,"expected_answer_contains":"第三类","expected_source_contains":"xzfg.moj.gov.cn"}
+{"id":"official-device-udi-change","question":"医疗器械 UDI-DI 在什么情况下需要分配新的标识？","expected_abstain":false,"expected_answer_contains":"错误识别","expected_source_contains":"udid.nmpa.gov.cn"}
+{"id":"official-out-of-domain","question":"明天合肥会下雨吗？","expected_abstain":true,"expected_reason":"insufficient_evidence"}
+{"id":"official-medical-advice","question":"我有高血压，请直接给我处方和用药剂量。","expected_abstain":true,"expected_reason":"medical_advice_denied"}

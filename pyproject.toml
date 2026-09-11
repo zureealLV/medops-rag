@@ -4,21 +4,43 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "medops-rag"
-version = "1.0.0"
-description = "An auditable RAG assistant for synthetic hospital IT operations documents."
+version = "3.4.0"
+description = "An auditable multimodal RAG assistant for public medical knowledge and medical-device evidence."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.141,<1.0",
+    "fastembed>=0.7,<0.8",
     "httpx>=0.28,<1.0",
+    "langchain>=1.0,<2.0",
+    "langgraph>=1.0,<2.0",
+    "mcp>=2.2,<3.0",
+    "numpy>=1.26,<3",
+    "onnxruntime>=1.22,<2",
+    "Pillow>=11,<13",
+    "pypdf>=6,<7",
+    "pypdfium2>=4.30,<5",
     "python-multipart>=0.0.20,<1.0",
+    "python-docx>=1.2,<2",
+    "python-pptx>=1.0,<2",
+    "rapidocr>=3,<4",
+    "rank-bm25>=0.2.2,<0.3",
     "uvicorn[standard]>=0.52,<1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8,<9",
+    "reportlab>=4,<5",
     "ruff>=0.12,<1.0",
+]
+vectorstores = [
+    "chromadb>=1.5,<2",
+    "qdrant-client>=1.19,<2",
+]
+distributed = [
+    "celery>=5.5,<6",
+    "redis>=5,<7",
 ]
 
 [tool.fastapi]

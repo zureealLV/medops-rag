@@ -1,0 +1,99 @@
+{
+  "benchmark": "medops-v2-retrieval-frozen-v1",
+  "generated_at": "2026-09-06T21:06:12.038678+08:00",
+  "documents": 20,
+  "answerable_questions": 120,
+  "negative_questions": 20,
+  "dataset_sha256": {
+    "v2_retrieval_documents.jsonl": "f8c422ad6003e96d699591d69733c332ab61d9cc66f812894867aec5267b3861",
+    "v2_retrieval_cases.jsonl": "a53e04fc336d73c1a14c77d2bc5f2e3323919064c432cfb935822377d14d069c"
+  },
+  "models": {
+    "dense": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "reranker": "BAAI/bge-reranker-base",
+    "dense_load_ms": 1012.677,
+    "reranker_load_ms": 2487.335,
+    "dense_index_ms": 2665.364
+  },
+  "results": {
+    "bm25": {
+      "hit_at_1": 0.9583,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9792,
+      "ndcg_at_5": 0.9846,
+      "mean_ms": 0.497,
+      "p95_ms": 1.274,
+      "hit_at_1_by_category": {
+        "exact": 0.925,
+        "paraphrase": 0.95,
+        "choice": 1.0,
+        "distractor": 1.0
+      }
+    },
+    "minilm": {
+      "hit_at_1": 0.9417,
+      "hit_at_3": 0.9833,
+      "hit_at_5": 0.9917,
+      "mrr_at_5": 0.9628,
+      "ndcg_at_5": 0.9701,
+      "mean_ms": 129.747,
+      "p95_ms": 205.451,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "paraphrase": 0.975,
+        "choice": 0.85,
+        "distractor": 0.85
+      }
+    },
+    "rrf": {
+      "hit_at_1": 0.9917,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9944,
+      "ndcg_at_5": 0.9958,
+      "mean_ms": 130.244,
+      "p95_ms": 206.169,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "paraphrase": 1.0,
+        "choice": 0.95,
+        "distractor": 1.0
+      }
+    },
+    "rrf_bge": {
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "mean_ms": 1082.388,
+      "p95_ms": 1271.338,
+      "hit_at_1_by_category": {
+        "exact": 1.0,
+        "paraphrase": 1.0,
+        "choice": 1.0,
+        "distractor": 1.0
+      }
+    }
+  },
+  "negative_max_scores": {
+    "bm25": {
+      "mean": 3.130975,
+      "max": 3.130975
+    },
+    "minilm": {
+      "mean": 0.338752,
+      "max": 0.354978
+    },
+    "rrf": {
+      "mean": 0.032641,
+      "max": 0.032787
+    }
+  },
+  "limitations": [
+    "Template-generated synthetic operations corpus; not production traffic.",
+    "Model files cached; download time excluded.",
+    "One relevant document per answerable query."
+  ]
+}

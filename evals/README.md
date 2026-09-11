@@ -1,5 +1,17 @@
 # Evaluations
 
+## Job queue transport
+
+`benchmark_job_queues.py` compares the SQLite lease transport against a real Redis/Celery worker. Install the
+`distributed` extra and pass a disposable Redis database URL; the URL is never written to the report.
+
+```powershell
+python -m pip install -e ".[distributed]"
+python evals/benchmark_job_queues.py --tasks 1000 --repetitions 3 `
+  --redis-url "redis://:PASSWORD@HOST:6379/14" `
+  --output reports/job-queue-benchmark-beta2.json
+```
+
 This directory will contain the reproducible offline RAG evaluation dataset, runner, and generated reports.
 # Offline evaluation
 
@@ -10,3 +22,43 @@ This directory will contain the reproducible offline RAG evaluation dataset, run
 ```
 
 The generated JSON report is written to `reports/generated/evaluation.json` and is intentionally ignored by Git.
+
+## Installed Chinese corpus gate
+
+After running `python -m scripts.import_huatuo`, execute the frozen Chinese
+answer/citation, abstention and latency gate against the local database:
+
+```powershell
+.\.venv\Scripts\python.exe -m evals.run_chinese_corpus_eval
+```
+
+The 14 cases cover ten exact Chinese medical records, two unrelated questions
+and two patient-specific advice refusals. The command fails if any expected
+answer/source/refusal is wrong or retrieval p95 exceeds 1,000 ms. Its generated
+report is written to `reports/generated/chinese_corpus_evaluation.json`.
+
+## Query transforms
+
+Run `benchmark_query_transforms.py` to compare unchanged queries, deterministic rewrite, multi-query fusion,
+and the template-HyDE experiment against the frozen Beta.1 corpus. It writes the versioned raw report to
+`reports/query-transform-benchmark-v2-beta1.json`.
+
+V3 comparison runners:
+
+```powershell
+python evals/benchmark_agent_orchestration.py --repetitions 20
+python evals/benchmark_chunk_profiles.py
+python evals/benchmark_official_chunk_profiles.py
+# Paid provider run; the dotenv file stays outside this repository.
+python evals/benchmark_deepseek_live.py --env-file <external-.env-path>
+```
+
+The live runner accepts `MODEL_API_KEY` or `DEEPSEEK_API_KEY`, never writes the key, counterbalances execution
+order across Classic/LangChain/LangGraph, and captures provider success, quality, p50/p95 latency, cache/prompt/
+completion tokens and a peak/off-peak cost range.
+
+## Hardened V2 performance profile
+
+`benchmark_v2_performance.py` measures raw per-call latency for API-key-authenticated upload acceptance,
+worker parse/index stages, auto/BM25 search, BGE Top-10 reranking and offline answers. It writes
+`reports/v2-performance-profile.json`; model files must already be cached for a network-independent run.

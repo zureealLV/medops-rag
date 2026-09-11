@@ -1,0 +1,2542 @@
+{
+  "benchmark": "medops-adaptive-routing-challenge-zh-v2",
+  "benchmark_version": "2.0.0",
+  "dataset_version": "2.0.0",
+  "generated_at": "2026-09-10T18:00:28.797957+08:00",
+  "evaluation_contract": {
+    "thresholds_changed_for_this_dataset": false,
+    "user_strategy_override": false,
+    "provider_or_application_api_calls": 0,
+    "network_access": "hard-disabled-by-socket-guard",
+    "source_ranking_denominator": 24,
+    "multi_source_coverage_denominator": 8,
+    "negative_cases_used_for_quality_metrics": 0,
+    "tenant_cases_used_for_quality_metrics": 0,
+    "negative_case_purpose": "adaptive route/reason distribution only; no abstention claim",
+    "tenant_case_purpose": "actual repository/service pre-ranking scope enforcement"
+  },
+  "dataset": {
+    "language": "zh-CN",
+    "documents": 28,
+    "documents_by_tenant": {
+      "hospital-amber": 4,
+      "hospital-green": 20,
+      "hospital-violet": 4
+    },
+    "cases": 48,
+    "category_counts": {
+      "ambiguous_short": 8,
+      "long_context": 8,
+      "multi_source": 8,
+      "table_text": 8,
+      "tenant_isolation": 8,
+      "unanswerable": 8
+    },
+    "evaluation_counts": {
+      "multi_source_coverage": 8,
+      "negative_route_only": 8,
+      "source_ranking": 24,
+      "tenant_isolation": 8
+    },
+    "exact_normalized_question_overlap_with_tuning_and_heldout_v1": 0,
+    "source_name_overlap_with_tuning_and_heldout_v1": 0,
+    "sha256": {
+      "adaptive_challenge_v2_documents_zh.jsonl": "0f06fca87b2c60cefe2078659122fe5a09c3d059d5725c9a3e8a39df25279466",
+      "adaptive_challenge_v2_cases_zh.jsonl": "0d8a6a84bd9272c8164df013402045b3426cd823c86580db8177d6dfdbf1f810",
+      "benchmark_adaptive_challenge_v2.py": "1851516deb5f9fbee9843490359aca034846996614e167f7b4e15c9dd417b2c8",
+      "app/retrieval/adaptive.py": "09ee92695a6dc86a840460028b37c77f386af3f7bd56e42d57a4ee7ff580761a"
+    }
+  },
+  "runtime": {
+    "project": "medops-rag",
+    "project_version": "3.2.0",
+    "git_commit": "19d7a691a56b740c166bf217dd712034d222b06f",
+    "python": "3.11.5",
+    "platform": "Windows-10-10.0.22631-SP0",
+    "fastembed": "0.7.4",
+    "rank_bm25": "0.2.2",
+    "numpy": "2.4.6",
+    "dense_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "dense_cache": "data/models/fastembed",
+    "dense_local_files_only": true,
+    "hf_hub_offline": "1",
+    "transformers_offline": "1",
+    "model_load_and_document_index_ms": 4675.843,
+    "query_repetitions": 1
+  },
+  "policy_snapshot": {
+    "dense_available": true,
+    "parent_child_available": true,
+    "semantic_score_threshold": 1.25,
+    "parent_score_threshold": 2.0
+  },
+  "source_ranking": {
+    "bm25": {
+      "evaluated_cases": 24,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "hit_at_1_by_category": {
+        "ambiguous_short": 1.0,
+        "long_context": 1.0,
+        "table_text": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch2-short-01",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "worklist-state-table.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-02",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "worklist-state-table.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-03",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-04",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "drug-dictionary-sync.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-05",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "imaging-identity-link.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-06",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ventilator-battery-table.md",
+            "drug-dictionary-sync.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-07",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "order-accession-map.md",
+            "result-backfill-reconcile.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-08",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "drug-dictionary-sync.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-01",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "scheduler-frozen-task.md",
+            "formulary-release-control.md",
+            "worklist-state-table.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-02",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "or-master-clock.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "scheduler-frozen-task.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-03",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "ambulance-monitor-offload-full.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-04",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "instrument-downtime-capture.md",
+            "formulary-release-control.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-05",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "endoscope-trace-full.md",
+            "order-accession-map.md",
+            "scheduler-frozen-task.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-06",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-07",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "radiotherapy-plan-handoff-full.md",
+            "receipt-ledger-gap.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-08",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "ambulance-monitor-offload-full.md",
+            "device-time-reconciliation.md",
+            "formulary-release-control.md",
+            "endoscope-trace-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-01",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md",
+            "scheduler-frozen-task.md",
+            "instrument-downtime-capture.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-02",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-03",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md",
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-04",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-05",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "label-spool-suspend.md",
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-06",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "imaging-identity-link.md",
+            "device-time-reconciliation.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-07",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-08",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "result-backfill-reconcile.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        }
+      ]
+    },
+    "rrf": {
+      "evaluated_cases": 24,
+      "hit_at_1": 0.9583,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 0.9792,
+      "ndcg_at_5": 0.9846,
+      "hit_at_1_by_category": {
+        "ambiguous_short": 1.0,
+        "long_context": 0.875,
+        "table_text": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch2-short-01",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "analyzer-delta-table.md",
+            "endoscope-trace-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-02",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "analyzer-delta-table.md",
+            "scheduler-frozen-task.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-03",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "result-backfill-reconcile.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-04",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "ventilator-battery-table.md",
+            "drug-dictionary-sync.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-05",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "sterilizer-cycle-table.md",
+            "oxygen-filter-bubble.md",
+            "ventilator-battery-table.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-06",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "ventilator-battery-table.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-07",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "result-backfill-reconcile.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-08",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "pathology-block-custody-full.md",
+            "result-backfill-reconcile.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-01",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "worklist-state-table.md",
+            "formulary-release-control.md",
+            "radiotherapy-plan-handoff-full.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-02",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "oxygen-filter-bubble.md",
+            "or-master-clock.md",
+            "ambulance-monitor-offload-full.md",
+            "result-backfill-reconcile.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-03",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "ambulance-monitor-offload-full.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-04",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "instrument-downtime-capture.md",
+            "sterilizer-cycle-table.md",
+            "device-time-reconciliation.md",
+            "oxygen-filter-bubble.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-05",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "scheduler-frozen-task.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md",
+            "oxygen-filter-bubble.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-06",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "sterilizer-cycle-table.md",
+            "drug-dictionary-sync.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-07",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "or-master-clock.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-08",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "device-time-reconciliation.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "formulary-release-control.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-01",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md",
+            "ambulance-monitor-offload-full.md",
+            "instrument-downtime-capture.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-02",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md",
+            "oxygen-filter-bubble.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-03",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "scheduler-frozen-task.md",
+            "drug-dictionary-sync.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-04",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 2,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "drug-dictionary-sync.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-05",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "scheduler-frozen-task.md",
+            "drug-dictionary-sync.md",
+            "result-backfill-reconcile.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-06",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "imaging-identity-link.md",
+            "pathology-block-custody-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-07",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "receipt-ledger-gap.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-08",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "result-backfill-reconcile.md",
+            "endoscope-trace-full.md",
+            "instrument-downtime-capture.md",
+            "receipt-ledger-gap.md"
+          ]
+        }
+      ]
+    },
+    "parent_child": {
+      "evaluated_cases": 24,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "hit_at_1_by_category": {
+        "ambiguous_short": 1.0,
+        "long_context": 1.0,
+        "table_text": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch2-short-01",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "worklist-state-table.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-02",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "worklist-state-table.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-03",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-04",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "drug-dictionary-sync.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-05",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "imaging-identity-link.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-06",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ventilator-battery-table.md",
+            "ambulance-monitor-offload-full.md",
+            "drug-dictionary-sync.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-07",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-08",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "scheduler-frozen-task.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-01",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "scheduler-frozen-task.md",
+            "formulary-release-control.md",
+            "worklist-state-table.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-02",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "or-master-clock.md",
+            "endoscope-trace-full.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-03",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "analyzer-delta-table.md",
+            "ambulance-monitor-offload-full.md",
+            "sterilizer-cycle-table.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-04",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "instrument-downtime-capture.md",
+            "formulary-release-control.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-05",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "endoscope-trace-full.md",
+            "order-accession-map.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-06",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-07",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "radiotherapy-plan-handoff-full.md",
+            "receipt-ledger-gap.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-08",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "device-time-reconciliation.md",
+            "formulary-release-control.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-01",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md",
+            "scheduler-frozen-task.md",
+            "instrument-downtime-capture.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-02",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md",
+            "or-master-clock.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-03",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md",
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-04",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-05",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "label-spool-suspend.md",
+            "scheduler-frozen-task.md",
+            "result-backfill-reconcile.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-06",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "imaging-identity-link.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-07",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "receipt-ledger-gap.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-08",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "result-backfill-reconcile.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        }
+      ]
+    },
+    "adaptive": {
+      "evaluated_cases": 24,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_5": 1.0,
+      "ndcg_at_5": 1.0,
+      "hit_at_1_by_category": {
+        "ambiguous_short": 1.0,
+        "long_context": 1.0,
+        "table_text": 1.0
+      },
+      "trace": [
+        {
+          "case_id": "ch2-short-01",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "worklist-state-table.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-02",
+          "category": "ambiguous_short",
+          "expected_source": "oxygen-filter-bubble.md",
+          "rank": 1,
+          "top_sources": [
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "ventilator-battery-table.md",
+            "worklist-state-table.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-03",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-04",
+          "category": "ambiguous_short",
+          "expected_source": "label-spool-suspend.md",
+          "rank": 1,
+          "top_sources": [
+            "label-spool-suspend.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "drug-dictionary-sync.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-05",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "oxygen-filter-bubble.md",
+            "sterilizer-cycle-table.md",
+            "imaging-identity-link.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-06",
+          "category": "ambiguous_short",
+          "expected_source": "scheduler-frozen-task.md",
+          "rank": 1,
+          "top_sources": [
+            "scheduler-frozen-task.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ventilator-battery-table.md",
+            "drug-dictionary-sync.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-07",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "order-accession-map.md",
+            "result-backfill-reconcile.md"
+          ]
+        },
+        {
+          "case_id": "ch2-short-08",
+          "category": "ambiguous_short",
+          "expected_source": "receipt-ledger-gap.md",
+          "rank": 1,
+          "top_sources": [
+            "receipt-ledger-gap.md",
+            "label-spool-suspend.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "drug-dictionary-sync.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-01",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "scheduler-frozen-task.md",
+            "formulary-release-control.md",
+            "worklist-state-table.md",
+            "order-accession-map.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-02",
+          "category": "table_text",
+          "expected_source": "sterilizer-cycle-table.md",
+          "rank": 1,
+          "top_sources": [
+            "sterilizer-cycle-table.md",
+            "or-master-clock.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "scheduler-frozen-task.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-03",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "ambulance-monitor-offload-full.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-04",
+          "category": "table_text",
+          "expected_source": "ventilator-battery-table.md",
+          "rank": 1,
+          "top_sources": [
+            "ventilator-battery-table.md",
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "instrument-downtime-capture.md",
+            "formulary-release-control.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-05",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "endoscope-trace-full.md",
+            "order-accession-map.md",
+            "scheduler-frozen-task.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-06",
+          "category": "table_text",
+          "expected_source": "worklist-state-table.md",
+          "rank": 1,
+          "top_sources": [
+            "worklist-state-table.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-07",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "sterilizer-cycle-table.md",
+            "radiotherapy-plan-handoff-full.md",
+            "receipt-ledger-gap.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-table-08",
+          "category": "table_text",
+          "expected_source": "analyzer-delta-table.md",
+          "rank": 1,
+          "top_sources": [
+            "analyzer-delta-table.md",
+            "ambulance-monitor-offload-full.md",
+            "device-time-reconciliation.md",
+            "formulary-release-control.md",
+            "endoscope-trace-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-01",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md",
+            "scheduler-frozen-task.md",
+            "instrument-downtime-capture.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-02",
+          "category": "long_context",
+          "expected_source": "endoscope-trace-full.md",
+          "rank": 1,
+          "top_sources": [
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md",
+            "or-master-clock.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-03",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md",
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md",
+            "ventilator-battery-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-04",
+          "category": "long_context",
+          "expected_source": "radiotherapy-plan-handoff-full.md",
+          "rank": 1,
+          "top_sources": [
+            "radiotherapy-plan-handoff-full.md",
+            "scheduler-frozen-task.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "pathology-block-custody-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-05",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "label-spool-suspend.md",
+            "scheduler-frozen-task.md",
+            "result-backfill-reconcile.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-06",
+          "category": "long_context",
+          "expected_source": "ambulance-monitor-offload-full.md",
+          "rank": 1,
+          "top_sources": [
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "endoscope-trace-full.md",
+            "imaging-identity-link.md",
+            "analyzer-delta-table.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-07",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "receipt-ledger-gap.md",
+            "or-master-clock.md"
+          ]
+        },
+        {
+          "case_id": "ch2-long-08",
+          "category": "long_context",
+          "expected_source": "pathology-block-custody-full.md",
+          "rank": 1,
+          "top_sources": [
+            "pathology-block-custody-full.md",
+            "endoscope-trace-full.md",
+            "result-backfill-reconcile.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ]
+        }
+      ]
+    }
+  },
+  "multi_source_coverage": {
+    "bm25": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 1.0,
+      "mean_recall_at_5": 1.0,
+      "full_coverage_at_3": 1.0,
+      "full_coverage_at_5": 1.0,
+      "trace": [
+        {
+          "case_id": "ch2-multi-01",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "instrument-downtime-capture.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ventilator-battery-table.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-02",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "or-master-clock.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-03",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "worklist-state-table.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-04",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "order-accession-map.md",
+            "imaging-identity-link.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-05",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "result-backfill-reconcile.md",
+            "instrument-downtime-capture.md",
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-06",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "result-backfill-reconcile.md",
+            "instrument-downtime-capture.md",
+            "ambulance-monitor-offload-full.md",
+            "oxygen-filter-bubble.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-07",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-08",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "or-master-clock.md",
+            "device-time-reconciliation.md",
+            "radiotherapy-plan-handoff-full.md",
+            "instrument-downtime-capture.md",
+            "oxygen-filter-bubble.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        }
+      ]
+    },
+    "rrf": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 1.0,
+      "mean_recall_at_5": 1.0,
+      "full_coverage_at_3": 1.0,
+      "full_coverage_at_5": 1.0,
+      "trace": [
+        {
+          "case_id": "ch2-multi-01",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "radiotherapy-plan-handoff-full.md",
+            "instrument-downtime-capture.md",
+            "endoscope-trace-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-02",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-03",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "drug-dictionary-sync.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-04",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "order-accession-map.md",
+            "imaging-identity-link.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-05",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md",
+            "endoscope-trace-full.md",
+            "receipt-ledger-gap.md",
+            "ambulance-monitor-offload-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-06",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "result-backfill-reconcile.md",
+            "instrument-downtime-capture.md",
+            "oxygen-filter-bubble.md",
+            "analyzer-delta-table.md",
+            "ambulance-monitor-offload-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-07",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-08",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "or-master-clock.md",
+            "device-time-reconciliation.md",
+            "instrument-downtime-capture.md",
+            "radiotherapy-plan-handoff-full.md",
+            "worklist-state-table.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        }
+      ]
+    },
+    "parent_child": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 1.0,
+      "mean_recall_at_5": 1.0,
+      "full_coverage_at_3": 1.0,
+      "full_coverage_at_5": 1.0,
+      "trace": [
+        {
+          "case_id": "ch2-multi-01",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "instrument-downtime-capture.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ventilator-battery-table.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-02",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-03",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md",
+            "ambulance-monitor-offload-full.md",
+            "worklist-state-table.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-04",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "order-accession-map.md",
+            "imaging-identity-link.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "pathology-block-custody-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-05",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "result-backfill-reconcile.md",
+            "instrument-downtime-capture.md",
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md",
+            "receipt-ledger-gap.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-06",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "result-backfill-reconcile.md",
+            "instrument-downtime-capture.md",
+            "ambulance-monitor-offload-full.md",
+            "oxygen-filter-bubble.md",
+            "analyzer-delta-table.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-07",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-08",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "or-master-clock.md",
+            "device-time-reconciliation.md",
+            "radiotherapy-plan-handoff-full.md",
+            "instrument-downtime-capture.md",
+            "worklist-state-table.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        }
+      ]
+    },
+    "adaptive": {
+      "evaluated_cases": 8,
+      "mean_recall_at_3": 1.0,
+      "mean_recall_at_5": 1.0,
+      "full_coverage_at_3": 1.0,
+      "full_coverage_at_5": 1.0,
+      "trace": [
+        {
+          "case_id": "ch2-multi-01",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "radiotherapy-plan-handoff-full.md",
+            "instrument-downtime-capture.md",
+            "endoscope-trace-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-02",
+          "expected_sources": [
+            "drug-dictionary-sync.md",
+            "formulary-release-control.md"
+          ],
+          "top_sources": [
+            "formulary-release-control.md",
+            "drug-dictionary-sync.md",
+            "endoscope-trace-full.md",
+            "ambulance-monitor-offload-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-03",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "drug-dictionary-sync.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-04",
+          "expected_sources": [
+            "imaging-identity-link.md",
+            "order-accession-map.md"
+          ],
+          "top_sources": [
+            "order-accession-map.md",
+            "imaging-identity-link.md",
+            "radiotherapy-plan-handoff-full.md",
+            "ambulance-monitor-offload-full.md",
+            "pathology-block-custody-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-05",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md",
+            "endoscope-trace-full.md",
+            "receipt-ledger-gap.md",
+            "ambulance-monitor-offload-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-06",
+          "expected_sources": [
+            "instrument-downtime-capture.md",
+            "result-backfill-reconcile.md"
+          ],
+          "top_sources": [
+            "result-backfill-reconcile.md",
+            "instrument-downtime-capture.md",
+            "oxygen-filter-bubble.md",
+            "analyzer-delta-table.md",
+            "ambulance-monitor-offload-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-07",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md",
+            "ambulance-monitor-offload-full.md",
+            "endoscope-trace-full.md",
+            "radiotherapy-plan-handoff-full.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        },
+        {
+          "case_id": "ch2-multi-08",
+          "expected_sources": [
+            "device-time-reconciliation.md",
+            "or-master-clock.md"
+          ],
+          "top_sources": [
+            "or-master-clock.md",
+            "device-time-reconciliation.md",
+            "radiotherapy-plan-handoff-full.md",
+            "instrument-downtime-capture.md",
+            "oxygen-filter-bubble.md"
+          ],
+          "recall_at_3": 1.0,
+          "full_coverage_at_3": true,
+          "recall_at_5": 1.0,
+          "full_coverage_at_5": true
+        }
+      ]
+    }
+  },
+  "negative_route_only": {
+    "evaluated_cases": 8,
+    "quality_metrics_computed": false,
+    "route_counts": {
+      "bm25": 5,
+      "rrf": 3
+    },
+    "reason_counts": {
+      "lexical_default": 5,
+      "semantic_or_multi_concept_query": 3
+    }
+  },
+  "tenant_isolation": {
+    "contract": "real app.repositories.documents + app.services.retrieval over an ephemeral SQLite database; tenant predicate is applied before ranking",
+    "evaluated_probes": 8,
+    "foreign_targets_proven_present": 8,
+    "leak_count": 0,
+    "foreign_kb_id_hidden_count": 8,
+    "all_passed": true,
+    "trace": [
+      {
+        "case_id": "ch2-tenant-01",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-amber",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-02",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-amber",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-03",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-amber",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-04",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-amber",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-05",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-violet",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-06",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-violet",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-07",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-violet",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      },
+      {
+        "case_id": "ch2-tenant-08",
+        "actor_tenant": "hospital-green",
+        "foreign_tenant": "hospital-violet",
+        "foreign_source_exists": true,
+        "repository_prefilter_excludes_foreign_source": true,
+        "fts_prefilter_excludes_foreign_source": true,
+        "search_results_exclude_foreign_source": true,
+        "search_results_exclude_foreign_marker": true,
+        "foreign_kb_id_hidden": true,
+        "resolved_strategy": "bm25",
+        "leaked": false
+      }
+    ]
+  },
+  "adaptive_selection": {
+    "route_counts_by_scope": {
+      "source_ranking": {
+        "bm25": 16,
+        "parent_child": 8
+      },
+      "multi_source_coverage": {
+        "bm25": 1,
+        "rrf": 7
+      },
+      "negative_route_only": {
+        "bm25": 5,
+        "rrf": 3
+      },
+      "tenant_isolation": {
+        "bm25": 7,
+        "rrf": 1
+      }
+    },
+    "reason_counts_by_scope": {
+      "source_ranking": {
+        "broad_context_required": 8,
+        "exact_or_identifier_lookup": 6,
+        "lexical_default": 10
+      },
+      "multi_source_coverage": {
+        "exact_or_identifier_lookup": 1,
+        "semantic_or_multi_concept_query": 7
+      },
+      "negative_route_only": {
+        "lexical_default": 5,
+        "semantic_or_multi_concept_query": 3
+      },
+      "tenant_isolation": {
+        "exact_or_identifier_lookup": 7,
+        "semantic_or_multi_concept_query": 1
+      }
+    },
+    "trace": [
+      {
+        "case_id": "ch2-short-01",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.79
+      },
+      {
+        "case_id": "ch2-short-02",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-short-03",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.79
+      },
+      {
+        "case_id": "ch2-short-04",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-short-05",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.79
+      },
+      {
+        "case_id": "ch2-short-06",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-short-07",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-short-08",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-table-01",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "ch2-table-02",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-table-03",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-table-04",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-table-05",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.88
+      },
+      {
+        "case_id": "ch2-table-06",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "ch2-table-07",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-table-08",
+        "evaluation": "source_ranking",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-long-01",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.88
+      },
+      {
+        "case_id": "ch2-long-02",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.88
+      },
+      {
+        "case_id": "ch2-long-03",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "ch2-long-04",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.88
+      },
+      {
+        "case_id": "ch2-long-05",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "ch2-long-06",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "ch2-long-07",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "ch2-long-08",
+        "evaluation": "source_ranking",
+        "strategy": "parent_child",
+        "reason_code": "broad_context_required",
+        "confidence": 0.88
+      },
+      {
+        "case_id": "ch2-multi-01",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74
+      },
+      {
+        "case_id": "ch2-multi-02",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74
+      },
+      {
+        "case_id": "ch2-multi-03",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.79
+      },
+      {
+        "case_id": "ch2-multi-04",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.77
+      },
+      {
+        "case_id": "ch2-multi-05",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "ch2-multi-06",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.79
+      },
+      {
+        "case_id": "ch2-multi-07",
+        "evaluation": "multi_source_coverage",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.8
+      },
+      {
+        "case_id": "ch2-multi-08",
+        "evaluation": "multi_source_coverage",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.88
+      },
+      {
+        "case_id": "ch2-neg-01",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-neg-02",
+        "evaluation": "negative_route_only",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch2-neg-03",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-neg-04",
+        "evaluation": "negative_route_only",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.75
+      },
+      {
+        "case_id": "ch2-neg-05",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-neg-06",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-neg-07",
+        "evaluation": "negative_route_only",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.74
+      },
+      {
+        "case_id": "ch2-neg-08",
+        "evaluation": "negative_route_only",
+        "strategy": "bm25",
+        "reason_code": "lexical_default",
+        "confidence": 0.62
+      },
+      {
+        "case_id": "ch2-tenant-01",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "ch2-tenant-02",
+        "evaluation": "tenant_isolation",
+        "strategy": "rrf",
+        "reason_code": "semantic_or_multi_concept_query",
+        "confidence": 0.73
+      },
+      {
+        "case_id": "ch2-tenant-03",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "ch2-tenant-04",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "ch2-tenant-05",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.85
+      },
+      {
+        "case_id": "ch2-tenant-06",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "ch2-tenant-07",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      },
+      {
+        "case_id": "ch2-tenant-08",
+        "evaluation": "tenant_isolation",
+        "strategy": "bm25",
+        "reason_code": "exact_or_identifier_lookup",
+        "confidence": 0.82
+      }
+    ]
+  },
+  "latency": {
+    "bm25": {
+      "samples": 32,
+      "mean_ms": 0.475,
+      "p50_ms": 0.473,
+      "p95_ms": 0.873
+    },
+    "rrf": {
+      "samples": 32,
+      "mean_ms": 72.482,
+      "p50_ms": 75.036,
+      "p95_ms": 90.118
+    },
+    "parent_child": {
+      "samples": 32,
+      "mean_ms": 0.545,
+      "p50_ms": 0.531,
+      "p95_ms": 1.006
+    },
+    "adaptive": {
+      "samples": 32,
+      "mean_ms": 17.924,
+      "p50_ms": 0.496,
+      "p95_ms": 85.01
+    }
+  },
+  "findings_scope": [
+    "Source ranking evaluates only cases with exactly one relevant source.",
+    "Multi-source questions use macro recall and all-required-sources coverage, not Hit@1.",
+    "Unanswerable questions inspect routing only; this benchmark does not claim abstention quality.",
+    "Tenant isolation uses the production SQLite repository and retrieval service against foreign documents proven present in the same ephemeral database."
+  ],
+  "limitations": [
+    "This is a handcrafted synthetic challenge, not blinded production traffic or clinical validation.",
+    "Ambiguous short-query labels assume a hospital-green operator context; real query logs may contain more ambiguity and spelling noise.",
+    "Markdown tables are evaluated as normalized text; PDF table extraction quality is out of scope.",
+    "Multi-source coverage measures source retrieval only and does not verify that a generated answer faithfully combines every required fact.",
+    "Tenant probes exercise production SQLite repository/service predicates, not API-key authentication, PostgreSQL row-level security, or distributed vector-store filtering.",
+    "Latency is a single-machine snapshot and excludes model load/index construction from query timing.",
+    "The cached multilingual MiniLM model was not selected by an independent Chinese embedding bake-off.",
+    "No routing thresholds or application code were changed to improve this report."
+  ]
+}

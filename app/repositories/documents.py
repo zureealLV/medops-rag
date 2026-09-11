@@ -3,18 +3,53 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 
 from app.db import transaction
-from app.models.documents import Document, DocumentCreate, DocumentUpdate
-from app.retrieval.embeddings import embed
+from app.ingestion.parsers import ParsedDocument, element_metadata_json
+from app.models.documents import Document, DocumentCreate, DocumentSummary, DocumentUpdate
+from app.repositories import artifacts as artifact_repository
+from app.retrieval.structure_chunking import ParentChunkPlan
+from app.retrieval.text_embeddings import TextEmbeddingProvider
+
+CJK_RUN = re.compile(r"[\u4e00-\u9fff]+")
+ASCII_WORD = re.compile(r"[A-Za-z0-9_+-]{3,}")
 
 
 def _model(row: sqlite3.Row) -> Document:
     data = dict(row)
     data["kb_id"] = data.pop("knowledge_base_id")
+    data["warnings"] = json.loads(data.pop("warning_json", "[]"))
     return Document(**data)
+
+
+def _summary_model(row: sqlite3.Row) -> DocumentSummary:
+    data = dict(row)
+    data["kb_id"] = data.pop("knowledge_base_id")
+    return DocumentSummary(**data)
+
+
+DOCUMENT_SELECT = """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
+                            d.mime_type, d.sha256, d.parser, d.ingest_status, d.warning_json,
+                            COUNT(DISTINCT c.id) AS chunk_count,
+                            COUNT(DISTINCT e.id) AS element_count,
+                            COUNT(DISTINCT da.id) AS artifact_count
+                     FROM documents d
+                     LEFT JOIN chunks c ON c.document_id = d.id
+                     LEFT JOIN document_elements e ON e.document_id = d.id
+                     LEFT JOIN document_artifacts da ON da.document_id = d.id"""
+
+DOCUMENT_SUMMARY_SELECT = """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.source,
+                                     d.mime_type, d.parser, d.ingest_status,
+                                     (SELECT COUNT(*) FROM chunks c
+                                      WHERE c.document_id = d.id) AS chunk_count,
+                                     (SELECT COUNT(*) FROM document_elements e
+                                      WHERE e.document_id = d.id) AS element_count,
+                                     (SELECT COUNT(*) FROM document_artifacts da
+                                      WHERE da.document_id = d.id) AS artifact_count
+                              FROM documents d"""
 
 
 def _insert_chunks(
@@ -23,32 +58,145 @@ def _insert_chunks(
     kb_id: int,
     tenant_id: str,
     chunks: list[str],
+    embedding_provider: TextEmbeddingProvider,
 ) -> None:
+    vectors = embedding_provider.embed_documents(chunks)
     connection.executemany(
         """INSERT INTO chunks
-           (document_id, knowledge_base_id, tenant_id, chunk_index, text, embedding_json)
-           VALUES (?, ?, ?, ?, ?, ?)""",
+           (document_id, knowledge_base_id, tenant_id, chunk_index, text, embedding_json,
+            embedding_model)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
         [
-            (document_id, kb_id, tenant_id, index, text, json.dumps(embed(text)))
+            (
+                document_id,
+                kb_id,
+                tenant_id,
+                index,
+                text,
+                json.dumps(vectors[index]),
+                embedding_provider.model_name,
+            )
             for index, text in enumerate(chunks)
         ],
     )
 
 
-def create(path: Path, tenant_id: str, kb_id: int, data: DocumentCreate, chunks: list[str]) -> Document:
+def _insert_parent_child_chunks(
+    connection: sqlite3.Connection,
+    document_id: int,
+    kb_id: int,
+    tenant_id: str,
+    plans: list[ParentChunkPlan],
+    embedding_provider: TextEmbeddingProvider,
+) -> None:
+    for parent_index, plan in enumerate(plans):
+        cursor = connection.execute(
+            """INSERT INTO parent_chunks
+               (document_id, knowledge_base_id, tenant_id, parent_index, element_start,
+                element_end, page_start, page_end, heading, text)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                document_id,
+                kb_id,
+                tenant_id,
+                parent_index,
+                plan.element_start,
+                plan.element_end,
+                plan.page_start,
+                plan.page_end,
+                plan.heading,
+                plan.text,
+            ),
+        )
+        parent_id = int(cursor.lastrowid)
+        vectors = embedding_provider.embed_documents(list(plan.children))
+        connection.executemany(
+            """INSERT INTO child_chunks
+               (parent_id, document_id, knowledge_base_id, tenant_id, child_index, text,
+                embedding_json, embedding_model)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            [
+                (
+                    parent_id,
+                    document_id,
+                    kb_id,
+                    tenant_id,
+                    child_index,
+                    text,
+                    json.dumps(vectors[child_index]),
+                    embedding_provider.model_name,
+                )
+                for child_index, text in enumerate(plan.children)
+            ],
+        )
+
+
+def create(
+    path: Path,
+    tenant_id: str,
+    kb_id: int,
+    data: DocumentCreate,
+    chunks: list[str],
+    parent_chunks: list[ParentChunkPlan],
+    text_embedding_provider: TextEmbeddingProvider,
+    parsed: ParsedDocument | None = None,
+    artifact_embeddings: dict[str, list[float]] | None = None,
+    artifact_embedding_model: str | None = None,
+) -> Document:
     with transaction(path) as connection:
         cursor = connection.execute(
-            """INSERT INTO documents (knowledge_base_id, tenant_id, title, content, source)
-               VALUES (?, ?, ?, ?, ?)""",
-            (kb_id, tenant_id, data.title, data.content, data.source),
+            """INSERT INTO documents
+               (knowledge_base_id, tenant_id, title, content, source, mime_type, sha256, parser,
+                ingest_status, warning_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'succeeded', ?)""",
+            (
+                kb_id,
+                tenant_id,
+                data.title,
+                data.content,
+                data.source,
+                parsed.mime_type if parsed else "text/plain",
+                parsed.sha256 if parsed else "",
+                parsed.parser if parsed else "manual",
+                json.dumps(parsed.warnings if parsed else (), ensure_ascii=False),
+            ),
         )
         document_id = int(cursor.lastrowid)
-        _insert_chunks(connection, document_id, kb_id, tenant_id, chunks)
+        if parsed:
+            connection.executemany(
+                """INSERT INTO document_elements
+                   (document_id, element_index, modality, text, page_number, heading,
+                    artifact_sha256, bbox_json, metadata_json)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                [
+                    (
+                        document_id,
+                        index,
+                        element.modality,
+                        element.text,
+                        element.page_number,
+                        element.heading,
+                        element.artifact_sha256,
+                        json.dumps(element.bbox, ensure_ascii=False) if element.bbox else None,
+                        element_metadata_json(element),
+                    )
+                    for index, element in enumerate(parsed.elements)
+                ],
+            )
+            artifact_repository.persist(
+                connection,
+                tenant_id=tenant_id,
+                document_id=document_id,
+                artifacts=parsed.artifacts,
+                embeddings=artifact_embeddings or {},
+                embedding_model=artifact_embedding_model,
+            )
+        _insert_chunks(connection, document_id, kb_id, tenant_id, chunks, text_embedding_provider)
+        _insert_parent_child_chunks(
+            connection, document_id, kb_id, tenant_id, parent_chunks, text_embedding_provider
+        )
         row = connection.execute(
-            """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
-                      COUNT(c.id) AS chunk_count
-               FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
-               WHERE d.id = ? GROUP BY d.id""",
+            DOCUMENT_SELECT + " WHERE d.id = ? GROUP BY d.id",
             (document_id,),
         ).fetchone()
     return _model(row)
@@ -57,10 +205,7 @@ def create(path: Path, tenant_id: str, kb_id: int, data: DocumentCreate, chunks:
 def get(path: Path, tenant_id: str, document_id: int) -> Document | None:
     with transaction(path) as connection:
         row = connection.execute(
-            """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
-                      COUNT(c.id) AS chunk_count
-               FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
-               WHERE d.id = ? AND d.tenant_id = ? GROUP BY d.id""",
+            DOCUMENT_SELECT + " WHERE d.id = ? AND d.tenant_id = ? GROUP BY d.id",
             (document_id, tenant_id),
         ).fetchone()
     return _model(row) if row else None
@@ -69,14 +214,78 @@ def get(path: Path, tenant_id: str, document_id: int) -> Document | None:
 def list_for_kb(path: Path, tenant_id: str, kb_id: int) -> list[Document]:
     with transaction(path) as connection:
         rows = connection.execute(
-            """SELECT d.id, d.knowledge_base_id, d.tenant_id, d.title, d.content, d.source,
-                      COUNT(c.id) AS chunk_count
-               FROM documents d LEFT JOIN chunks c ON c.document_id = d.id
-               WHERE d.knowledge_base_id = ? AND d.tenant_id = ?
-               GROUP BY d.id ORDER BY d.id""",
+            DOCUMENT_SELECT
+            + " WHERE d.knowledge_base_id = ? AND d.tenant_id = ? GROUP BY d.id ORDER BY d.id",
             (kb_id, tenant_id),
         ).fetchall()
     return [_model(row) for row in rows]
+
+
+def list_page_for_kb(
+    path: Path,
+    tenant_id: str,
+    kb_id: int,
+    *,
+    limit: int,
+    offset: int,
+    query: str = "",
+) -> tuple[list[DocumentSummary], int]:
+    """Return one metadata-only page without materializing every document body."""
+    where = "d.knowledge_base_id = ? AND d.tenant_id = ?"
+    params: list[object] = [kb_id, tenant_id]
+    normalized_query = query.strip()
+    if normalized_query:
+        escaped = (
+            normalized_query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        )
+        where += " AND (d.title LIKE ? ESCAPE '\\' OR d.source LIKE ? ESCAPE '\\')"
+        pattern = f"%{escaped}%"
+        params.extend((pattern, pattern))
+    with transaction(path) as connection:
+        total = int(
+            connection.execute(f"SELECT COUNT(*) FROM documents d WHERE {where}", params).fetchone()[0]
+        )
+        rows = connection.execute(
+            DOCUMENT_SUMMARY_SELECT
+            + f" WHERE {where} ORDER BY d.id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        ).fetchall()
+    return [_summary_model(row) for row in rows], total
+
+
+def find_by_hash(path: Path, tenant_id: str, kb_id: int, sha256: str) -> Document | None:
+    with transaction(path) as connection:
+        row = connection.execute(
+            DOCUMENT_SELECT
+            + " WHERE d.tenant_id = ? AND d.knowledge_base_id = ? AND d.sha256 = ? GROUP BY d.id",
+            (tenant_id, kb_id, sha256),
+        ).fetchone()
+    return _model(row) if row else None
+
+
+def list_elements(path: Path, tenant_id: str, document_id: int) -> list[dict[str, object]] | None:
+    if get(path, tenant_id, document_id) is None:
+        return None
+    with transaction(path) as connection:
+        rows = connection.execute(
+            """SELECT element_index, modality, text, page_number, heading, artifact_sha256,
+                      bbox_json, metadata_json
+               FROM document_elements WHERE document_id = ? ORDER BY element_index""",
+            (document_id,),
+        ).fetchall()
+    return [
+        {
+            "index": row["element_index"],
+            "modality": row["modality"],
+            "text": row["text"],
+            "page_number": row["page_number"],
+            "heading": row["heading"],
+            "artifact_sha256": row["artifact_sha256"],
+            "bbox": json.loads(row["bbox_json"]) if row["bbox_json"] else None,
+            "metadata": json.loads(row["metadata_json"]),
+        }
+        for row in rows
+    ]
 
 
 def update(
@@ -85,21 +294,62 @@ def update(
     document_id: int,
     data: DocumentUpdate,
     chunks: list[str] | None,
+    parent_chunks: list[ParentChunkPlan] | None,
+    text_embedding_provider: TextEmbeddingProvider,
 ) -> Document | None:
     stored = get(path, tenant_id, document_id)
     if stored is None:
         return None
-    values = stored.model_dump(exclude={"chunk_count", "id", "kb_id", "tenant_id"})
+    values = stored.model_dump(
+        exclude={
+            "chunk_count",
+            "element_count",
+            "artifact_count",
+            "id",
+            "kb_id",
+            "tenant_id",
+            "mime_type",
+            "sha256",
+            "parser",
+            "ingest_status",
+            "warnings",
+        }
+    )
     values.update(data.model_dump(exclude_unset=True))
     with transaction(path) as connection:
-        connection.execute(
-            """UPDATE documents SET title = ?, content = ?, source = ?, updated_at = CURRENT_TIMESTAMP
-               WHERE id = ? AND tenant_id = ?""",
-            (values["title"], values["content"], values["source"], document_id, tenant_id),
-        )
+        if chunks is None:
+            connection.execute(
+                """UPDATE documents SET title = ?, source = ?, updated_at = CURRENT_TIMESTAMP
+                   WHERE id = ? AND tenant_id = ?""",
+                (values["title"], values["source"], document_id, tenant_id),
+            )
+        else:
+            # A manual content edit invalidates byte identity and parser provenance.
+            connection.execute(
+                """UPDATE documents
+                   SET title = ?, content = ?, source = ?, mime_type = 'text/plain', sha256 = '',
+                       parser = 'manual', ingest_status = 'succeeded', warning_json = '[]',
+                       updated_at = CURRENT_TIMESTAMP
+                   WHERE id = ? AND tenant_id = ?""",
+                (values["title"], values["content"], values["source"], document_id, tenant_id),
+            )
+            connection.execute("DELETE FROM document_elements WHERE document_id = ?", (document_id,))
+            connection.execute("DELETE FROM document_artifacts WHERE document_id = ?", (document_id,))
+            artifact_repository.delete_orphan_blobs(connection, tenant_id)
         if chunks is not None:
             connection.execute("DELETE FROM chunks WHERE document_id = ?", (document_id,))
-            _insert_chunks(connection, document_id, stored.kb_id, tenant_id, chunks)
+            connection.execute("DELETE FROM parent_chunks WHERE document_id = ?", (document_id,))
+            _insert_chunks(
+                connection, document_id, stored.kb_id, tenant_id, chunks, text_embedding_provider
+            )
+            _insert_parent_child_chunks(
+                connection,
+                document_id,
+                stored.kb_id,
+                tenant_id,
+                parent_chunks or [],
+                text_embedding_provider,
+            )
     return get(path, tenant_id, document_id)
 
 
@@ -108,16 +358,78 @@ def delete(path: Path, tenant_id: str, document_id: int) -> bool:
         cursor = connection.execute(
             "DELETE FROM documents WHERE id = ? AND tenant_id = ?", (document_id, tenant_id)
         )
-        return cursor.rowcount == 1
+        deleted = cursor.rowcount == 1
+        if deleted:
+            artifact_repository.delete_orphan_blobs(connection, tenant_id)
+        return deleted
 
 
-def retrieval_rows(path: Path, tenant_id: str, kb_id: int | None = None) -> list[sqlite3.Row]:
-    sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json, d.source
-             FROM chunks c JOIN documents d ON d.id = c.document_id
-             WHERE c.tenant_id = ?"""
+def retrieval_rows(
+    path: Path,
+    tenant_id: str,
+    kb_id: int | None = None,
+    *,
+    parent_child: bool = False,
+) -> list[sqlite3.Row]:
+    if parent_child:
+        sql = """SELECT c.id, c.document_id, c.child_index AS chunk_index, c.text,
+                        c.embedding_json, c.embedding_model, d.source,
+                        p.id AS parent_id, p.text AS parent_text,
+                        p.page_start, p.page_end, p.heading
+                 FROM child_chunks c
+                 JOIN parent_chunks p ON p.id = c.parent_id
+                 JOIN documents d ON d.id = c.document_id
+                 WHERE c.tenant_id = ?"""
+    else:
+        sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json,
+                        c.embedding_model, d.source
+                 FROM chunks c JOIN documents d ON d.id = c.document_id
+                 WHERE c.tenant_id = ?"""
     params: list[object] = [tenant_id]
     if kb_id is not None:
         sql += " AND c.knowledge_base_id = ?"
         params.append(kb_id)
     with transaction(path) as connection:
         return list(connection.execute(sql, params).fetchall())
+
+
+def lexical_candidate_rows(
+    path: Path,
+    tenant_id: str,
+    kb_id: int | None,
+    query: str,
+    *,
+    limit: int = 800,
+) -> list[sqlite3.Row] | None:
+    """Use the optional trigram FTS index to bound in-process BM25 work.
+
+    ``None`` means FTS is unavailable and callers should use the full scan.
+    An empty list is a valid indexed result and callers may choose a recall
+    preserving fallback.
+    """
+    terms: list[str] = []
+    for run in CJK_RUN.findall(query):
+        if len(run) >= 3:
+            terms.extend(run[index : index + 3] for index in range(len(run) - 2))
+    terms.extend(ASCII_WORD.findall(query.lower()))
+    unique_terms = list(dict.fromkeys(term for term in terms if '"' not in term))[:48]
+    if not unique_terms:
+        return []
+    expression = " OR ".join(f'"{term}"' for term in unique_terms)
+    sql = """SELECT c.id, c.document_id, c.chunk_index, c.text, c.embedding_json,
+                    c.embedding_model, d.source
+             FROM chunks_fts
+             JOIN chunks c ON c.id = chunks_fts.rowid
+             JOIN documents d ON d.id = c.document_id
+             WHERE chunks_fts MATCH ? AND c.tenant_id = ?"""
+    params: list[object] = [expression, tenant_id]
+    if kb_id is not None:
+        sql += " AND c.knowledge_base_id = ?"
+        params.append(kb_id)
+    sql += " ORDER BY bm25(chunks_fts), c.id LIMIT ?"
+    params.append(max(10, min(limit, 5_000)))
+    try:
+        with transaction(path) as connection:
+            return list(connection.execute(sql, params).fetchall())
+    except sqlite3.OperationalError:
+        return None

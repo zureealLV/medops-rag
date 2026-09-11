@@ -1,66 +1,402 @@
-"""Grounded-answer workflow, citation checks, and refusal rules."""
+"""Grounded text/visual answer workflow, citations, and refusal rules."""
 
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
-from app.agents.model import generate
+from anyio import to_thread
+
+from app.agents.model import (
+    GenerationResult,
+    ModelProvider,
+    generate_detailed,
+    generate_detailed_async,
+)
 from app.config import Settings
-from app.models.answers import AnswerRequest, AnswerResponse, Citation
-from app.models.retrieval import SearchRequest
-from app.security.policies import is_medical_advice_request
+from app.models.answers import AnswerRequest, AnswerResponse, Citation, VisualCitation
+from app.models.artifacts import VisualEvidence, VisualSearchRequest
+from app.models.retrieval import (
+    AdaptiveRoutingTrace,
+    Evidence,
+    QueryTransform,
+    RetrievalStrategy,
+    SearchRequest,
+)
+from app.retrieval.query_routing import ResolvedProfile, route_query
+from app.security.policies import is_medical_advice_request, is_supported_domain_query
 from app.security.prompt_injection import has_injection_signals
-from app.services.retrieval import search
+from app.services import artifacts as artifact_service
+from app.services.retrieval import search as text_search
 
 
-def answer(path: Path, settings: Settings, tenant_id: str, request: AnswerRequest) -> AnswerResponse | None:
+def _strip_inline_citation_markers(answer_text: str) -> str:
+    """Keep the answer natural; structured citation cards are rendered separately."""
+    result = re.sub(
+        r"\s*[\[【](?:\d+:\d+|source:\d+|evidence:\d+|visual:\d+|image:\d+|来源\d+|图像\d+)[\]】]",
+        "",
+        answer_text,
+        flags=re.I,
+    )
+    result = re.sub(r"[ \t]+([，。！？；：,.!?;:])", r"\1", result)
+    result = re.sub(r"[ \t]{2,}", " ", result)
+    return result.strip()
+
+
+def _visual_confident(evidence: list[VisualEvidence], settings: Settings) -> bool:
+    if not evidence or evidence[0].image_similarity is None:
+        return False
+    top = float(evidence[0].image_similarity)
+    other_scores = [
+        float(item.image_similarity) for item in evidence[1:] if item.image_similarity is not None
+    ]
+    runner_up = max(other_scores, default=-1.0)
+    return (
+        top >= settings.visual_similarity_threshold and top - runner_up >= settings.visual_similarity_margin
+    )
+
+
+def _text_confident(evidence: list[Evidence], strategy: str, settings: Settings) -> bool:
+    """Apply an absolute component floor when the final rank score is normalized.
+
+    BM25 and RRF scores are normalized within each request, so the best irrelevant
+    row can otherwise receive a misleading score of 1.0. The component floors were
+    calibrated on the frozen 120-positive/20-negative V2 set and remain configurable.
+    """
+    if not evidence or evidence[0].score < settings.retrieval_threshold:
+        return False
+    top = evidence[0]
+    lexical = top.keyword_score >= settings.retrieval_keyword_threshold
+    dense = top.vector_score >= settings.retrieval_dense_threshold
+    if strategy in {"keyword", "bm25", "parent_child"}:
+        return lexical
+    if strategy == "vector":
+        return dense
+    return lexical or dense
+
+
+def _visual_payloads(
+    path: Path,
+    tenant_id: str,
+    evidence: list[VisualEvidence],
+    limit: int,
+    max_bytes: int,
+) -> list[tuple[VisualEvidence, bytes]]:
+    payloads: list[tuple[VisualEvidence, bytes]] = []
+    total_bytes = 0
+    for item in evidence[: max(0, min(limit, 5))]:
+        stored = artifact_service.content(path, tenant_id, item.id)
+        if stored is None:
+            continue
+        content = stored[0]
+        if len(content) > max_bytes or total_bytes + len(content) > max_bytes:
+            continue
+        payloads.append((item, content))
+        total_bytes += len(content)
+    return payloads
+
+
+def _response(
+    *,
+    answer_text: str,
+    text_evidence: list[Evidence],
+    all_text_evidence: list[Evidence],
+    visual_evidence: list[VisualEvidence],
+    all_visual_evidence: list[VisualEvidence],
+    resolved_profile: ResolvedProfile,
+    abstained: bool,
+    reason: str | None,
+    provider: str,
+    retrieval_ms: float,
+    retrieval_strategy: RetrievalStrategy | None = None,
+    retrieval_routing: AdaptiveRoutingTrace | None = None,
+    model_ms: float = 0.0,
+    token_usage: int = 0,
+    prompt_tokens: int = 0,
+    completion_tokens: int = 0,
+    cached_prompt_tokens: int = 0,
+    query_transform: QueryTransform = "none",
+    transformed_queries: list[str] | None = None,
+) -> AnswerResponse:
+    return AnswerResponse(
+        answer=answer_text,
+        citations=[
+            Citation(
+                source=item.source,
+                document_id=item.document_id,
+                chunk_id=item.chunk_id,
+                parent_id=item.parent_id,
+            )
+            for item in text_evidence[:3]
+        ],
+        visual_citations=[
+            VisualCitation(
+                artifact_id=item.id,
+                source=item.source,
+                document_id=item.document_id,
+                page_number=item.page_number,
+                bbox=item.bbox,
+                content_url=item.content_url,
+                sha256=item.sha256,
+            )
+            for item in visual_evidence[:3]
+        ],
+        retrieved_chunks=all_text_evidence,
+        retrieved_artifacts=all_visual_evidence,
+        retrieval_profile=resolved_profile,
+        retrieval_strategy=retrieval_strategy,
+        retrieval_routing=retrieval_routing,
+        query_transform=query_transform,
+        transformed_queries=transformed_queries or [],
+        abstained=abstained,
+        reason=reason,
+        provider=provider,
+        retrieval_ms=round(retrieval_ms, 3),
+        model_ms=round(model_ms, 3),
+        token_usage=token_usage,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        cached_prompt_tokens=cached_prompt_tokens,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationPlan:
+    """Fully retrieved and policy-checked input waiting only on model I/O."""
+
+    question: str
+    text_evidence: list[Evidence]
+    all_text_evidence: list[Evidence]
+    visual_evidence: list[VisualEvidence]
+    all_visual_evidence: list[VisualEvidence]
+    visual_payloads: list[tuple[VisualEvidence, bytes]]
+    resolved_profile: ResolvedProfile
+    retrieval_ms: float
+    retrieval_strategy: RetrievalStrategy
+    retrieval_routing: AdaptiveRoutingTrace | None
+    query_transform: QueryTransform
+    transformed_queries: list[str]
+
+
+def prepare_answer(
+    path: Path,
+    settings: Settings,
+    tenant_id: str,
+    request: AnswerRequest,
+) -> GenerationPlan | AnswerResponse | None:
+    """Run all SQLite, retrieval, artifact I/O, and policy work synchronously."""
+
+
+    resolved_profile = route_query(request.question, request.retrieval_profile)
     if is_medical_advice_request(request.question):
-        return AnswerResponse(
-            answer="该系统只回答医院信息化运维问题，不提供诊断、处方或治疗建议。",
-            citations=[],
-            retrieved_chunks=[],
+        return _response(
+            answer_text="该系统只提供医疗知识与医疗器械资料检索，不提供个体诊断、处方或治疗建议。",
+            text_evidence=[],
+            all_text_evidence=[],
+            visual_evidence=[],
+            all_visual_evidence=[],
+            resolved_profile=resolved_profile,
             abstained=True,
             reason="medical_advice_denied",
             provider="policy",
             retrieval_ms=0,
-            model_ms=0,
-            token_usage=0,
         )
-    result = search(
+    if resolved_profile == "text" and not is_supported_domain_query(request.question):
+        return _response(
+            answer_text="当前知识库没有足够的医疗或医疗器械证据回答这个问题。",
+            text_evidence=[],
+            all_text_evidence=[],
+            visual_evidence=[],
+            all_visual_evidence=[],
+            resolved_profile=resolved_profile,
+            abstained=True,
+            reason="insufficient_evidence",
+            provider="policy",
+            retrieval_ms=0,
+        )
+
+    text_result = text_search(
         path,
         tenant_id,
         SearchRequest(
-            query=request.question, knowledge_base_id=request.knowledge_base_id, top_k=request.top_k
+            query=request.question,
+            knowledge_base_id=request.knowledge_base_id,
+            top_k=request.top_k,
+            strategy=request.text_strategy,
+            query_transform=request.query_transform,
         ),
+        settings,
     )
-    if result is None:
+    if text_result is None:
         return None
-    safe_evidence = [item for item in result.results if not has_injection_signals(item.text)]
-    if not safe_evidence or safe_evidence[0].score < settings.retrieval_threshold:
-        reason = "unsafe_evidence" if result.results and not safe_evidence else "insufficient_evidence"
-        return AnswerResponse(
-            answer="现有知识库中没有足够可靠的证据，我不能据此回答。",
-            citations=[],
-            retrieved_chunks=result.results,
-            abstained=True,
-            reason=reason,
-            provider="policy",
-            retrieval_ms=result.retrieval_ms,
-            model_ms=0,
-            token_usage=0,
-        )
-    response_text, provider, model_ms, token_usage = generate(request.question, safe_evidence, settings)
-    citations = [
-        Citation(source=item.source, document_id=item.document_id, chunk_id=item.chunk_id)
-        for item in safe_evidence[:3]
-    ]
-    return AnswerResponse(
-        answer=response_text,
-        citations=citations,
-        retrieved_chunks=result.results,
-        abstained=False,
-        provider=provider,
-        retrieval_ms=result.retrieval_ms,
-        model_ms=round(model_ms, 3),
-        token_usage=token_usage,
+    safe_text = [item for item in text_result.results if not has_injection_signals(item.text)]
+    text_confident = _text_confident(safe_text, text_result.strategy, settings)
+
+    visual_result = None
+    needs_visual = resolved_profile == "visual" or (
+        request.retrieval_profile == "auto" and not text_confident and settings.image_embedding_enabled
     )
+    if needs_visual:
+        visual_result = artifact_service.search(
+            path,
+            settings,
+            tenant_id,
+            VisualSearchRequest(
+                query=request.question,
+                knowledge_base_id=request.knowledge_base_id,
+                top_k=request.top_k,
+                strategy=request.visual_strategy,
+            ),
+        )
+        if visual_result is None:
+            return None
+
+    all_visual = visual_result.results if visual_result is not None else []
+    safe_visual = [item for item in all_visual if not has_injection_signals(item.ocr_text)]
+    visual_confident = _visual_confident(safe_visual, settings)
+    if (
+        request.retrieval_profile == "auto"
+        and resolved_profile == "text"
+        and not text_confident
+        and visual_confident
+    ):
+        resolved_profile = "visual"
+
+    if resolved_profile == "visual":
+        accepted = visual_confident
+        accepted_text = safe_text if text_confident else []
+        accepted_visual = safe_visual if visual_confident else []
+        insufficient_reason = "insufficient_visual_evidence"
+    else:
+        accepted = text_confident
+        accepted_text = safe_text if text_confident else []
+        accepted_visual = []
+        insufficient_reason = "insufficient_evidence"
+
+    if not accepted:
+        unsafe = bool(text_result.results and not safe_text) or bool(all_visual and not safe_visual)
+        return _response(
+            answer_text="现有知识库中没有足够可靠的证据，我不能据此回答。",
+            text_evidence=[],
+            all_text_evidence=text_result.results,
+            visual_evidence=[],
+            all_visual_evidence=all_visual,
+            resolved_profile=resolved_profile,
+            abstained=True,
+            reason="unsafe_evidence" if unsafe else insufficient_reason,
+            provider="policy",
+            retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
+            retrieval_strategy=text_result.strategy,
+            retrieval_routing=text_result.routing,
+        )
+
+    payloads = _visual_payloads(
+        path,
+        tenant_id,
+        accepted_visual,
+        settings.model_max_visual_images,
+        settings.model_max_visual_bytes,
+    )
+    if accepted_visual and not payloads:
+        return _response(
+            answer_text="视觉证据已命中，但原图无法在安全大小限制内加载，因此本次拒绝作答。",
+            text_evidence=[],
+            all_text_evidence=text_result.results,
+            visual_evidence=[],
+            all_visual_evidence=all_visual,
+            resolved_profile=resolved_profile,
+            abstained=True,
+            reason="visual_payload_unavailable",
+            provider="policy",
+            retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
+            retrieval_strategy=text_result.strategy,
+            retrieval_routing=text_result.routing,
+        )
+    payload_evidence = [item for item, _ in payloads]
+    answer_text_evidence = accepted_text[:3]
+    return GenerationPlan(
+        question=request.question,
+        text_evidence=answer_text_evidence,
+        all_text_evidence=text_result.results,
+        visual_evidence=payload_evidence,
+        all_visual_evidence=all_visual,
+        visual_payloads=payloads,
+        resolved_profile=resolved_profile,
+        retrieval_ms=text_result.retrieval_ms + (visual_result.retrieval_ms if visual_result else 0.0),
+        retrieval_strategy=text_result.strategy,
+        retrieval_routing=text_result.routing,
+        query_transform=text_result.query_transform,
+        transformed_queries=text_result.transformed_queries,
+    )
+
+
+def _finalize_generation(plan: GenerationPlan, generation: GenerationResult) -> AnswerResponse:
+    response_text = _strip_inline_citation_markers(generation.answer)
+    return _response(
+        answer_text=response_text,
+        text_evidence=plan.text_evidence,
+        all_text_evidence=plan.all_text_evidence,
+        visual_evidence=plan.visual_evidence,
+        all_visual_evidence=plan.all_visual_evidence,
+        resolved_profile=plan.resolved_profile,
+        abstained=False,
+        reason=None,
+        provider=generation.provider,
+        retrieval_ms=plan.retrieval_ms,
+        retrieval_strategy=plan.retrieval_strategy,
+        retrieval_routing=plan.retrieval_routing,
+        query_transform=plan.query_transform,
+        transformed_queries=plan.transformed_queries,
+        model_ms=generation.model_ms,
+        token_usage=generation.usage.total_tokens,
+        prompt_tokens=generation.usage.prompt_tokens,
+        completion_tokens=generation.usage.completion_tokens,
+        cached_prompt_tokens=generation.usage.cached_prompt_tokens,
+    )
+
+
+def answer(
+    path: Path,
+    settings: Settings,
+    tenant_id: str,
+    request: AnswerRequest,
+    model_provider: ModelProvider | None = None,
+) -> AnswerResponse | None:
+    """Synchronous compatibility path used by batch workers and benchmarks."""
+    prepared = prepare_answer(path, settings, tenant_id, request)
+    if not isinstance(prepared, GenerationPlan):
+        return prepared
+    generation = generate_detailed(
+        prepared.question,
+        prepared.text_evidence,
+        settings,
+        prepared.visual_payloads,
+        model_provider,
+    )
+    return _finalize_generation(prepared, generation)
+
+
+async def answer_async(
+    path: Path,
+    settings: Settings,
+    tenant_id: str,
+    request: AnswerRequest,
+    model_provider: ModelProvider,
+) -> AnswerResponse | None:
+    """Event-loop-safe API path: sync retrieval is offloaded, model I/O is async."""
+    prepared = await to_thread.run_sync(
+        partial(prepare_answer, path, settings, tenant_id, request)
+    )
+    if not isinstance(prepared, GenerationPlan):
+        return prepared
+    generation = await generate_detailed_async(
+        prepared.question,
+        prepared.text_evidence,
+        settings,
+        prepared.visual_payloads,
+        tenant_id=tenant_id,
+        provider=model_provider,
+    )
+    return await to_thread.run_sync(partial(_finalize_generation, prepared, generation))

@@ -1,25 +1,69 @@
+x-medops-common: &medops-common
+  build:
+    context: .
+  environment:
+    DATABASE_URL: sqlite:///./data/runtime/medops.db
+    AUTH_MODE: ${AUTH_MODE:-trusted_headers}
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    OCR_ENABLED: ${OCR_ENABLED:-true}
+    TEXT_EMBEDDING_ENABLED: ${TEXT_EMBEDDING_ENABLED:-false}
+    IMAGE_EMBEDDING_ENABLED: ${IMAGE_EMBEDDING_ENABLED:-false}
+    MODEL_CACHE_DIR: /app/data/models/fastembed
+  volumes:
+    - medops_data:/app/data/runtime
+    - medops_models:/app/data/models
+  read_only: true
+  tmpfs:
+    - /tmp:size=128m,mode=1777
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  pids_limit: 256
+  init: true
+  restart: unless-stopped
+
 services:
-  medops:
-    build: .
-    environment:
-      DATABASE_URL: sqlite:///./data/runtime/medops.db
-      LOG_LEVEL: INFO
+  api:
+    <<: *medops-common
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "127.0.0.1:8000:8000"
-    volumes:
-      - medops_data:/app/data/runtime
-    read_only: true
-    tmpfs:
-      - /tmp
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/live', timeout=2)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  ingestion-worker:
+    <<: *medops-common
+    command: ["python", "scripts/ingestion_worker.py", "--poll-seconds", "0.25"]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1"]
       interval: 10s
       timeout: 3s
-      retries: 5
+      retries: 3
+
+  summary-worker:
+    <<: *medops-common
+    command: ["python", "scripts/summary_worker.py", "--poll-seconds", "0.25"]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
 volumes:
   medops_data:
+  medops_models:

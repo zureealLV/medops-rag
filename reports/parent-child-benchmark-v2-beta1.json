@@ -1,0 +1,29 @@
+{
+  "benchmark": "parent-child-context-v1",
+  "generated_at": "2026-09-06T20:48:48.003268+08:00",
+  "documents": 50,
+  "questions": 50,
+  "fixture": "unique alert near section start; linked action beyond legacy 600-char chunk",
+  "profiles": {
+    "bm25": {
+      "hit_at_1": 1.0,
+      "linked_action_in_returned_context": 0.0,
+      "mean_context_chars": 563.0,
+      "query_mean_ms": 13.628,
+      "query_p95_ms": 16.097
+    },
+    "parent_child": {
+      "hit_at_1": 1.0,
+      "linked_action_in_returned_context": 1.0,
+      "mean_context_chars": 1132.0,
+      "query_mean_ms": 19.702,
+      "query_p95_ms": 21.21
+    }
+  },
+  "decision": "Parent-child is opt-in: it improves context completeness on this fixture, while BM25 remains the measured child scorer until a real dense model wins a held-out benchmark.",
+  "limitations": [
+    "Synthetic lexical markers make document retrieval easy for both strategies.",
+    "This measures context reconstruction, not answer generation quality.",
+    "SQLite exact scoring and 50 documents do not establish a production scale choice."
+  ]
+}

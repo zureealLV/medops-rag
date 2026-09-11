@@ -1,0 +1,3 @@
+﻿asset_id,device_type,department,status,patient_data
+DEMO-PUMP-042,infusion_pump,simulation_lab,inspection_due,none
+DEMO-SPO2-017,pulse_oximeter,simulation_lab,ready,none
