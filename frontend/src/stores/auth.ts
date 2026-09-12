@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import type { ConnectionProfile } from '@/types/api'
 
 const defaults: ConnectionProfile = {
@@ -20,6 +20,7 @@ function readProfile(): ConnectionProfile {
 
 export const useAuthStore = defineStore('auth', () => {
   const profile = reactive<ConnectionProfile>(readProfile())
+  const authenticated = ref(sessionStorage.getItem('medops-authenticated') === '1')
 
   function save(next: ConnectionProfile) {
     Object.assign(profile, next)
@@ -29,5 +30,17 @@ export const useAuthStore = defineStore('auth', () => {
     else sessionStorage.removeItem('medops-api-key')
   }
 
-  return { profile, save }
+  function login() {
+    authenticated.value = true
+    sessionStorage.setItem('medops-authenticated', '1')
+  }
+
+  function logout() {
+    authenticated.value = false
+    sessionStorage.removeItem('medops-authenticated')
+    sessionStorage.removeItem('medops-api-key')
+    profile.apiKey = ''
+  }
+
+  return { profile, authenticated, save, login, logout }
 })

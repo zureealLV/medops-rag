@@ -58,6 +58,13 @@
 
 ## 核心能力
 
+### 0. 持续对话与角色界面（V3.5）
+
+- LangGraph 对话图会先解析口语化追问，再进入现有受控 RAG Agent；
+- 对话与消息按 tenant + actor 持久化，支持新建、历史回放与删除；
+- 独立登录页支持受信任组织身份和 Bearer API Key，管理菜单根据服务端角色显示；
+- 彩色 Web 对话台提供对话列表、固定输入框、可读引用和 Agent 轨迹。
+
 ### 1. 文档摄取与多模态证据
 
 - 支持 TXT、Markdown、PDF、DOCX、PPTX、PNG、JPEG、WebP、CSV、JSON、JSONL；

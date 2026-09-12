@@ -52,6 +52,43 @@ export interface Identity {
   auth_mode: string
 }
 
+export interface ConversationSummary {
+  id: string
+  knowledge_base_id: number
+  title: string
+  message_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ConversationMessage {
+  id: number
+  role: 'user' | 'assistant'
+  content: string
+  contextualized_question: string | null
+  answer: AnswerResponse | null
+  created_at: string
+}
+
+export interface ConversationDetail extends ConversationSummary {
+  messages: ConversationMessage[]
+}
+
+export interface ConversationTurnResponse {
+  conversation_id: string
+  contextualized_question: string
+  user_message: ConversationMessage
+  assistant_message: ConversationMessage
+  answer: AnswerResponse
+}
+
+export interface ManagedUser {
+  id: number
+  tenant_id: string
+  name: string
+  email: string
+}
+
 export interface KnowledgeBase {
   id: number
   tenant_id: string

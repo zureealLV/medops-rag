@@ -12,6 +12,11 @@ from app.services import users as service
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+@router.get("")
+def list_users(context: TenantContext, settings: SettingsDep) -> list[User]:
+    return service.list_users(settings.database_path, context.tenant_id)
+
+
 @router.post("", status_code=201)
 def create_user(data: UserCreate, context: TenantContext, settings: SettingsDep) -> User:
     return service.create_user(settings.database_path, context.tenant_id, data)

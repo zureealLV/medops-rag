@@ -24,7 +24,7 @@ class RequestContext:
     auth_mode: str
 
 
-VIEWER_POST_PATHS = frozenset({"/answer", "/search", "/visual-search"})
+VIEWER_POST_PATHS = frozenset({"/answer", "/search", "/visual-search", "/conversations"})
 
 
 def _unauthorized(message: str = "A valid Bearer API key is required") -> AppError:
@@ -50,7 +50,12 @@ def _authorize(context: RequestContext, method: str, path: str) -> None:
         raise AppError(403, "permission_denied", "This endpoint requires the admin role")
     if context.role == "editor":
         return
-    if context.role == "viewer" and (method == "GET" or path in VIEWER_POST_PATHS):
+    if context.role == "viewer" and (
+        method == "GET"
+        or path in VIEWER_POST_PATHS
+        or (path.startswith("/conversations/") and path.endswith("/messages"))
+        or (method == "DELETE" and path.startswith("/conversations/"))
+    ):
         return
     raise AppError(403, "permission_denied", "This endpoint requires the editor role")
 

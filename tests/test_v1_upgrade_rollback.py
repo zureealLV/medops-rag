@@ -72,10 +72,13 @@ def test_exact_v1_upgrade_preserves_rows_backfills_indexes_and_rolls_back(tmp_pa
     with sqlite3.connect(database) as connection:
         connection.row_factory = sqlite3.Row
         assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
         assert connection.execute(
             "SELECT value FROM schema_metadata WHERE key='schema_version'"
-        ).fetchone()[0] == "4"
+        ).fetchone()[0] == "5"
+        assert connection.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='conversations'"
+        ).fetchone()[0] == 1
         document = connection.execute("SELECT * FROM documents WHERE id=1").fetchone()
         assert document["content"] == "PACS legacy recovery"
         assert document["mime_type"] == "text/plain"
@@ -122,4 +125,4 @@ def test_upgrade_new_database_needs_no_backup(tmp_path: Path):
     assert digest == database_sha256(database)
     initialize(database)
     with sqlite3.connect(database) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5

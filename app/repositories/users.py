@@ -22,3 +22,12 @@ def get_user(path: Path, tenant_id: str, user_id: int) -> User | None:
             (user_id, tenant_id),
         ).fetchone()
     return User(**dict(row)) if row else None
+
+
+def list_users(path: Path, tenant_id: str) -> list[User]:
+    with transaction(path) as connection:
+        rows = connection.execute(
+            "SELECT id, tenant_id, name, email FROM users WHERE tenant_id=? ORDER BY id DESC",
+            (tenant_id,),
+        ).fetchall()
+    return [User(**dict(row)) for row in rows]

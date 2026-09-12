@@ -12,3 +12,7 @@ def create_user(path: Path, tenant_id: str, data: UserCreate) -> User:
 
 def get_user(path: Path, tenant_id: str, user_id: int) -> User | None:
     return repository.get_user(path, tenant_id, user_id)
+
+
+def list_users(path: Path, tenant_id: str) -> list[User]:
+    return repository.list_users(path, tenant_id)

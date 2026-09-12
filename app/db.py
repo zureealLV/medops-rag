@@ -292,6 +292,32 @@ CREATE TABLE IF NOT EXISTS agent_checkpoints (
 );
 CREATE INDEX IF NOT EXISTS idx_agent_checkpoints_identity
     ON agent_checkpoints(tenant_id, actor, thread_id, id DESC);
+CREATE TABLE IF NOT EXISTS conversations (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    knowledge_base_id INTEGER NOT NULL,
+    title TEXT NOT NULL DEFAULT '新对话',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(knowledge_base_id) REFERENCES knowledge_bases(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_conversations_identity
+    ON conversations(tenant_id, actor, updated_at DESC);
+CREATE TABLE IF NOT EXISTS conversation_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id TEXT NOT NULL,
+    tenant_id TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('user','assistant')),
+    content TEXT NOT NULL,
+    contextualized_question TEXT,
+    answer_json TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_order
+    ON conversation_messages(conversation_id, id);
 """
 
 
@@ -363,7 +389,7 @@ def initialize(path: Path) -> None:
         if "provider" not in columns:
             connection.execute("ALTER TABLE request_metrics ADD COLUMN provider TEXT")
         if "retrieval_profile" not in columns:
-                connection.execute("ALTER TABLE request_metrics ADD COLUMN retrieval_profile TEXT")
+            connection.execute("ALTER TABLE request_metrics ADD COLUMN retrieval_profile TEXT")
         if "tenant_id" not in columns:
             connection.execute("ALTER TABLE request_metrics ADD COLUMN tenant_id TEXT")
         document_columns = {row["name"] for row in connection.execute("PRAGMA table_info(documents)")}
@@ -424,7 +450,7 @@ def initialize(path: Path) -> None:
         )
         connection.execute(
             """INSERT INTO schema_metadata(key,value,updated_at)
-               VALUES ('schema_version','4',CURRENT_TIMESTAMP)
-               ON CONFLICT(key) DO UPDATE SET value='4',updated_at=CURRENT_TIMESTAMP"""
+               VALUES ('schema_version','5',CURRENT_TIMESTAMP)
+               ON CONFLICT(key) DO UPDATE SET value='5',updated_at=CURRENT_TIMESTAMP"""
         )
-        connection.execute("PRAGMA user_version = 4")
+        connection.execute("PRAGMA user_version = 5")

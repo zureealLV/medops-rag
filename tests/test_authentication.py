@@ -84,6 +84,18 @@ def test_roles_tenant_isolation_revocation_and_hash_only_storage(tmp_path: Path)
 
         assert client.get("/knowledge-bases", headers=_headers(viewer_token)).status_code == 200
         assert client.get("/system/metrics", headers=_headers(viewer_token)).status_code == 403
+        conversation = client.post(
+            "/conversations",
+            headers=_headers(viewer_token),
+            json={"knowledge_base_id": kb_id},
+        )
+        assert conversation.status_code == 201
+        assert (
+            client.delete(
+                f"/conversations/{conversation.json()['id']}", headers=_headers(viewer_token)
+            ).status_code
+            == 204
+        )
         search = client.post(
             "/search",
             headers=_headers(viewer_token),
@@ -120,6 +132,8 @@ def test_roles_tenant_isolation_revocation_and_hash_only_storage(tmp_path: Path)
             json={"name": "Alice", "email": "alice@example.test"},
         )
         assert admin_user.status_code == 201
+        assert client.get("/users", headers=_headers(viewer_token)).status_code == 403
+        assert client.get("/users", headers=_headers(admin_token)).json() == [admin_user.json()]
         assert client.get("/audit-logs", headers=_headers(admin_token)).status_code == 200
 
         assert revoke_credential(database, tenant_id="hospital-a", credential_id=viewer_id)

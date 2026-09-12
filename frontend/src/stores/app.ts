@@ -26,7 +26,8 @@ export const useAppStore = defineStore('app', () => {
   async function loadKnowledgeBases() {
     knowledgeBases.value = await medopsApi.listKnowledgeBases()
     if (!knowledgeBases.value.some((item) => item.id === activeKbId.value)) {
-      const preferred = knowledgeBases.value.find((item) => /华佗中文医学/.test(item.name))
+      const preferred = knowledgeBases.value.find((item) => /中国官方医疗/.test(item.name))
+        ?? knowledgeBases.value.find((item) => /华佗中文医学/.test(item.name))
         ?? knowledgeBases.value.find((item) => /MedlinePlus|器械|医疗|医学/.test(item.name))
         ?? knowledgeBases.value[0]
       activeKbId.value = preferred?.id ?? null

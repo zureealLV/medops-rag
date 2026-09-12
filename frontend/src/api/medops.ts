@@ -2,11 +2,15 @@ import { apiRequest, encodeQuery } from './client'
 import type {
   AdminAnswerRequest,
   AnswerResponse,
+  ConversationDetail,
+  ConversationSummary,
+  ConversationTurnResponse,
   DocumentPage,
   Health,
   Identity,
   KnowledgeBase,
   Metrics,
+  ManagedUser,
   ModelConfigInput,
   ModelConfigTestResult,
   ModelConfigView,
@@ -29,6 +33,18 @@ export const medopsApi = {
   },
   answer: (data: { question: string; knowledge_base_id: number; top_k: number }, signal?: AbortSignal) =>
     apiRequest<AnswerResponse>('/answer', { method: 'POST', body: JSON.stringify(data), signal }),
+  listConversations: () => apiRequest<ConversationSummary[]>('/conversations'),
+  createConversation: (data: { knowledge_base_id: number; title?: string }) =>
+    apiRequest<ConversationSummary>('/conversations', { method: 'POST', body: JSON.stringify(data) }),
+  getConversation: (id: string) => apiRequest<ConversationDetail>(`/conversations/${id}`),
+  deleteConversation: (id: string) => apiRequest<void>(`/conversations/${id}`, { method: 'DELETE' }),
+  sendConversationMessage: (id: string, content: string, signal?: AbortSignal) =>
+    apiRequest<ConversationTurnResponse>(`/conversations/${id}/messages`, {
+      method: 'POST', body: JSON.stringify({ content }), signal,
+    }),
+  listUsers: () => apiRequest<ManagedUser[]>('/users'),
+  createUser: (data: { name: string; email: string }) =>
+    apiRequest<ManagedUser>('/users', { method: 'POST', body: JSON.stringify(data) }),
   adminAnswer: (data: AdminAnswerRequest, signal?: AbortSignal) =>
     apiRequest<AnswerResponse>('/answer', { method: 'POST', body: JSON.stringify(data), signal }),
   search: (data: SearchRequest, signal?: AbortSignal) =>
@@ -55,7 +71,7 @@ export const medopsApi = {
       params: {
         protocolVersion: '2025-11-25',
         capabilities: {},
-        clientInfo: { name: 'medops-console', version: '3.4.0' },
+        clientInfo: { name: 'medops-console', version: '3.5.0' },
       },
     }),
   }),

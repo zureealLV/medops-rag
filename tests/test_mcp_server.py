@@ -56,7 +56,7 @@ def test_mcp_initialize_and_tool_schemas(tmp_path: Path):
         assert initialize.json()["result"]["serverInfo"] == {
             "description": "Tenant-scoped medical and medical-device evidence retrieval.",
             "name": "MedOps RAG",
-            "version": "3.4.0",
+            "version": "3.5.0",
         }
 
         tools = client.post(

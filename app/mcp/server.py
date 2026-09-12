@@ -137,7 +137,7 @@ def create_mcp_server(
             "Use rag_search for evidence discovery and rag_answer for a grounded answer. "
             "Preserve returned citations and never present the system as medical advice."
         ),
-        version="3.4.0",
+        version="3.5.0",
     )
 
     @server.tool()

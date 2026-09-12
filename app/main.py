@@ -16,6 +16,7 @@ from app.api.answers import router as answers_router
 from app.api.artifacts import router as artifacts_router
 from app.api.audit import router as audit_router
 from app.api.auth import router as auth_router
+from app.api.conversations import router as conversations_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
 from app.api.jobs import router as jobs_router
@@ -85,7 +86,7 @@ def create_app(
 
     application = FastAPI(
         title="MedOps RAG",
-        version="3.4.0",
+        version="3.5.0",
         description=(
             "Auditable multimodal RAG for public medical knowledge and medical-device evidence. "
             "Educational use only; not medical advice."
@@ -100,6 +101,7 @@ def create_app(
     for router in (
         health_router,
         auth_router,
+        conversations_router,
         users_router,
         knowledge_bases_router,
         metrics_router,

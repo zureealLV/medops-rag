@@ -10,8 +10,9 @@ Initialization adds document provenance, normalized elements/artifacts, parent/c
 hashed credentials, pipeline metrics and tenant/actor-scoped agent control checkpoints. Legacy fixed chunks are copied into one parent and one compatible
 child so they remain searchable without rewriting their text or embeddings.
 
-Successful initialization records both `PRAGMA user_version = 4` and
-`schema_metadata['schema_version'] = '4'`. Schema 3 added the trigger-maintained
+Successful initialization records both `PRAGMA user_version = 5` and
+`schema_metadata['schema_version'] = '5'`. Schema 5 adds tenant- and actor-scoped
+durable conversations and message history. Schema 3 added the trigger-maintained
 FTS5 trigram candidate index; schema 4 adds append-only bounded agent control checkpoints.
 SQLite builds without FTS5 still retain the automatic full-scan fallback. The upgrade is idempotent.
 
