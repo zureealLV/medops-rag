@@ -1,10 +1,12 @@
-# MedOps RAG V3.4｜可审计的医疗知识 Agent 系统
+# MedOps RAG V3.4｜可审计的企业知识库问答 Agent
 
 [English](README_EN.md) · [学习导览](docs/LEARNING_GUIDE.md) · [部署说明](docs/v2/DEPLOYMENT.md) · [安全威胁模型](THREAT_MODEL.md)
 
-面向**公开医疗知识与医疗器械证据**的多租户 RAG：把文档解析、混合检索、受控 Agent、MCP、引用复核与运行审计收进一条可解释链路。
+面向**公开资料与企业内部知识**的多租户 RAG：把多模态文档解析、混合检索、受控 Agent、MCP、引用复核与运行审计收进一条可解释链路，让 AI 回答能够回到原始证据，并对无依据问答和越权访问主动拒绝。
 
-> **边界声明：**这是教学与工程作品集，不是医疗器械；不诊断、不处方、不处理真实患者资料，也不会执行改变系统状态的工具。
+> **定位演进：**项目第一版使用医疗健康与医疗器械公开资料验证来源追溯、拒答和高风险域安全策略；V3.4 的主定位已演进为企业知识库问答 Agent。医疗语料与 `medical` 策略仍作为可复现的垂直领域验证资产，而不是产品的唯一知识边界。
+>
+> **边界声明：**这是教学与工程作品集，不处理真实患者资料或企业敏感数据，也不会执行改变系统状态的工具；仓库中的公开语料和基准结果不等于行业合规认证。
 
 ![MedOps 从资料到可审计回答的完整流程](docs/assets/medops-flow.svg)
 
@@ -13,7 +15,7 @@
 1. **资料与问题先过边界**：API Key / RBAC 解析租户和角色，SQL 在检索前完成租户过滤，而不是把别人的内容交给模型后再过滤。
 2. **摄取与问答分两条路径**：文档进入安全解析、OCR、语义分块和索引；问题进入 BM25 / RRF / Parent–Child 自适应检索。
 3. **Agent 不能自由乱跑**：LangGraph 最多调用两个代码所有、只读的白名单工具，并记录有界控制状态。
-4. **输出必须能追溯**：答案附带 `[来源N]` 与来源卡片；证据不足、疑似提示注入或涉及医疗建议时明确拒答。
+4. **输出必须能追溯**：答案附带 `[来源N]` 与来源卡片；证据不足、疑似提示注入或引用越权时明确拒答；可选 `medical` profile 额外拒绝个体诊疗建议。
 5. **整条链路可观察**：请求 ID、`Server-Timing`、队列、模型、路由、熔断、截止时间和重试预算都可查询。
 
 ## 界面预览
@@ -47,7 +49,7 @@
 
 | 真实问题 | MedOps 的处理方式 | 可核验结果 |
 |---|---|---|
-| 医疗资料格式杂乱、来源难追 | 统一解析 PDF / Office / 图片 / CSV / JSON，并保留页码、标题、坐标、URL 和哈希 | 文本与图片证据都能回到原文档 |
+| 企业资料格式杂乱、来源难追 | 统一解析 PDF / Office / 图片 / CSV / JSON，并保留页码、标题、坐标、URL 和哈希 | 文本与图片证据都能回到原文档 |
 | 多租户 RAG 容易越权 | 服务端身份解析、RBAC、SQL 前置租户过滤、引用范围二次复核 | 其他租户 KB 不可见，内容不进入模型上下文 |
 | 检索分数高不代表真有答案 | 绝对证据阈值、负例校准、提示注入隔离和策略拒答 | 无证据时明确 abstain，不拿“最不差结果”硬答 |
 | Agent 容易不可控 | LangGraph 有界节点、只读白名单工具、Checkpoint 不保存敏感正文 | 能看见路径，也能限制工具与状态体积 |
@@ -92,9 +94,9 @@
 | 检索 | SQLite FTS5、rank-bm25、RRF、FastEmbed、可选 Qdrant | 词法/稠密/融合检索与租户过滤 |
 | 文档 | PyMuPDF、python-docx、python-pptx、RapidOCR、ONNX Runtime | 文本、表格、OCR、图片与版面元素提取 |
 | 存储与任务 | SQLite WAL、事务、租约队列、SHA-256 | 元数据、审计、任务、Checkpoint 与证据去重 |
-| 工程质量 | Pytest、Ruff、vue-tsc、Docker Compose | 214 项测试、静态检查、前端构建与多服务部署 |
+| 工程质量 | Pytest、Ruff、vue-tsc、Docker Compose | 216 项测试、静态检查、前端构建与多服务部署 |
 
-## 数据与证据资产
+## 数据与证据资产（医疗语料是首个验证域）
 
 | 语料 | 规模与语言 | 来源与用途 | 再分发边界 |
 |---|---|---|---|
@@ -103,7 +105,7 @@
 | NLM MedlinePlus | 英文健康主题 XML，可选西语 | 官方公共健康主题、URL、主题 ID、MeSH 与来源 | 通过官方批量数据复现导入并保留出处 |
 | 教学样例 | 两个幂等知识库 | FDA、CDC、WHO、MedlinePlus 公开资料的教育性改写 | 只用于本地演示，不冒充临床知识库 |
 
-详见[中国官方语料说明](docs/v2/OFFICIAL_CHINESE_CORPUS.md)与[公共医疗语料说明](docs/v2/PUBLIC_MEDICAL_CORPORA.md)。
+这些资产用于证明公开数据摄取、来源追溯、负例校准与高风险策略，而不是把系统限定为医疗产品。企业部署应导入自身制度、SOP、产品、客服或运维资料，并重新校准阈值。详见[中国官方语料说明](docs/v2/OFFICIAL_CHINESE_CORPUS.md)与[公共医疗语料说明](docs/v2/PUBLIC_MEDICAL_CORPORA.md)。
 
 ## 测试与基准数据
 
@@ -111,7 +113,7 @@
 
 | 门禁 | 当前证据 |
 |---|---|
-| 自动化测试 | **214 项** API、安全、解析器、迁移、队列、UI、MCP、Provider 配置与异步竞态测试 |
+| 自动化测试 | **216 项** API、安全、解析器、迁移、队列、UI、MCP、Provider 配置与异步竞态测试 |
 | 回答评测 | 冻结 30-case 的召回、引用正确性与拒答检查 |
 | 前端 | `vue-tsc` 类型检查 + Vite 生产构建 |
 | 可复现性 | 报告 JSON、数据哈希、版本与运行环境一并提交；`reproduce_release.ps1` 统一入口 |
@@ -149,12 +151,13 @@
 
 ## 安全边界与明确限制
 
-- 只使用公开、可审计语料；官方来源和研究语料不等于经过临床专家签核。
-- 医疗建议、诊断、处方类请求由策略层拒绝；项目不处理真实患者数据。
+- 仓库示例只使用公开、可审计语料；企业内部资料需要独立完成数据分级、授权、保留期和删除策略。
+- 默认 `POLICY_PROFILE=enterprise`，由租户范围内的检索证据决定能否回答；切换为 `medical` 后额外拒绝医疗建议、诊断、处方和明显域外请求。
+- 官方来源和研究语料不等于经过专家签核，项目不处理真实患者数据。
 - Prompt Injection 检测属于纵深防御，不能宣称完全阻断所有攻击。
 - `trusted_headers` 仅适合本地演示；公网部署应使用 API Key 模式并在网关补齐 TLS、限流和密钥管理。
 - CLIP 可检索图片，但不能可靠推理图表数值或示意图关系；中文跨模态配置默认关闭。
-- SQLite 与进程内检索面向单机作品集/教学部署，不宣称医院级容量或高可用。
+- SQLite 与进程内检索面向单机作品集/教学部署，不宣称企业级多实例容量或高可用。
 - V3.4 前端与异步 Provider 变更后的 Docker Linux 镜像仍需在可用 Docker Engine 主机上重新验证。
 
 ## 代码与文档导航
@@ -165,7 +168,7 @@ app/services/        回答、检索、摄取与任务编排
 app/retrieval/       BM25 / RRF / Adaptive / Parent–Child
 app/agents/          Classic / LangChain / LangGraph / Provider
 app/mcp/             MCP Server 与租户工具边界
-app/parsers/         文档、OCR 与安全解析
+app/ingestion/       文档、OCR 与安全解析
 frontend/            Vue 3 企业控制台
 scripts/             启动、导入、Worker、迁移与复现脚本
 evals/               冻结数据与基准 Runner
@@ -201,7 +204,7 @@ cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\scripts\build_frontend.ps1
-.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
+.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile operations --tenant company-a
 .\.venv\Scripts\fastapi.exe dev
 ```
 
@@ -215,7 +218,7 @@ python -m venv .venv
 本地演示默认身份头：
 
 ```text
-X-Tenant-ID: hospital-a
+X-Tenant-ID: company-a
 X-Actor-ID: local-demo
 ```
 
@@ -239,7 +242,7 @@ X-Actor-ID: local-demo
 
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\manage_api_keys.py create `
-  --tenant hospital-a --name local-admin --role admin
+  --tenant company-a --name local-admin --role admin
 $env:AUTH_MODE = "api_key"
 ```
 

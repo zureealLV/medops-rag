@@ -1,8 +1,12 @@
-# MedOps Medical Knowledge Agent RAG V3.4
+# MedOps Enterprise Knowledge Q&A Agent RAG V3.4
 
 [中文首页](README.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [Summary Provider policy](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
 
-An auditable, tenant-scoped Agent RAG assistant for **public medical knowledge and medical-device evidence**.
+An auditable, tenant-scoped Agent RAG assistant for **public documents and internal enterprise knowledge**.
+The first version used public medical and medical-device sources to validate provenance, abstention, and
+high-risk policy controls. V3.4 treats that corpus and the optional `medical` policy profile as a reproducible
+domain validation pack rather than the product's primary identity. The default `enterprise` profile relies on
+tenant-scoped retrieval evidence instead of a medical keyword allowlist.
 V3.4 adds one end-to-end Provider deadline across queueing, HTTP attempts and backoff, bounded `Retry-After`,
 exponential jitter, process-local global/per-tenant retry budgets, and an honestly harder adaptive challenge v3.
 It retains V3.3's tenant-fair AsyncClient path, circuit breaker, explicit overload behavior, and the admin-only
@@ -10,9 +14,9 @@ retrieval laboratory, tenant/actor-scoped Agent control checkpoints, Vue 3 enter
 explainable adaptive retrieval, DeepSeek V4 Flash, token/cost telemetry,
 and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
 PDFs, 15,000-record Huatuo research corpus, NLM MedlinePlus import, multimodal evidence, SQLite trigram FTS and
-the bright clinical console.
+the enterprise operations console as reproducible validation assets.
 
-> Educational portfolio software, not a medical device. It does not diagnose, prescribe, process real patient records, or execute system-changing tools.
+> Educational portfolio software. It does not process real patient or enterprise-sensitive records, claim regulatory compliance, or execute system-changing tools.
 
 > **Claim boundary:** alpha.2 routes visual questions, retrieves text-free images, and returns stored image evidence. It does not yet claim chart/diagram reasoning or production Chinese cross-modal quality.
 
@@ -65,16 +69,16 @@ the bright clinical console.
 - optional OpenAI-compatible generation with timeout, bounded retry and offline fallback;
 - tenant filtering in SQL before retrieval/model context;
 - optional scrypt-hashed API keys, immediate revocation, server-bound tenancy and viewer/editor/admin roles;
-- indirect prompt-injection quarantine, PII-safe audit data and medical-advice denial;
+- indirect prompt-injection quarantine, PII-safe audit data, evidence-based abstention, and optional medical-advice denial under `POLICY_PROFILE=medical`;
 - three read-only tools: `search_documents`, `get_document_metadata`, `get_system_status`;
 - request IDs, `Server-Timing`, dependency-free `/live`, database-aware `/ready`, tenant-scoped routing metrics,
-  process-local Provider capacity/breaker/deadline/retry-budget telemetry, 214 tests,
+  process-local Provider capacity/breaker/deadline/retry-budget telemetry, 216 tests,
   and repeatable ingestion/retrieval/concurrency benchmarks;
 - backup-first V1-to-V2 migration, explicit schema versioning and a tested full-database rollback path;
 - a Docker Compose definition with API, ingestion worker, summary worker, health checks and persistent
   data/model volumes; the prior V3 image gate was verified, while the V3.4 async/frontend image still needs
   revalidation on a host with the Docker Linux engine available;
-- two idempotent starter knowledge bases for clinical fundamentals and medical-device safety, derived from public FDA, CDC, WHO and MedlinePlus material and kept strictly educational.
+- two idempotent starter knowledge bases for the original medical validation profile, derived from public FDA, CDC, WHO and MedlinePlus material and kept strictly educational.
 
 ## Quick start (Windows / PowerShell)
 
@@ -87,7 +91,7 @@ cd medops-rag
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\scripts\build_frontend.ps1
-.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile medical
+.\.venv\Scripts\python.exe .\scripts\seed_sample_data.py --profile operations --tenant company-a
 .\.venv\Scripts\python.exe -m scripts.import_chinese_official
 .\.venv\Scripts\python.exe -m scripts.import_huatuo
 .\.venv\Scripts\python.exe -m scripts.import_medlineplus
@@ -110,7 +114,7 @@ source selection, attribution boundaries, optional Spanish import and test quest
 Open `http://127.0.0.1:8000/` for the Web console, or `http://127.0.0.1:8000/docs` for Swagger. The console defaults to these local demo trust-boundary headers:
 
 ```text
-X-Tenant-ID: hospital-a
+X-Tenant-ID: company-a
 X-Actor-ID: local-demo
 ```
 
@@ -119,7 +123,7 @@ and switch modes:
 
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\manage_api_keys.py create `
-  --tenant hospital-a --name local-admin --role admin
+  --tenant company-a --name local-admin --role admin
 $env:AUTH_MODE = "api_key"
 $headers = @{ Authorization = "Bearer <the-key-printed-once>" }
 ```
@@ -130,7 +134,7 @@ spoofed `X-Tenant-ID`/`X-Actor-ID` values. See [`docs/v2/AUTHORIZATION.md`](docs
 ## Minimal demonstration
 
 ```powershell
-$headers = @{ "X-Tenant-ID" = "hospital-a"; "X-Actor-ID" = "local-demo" }
+$headers = @{ "X-Tenant-ID" = "company-a"; "X-Actor-ID" = "local-demo" }
 
 Invoke-RestMethod http://127.0.0.1:8000/search -Method Post -Headers $headers `
   -ContentType "application/json" -Body '{"query":"哪些因素可能影响脉搏血氧仪读数？","knowledge_base_id":2}'
@@ -166,7 +170,7 @@ See [`docs/demo.md`](docs/demo.md) for normal, abstention, cross-tenant, injecti
 
 ## Quality gates and benchmarks
 
-Run the release core (Ruff, 214 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
+Run the release core (Ruff, 216 tests, Vue typecheck/production build, 30-case answer/citation/abstention evaluation, ingestion and retrieval
 benchmarks) with one command. `-Full` additionally runs the cached MiniLM confidence calibration and BGE
 performance profile:
 
@@ -299,5 +303,5 @@ Read [`docs/v2/ENGINEERING_DESIGN.md`](docs/v2/ENGINEERING_DESIGN.md), then [`do
 - Prompt-injection detection is heuristic defense-in-depth, not a complete solution.
 - `trusted_headers` remains a demo boundary; the API-key mode is authenticated but still needs gateway TLS,
   rate limiting and secret management for an Internet-facing deployment.
-- SQLite and in-process retrieval target a local demonstration, not hospital-scale traffic.
+- SQLite and in-process retrieval target a local demonstration, not enterprise multi-instance traffic.
 - The corpus is synthetic and the evaluation set is intentionally small.

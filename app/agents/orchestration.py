@@ -23,6 +23,7 @@ from app.agents.tools import (
     READ_ONLY_AGENT_TOOLS,
     select_read_only_tools,
 )
+from app.config import PolicyProfile
 from app.models.answers import AgentStep, AnswerRequest, AnswerResponse
 from app.retrieval.query_routing import route_query
 from app.security.policies import is_medical_advice_request, is_supported_domain_query
@@ -37,6 +38,7 @@ class _ToolCall(TypedDict):
 
 class _WorkflowState(TypedDict, total=False):
     request: AnswerRequest
+    policy_profile: PolicyProfile
     runner: Callable[[], AnswerResponse | None]
     result: AnswerResponse | None
     route: str
@@ -94,9 +96,10 @@ def _prepare(state: _WorkflowState) -> _WorkflowState:
     request = state["request"]
     route = route_query(request.question, request.retrieval_profile)
     policy_reason = None
-    if is_medical_advice_request(request.question):
+    profile = state.get("policy_profile", "enterprise")
+    if is_medical_advice_request(request.question, profile):
         policy_reason = "medical_advice_denied"
-    elif route == "text" and not is_supported_domain_query(request.question):
+    elif route == "text" and not is_supported_domain_query(request.question, profile):
         policy_reason = "insufficient_evidence"
     next_state: _WorkflowState = {
         **state,
@@ -334,6 +337,7 @@ def orchestrate_answer(
     request: AnswerRequest,
     runner: Callable[[], AnswerResponse | None],
     *,
+    policy_profile: PolicyProfile = "enterprise",
     citation_scope_checker: Callable[[AnswerResponse], bool] | None = None,
     checkpoint: CheckpointSession | None = None,
 ) -> AnswerResponse | None:
@@ -369,6 +373,7 @@ def orchestrate_answer(
 
     initial: _WorkflowState = {
         "request": request,
+        "policy_profile": policy_profile,
         "runner": runner,
         "steps": [],
         "tool_calls": 0,
@@ -395,6 +400,7 @@ def orchestrate_answer(
 
 class _AsyncWorkflowState(TypedDict, total=False):
     request: AnswerRequest
+    policy_profile: PolicyProfile
     runner: Callable[[], Awaitable[AnswerResponse | None]]
     result: AnswerResponse | None
     route: str
@@ -572,6 +578,7 @@ async def orchestrate_answer_async(
     request: AnswerRequest,
     runner: Callable[[], Awaitable[AnswerResponse | None]],
     *,
+    policy_profile: PolicyProfile = "enterprise",
     citation_scope_checker: Callable[[AnswerResponse], bool] | None = None,
     checkpoint: CheckpointSession | None = None,
 ) -> AnswerResponse | None:
@@ -624,6 +631,7 @@ async def orchestrate_answer_async(
 
     initial: _AsyncWorkflowState = {
         "request": request,
+        "policy_profile": policy_profile,
         "runner": runner,
         "steps": [],
         "tool_calls": 0,

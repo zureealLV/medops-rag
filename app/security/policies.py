@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+from app.config import PolicyProfile
+
 MEDICAL_ADVICE = re.compile(r"(诊断|确诊|吃什么药|用药|剂量|治疗方案|处方|diagnos|dosage|treatment)", re.I)
 SUPPORTED_DOMAIN = re.compile(
     r"(医|病|症|药|血|菌|病毒|感染|炎|癌|瘤|疼|痛|压疮|检查|手术|预防|护理|"
@@ -18,10 +20,10 @@ SUPPORTED_DOMAIN = re.compile(
 )
 
 
-def is_medical_advice_request(question: str) -> bool:
-    return bool(MEDICAL_ADVICE.search(question))
+def is_medical_advice_request(question: str, profile: PolicyProfile = "medical") -> bool:
+    return profile == "medical" and bool(MEDICAL_ADVICE.search(question))
 
 
-def is_supported_domain_query(question: str) -> bool:
-    """Reject obviously unrelated queries before corpus terms can spuriously overlap."""
-    return bool(SUPPORTED_DOMAIN.search(question))
+def is_supported_domain_query(question: str, profile: PolicyProfile = "medical") -> bool:
+    """Apply a domain allowlist only for the legacy medical validation profile."""
+    return profile == "enterprise" or bool(SUPPORTED_DOMAIN.search(question))

@@ -113,7 +113,7 @@ def test_mcp_list_knowledge_bases_is_tenant_scoped(tmp_path: Path):
 
 
 def test_mcp_answer_preserves_medical_advice_refusal(tmp_path: Path):
-    settings = Settings(database_path=tmp_path / "mcp-policy.db")
+    settings = Settings(database_path=tmp_path / "mcp-policy.db", policy_profile="medical")
     with TestClient(create_app(settings), base_url="http://localhost") as client:
         result = _call(
             client,

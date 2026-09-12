@@ -1,4 +1,4 @@
-"""Medical-operations domain routing regression tests."""
+"""Configurable domain-policy regression tests."""
 
 import pytest
 
@@ -30,3 +30,7 @@ def test_medical_operations_queries_stay_in_scope(question: str):
 )
 def test_obviously_unrelated_queries_stay_out_of_scope(question: str):
     assert not is_supported_domain_query(question)
+
+
+def test_enterprise_profile_defers_domain_scope_to_retrieval_evidence():
+    assert is_supported_domain_query("员工年假可以结转到下一年吗？", profile="enterprise")

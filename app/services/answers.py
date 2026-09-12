@@ -190,7 +190,7 @@ def prepare_answer(
 
 
     resolved_profile = route_query(request.question, request.retrieval_profile)
-    if is_medical_advice_request(request.question):
+    if is_medical_advice_request(request.question, settings.policy_profile):
         return _response(
             answer_text="该系统只提供医疗知识与医疗器械资料检索，不提供个体诊断、处方或治疗建议。",
             text_evidence=[],
@@ -203,7 +203,9 @@ def prepare_answer(
             provider="policy",
             retrieval_ms=0,
         )
-    if resolved_profile == "text" and not is_supported_domain_query(request.question):
+    if resolved_profile == "text" and not is_supported_domain_query(
+        request.question, settings.policy_profile
+    ):
         return _response(
             answer_text="当前知识库没有足够的医疗或医疗器械证据回答这个问题。",
             text_evidence=[],

@@ -11,7 +11,7 @@ from app.main import create_app
 
 @pytest.fixture
 def client(tmp_path: Path):
-    settings = Settings(database_path=tmp_path / "medops-test.db")
+    settings = Settings(database_path=tmp_path / "medops-test.db", policy_profile="medical")
     with TestClient(create_app(settings)) as test_client:
         yield test_client
 

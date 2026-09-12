@@ -5,6 +5,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, cast
+
+PolicyProfile = Literal["enterprise", "medical"]
 
 
 def _database_path(database_url: str) -> Path:
@@ -19,12 +22,20 @@ def _csv(value: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
+def _policy_profile(value: str) -> PolicyProfile:
+    normalized = value.strip().lower()
+    if normalized not in {"enterprise", "medical"}:
+        raise ValueError("POLICY_PROFILE must be 'enterprise' or 'medical'")
+    return cast(PolicyProfile, normalized)
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     database_path: Path
     app_env: str = "development"
     log_level: str = "INFO"
     auth_mode: str = "trusted_headers"
+    policy_profile: PolicyProfile = "enterprise"
     mcp_allowed_hosts: tuple[str, ...] = (
         "localhost",
         "localhost:*",
@@ -99,6 +110,7 @@ class Settings:
             app_env=os.getenv("APP_ENV", "development"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             auth_mode=os.getenv("AUTH_MODE", "trusted_headers"),
+            policy_profile=_policy_profile(os.getenv("POLICY_PROFILE", "enterprise")),
             mcp_allowed_hosts=_csv(
                 os.getenv(
                     "MCP_ALLOWED_HOSTS",

@@ -236,6 +236,7 @@ def create_mcp_server(
                 request,
                 model_provider,
             ),
+            policy_profile=settings.policy_profile,
             citation_scope_checker=lambda candidate: _citations_belong_to_tenant(
                 settings.database_path, identity.tenant_id, candidate
             ),

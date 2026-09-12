@@ -98,6 +98,7 @@ async def grounded_answer(
                 effective,
                 model_provider,
             ),
+            policy_profile=settings.policy_profile,
             citation_scope_checker=lambda result: _citations_belong_to_tenant(
                 settings.database_path, context.tenant_id, result
             ),
