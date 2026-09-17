@@ -1,6 +1,10 @@
 # MedOps RAG V3.4｜可审计的企业知识库问答 Agent
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/zureeallv-medops-rag-kmjsru?v=73037b1565a7fc8e72ff8b53dcf39b43)](https://m8ven.ai/mcp/zureeallv-medops-rag-kmjsru)
+
 [English](README_EN.md) · [学习导览](docs/LEARNING_GUIDE.md) · [部署说明](docs/v2/DEPLOYMENT.md) · [安全威胁模型](THREAT_MODEL.md)
+
+代码以 [MIT 许可证](LICENSE) 开源。引用的第三方资料、商标和外部数据仍受各自原始条款约束；仓库不重新许可其原文。
 
 面向**公开资料与企业内部知识**的多租户 RAG：把多模态文档解析、混合检索、受控 Agent、MCP、引用复核与运行审计收进一条可解释链路，让 AI 回答能够回到原始证据，并对无依据问答和越权访问主动拒绝。
 

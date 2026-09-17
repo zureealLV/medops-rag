@@ -128,11 +128,11 @@ async function copyEnv() {
   const lines = [
     `MODEL_BASE_URL=${form.base_url.trim().replace(/\/$/, '')}`,
     `MODEL_NAME=${form.model_name.trim()}`,
-    form.api_key.trim() ? `MODEL_API_KEY=${form.api_key.trim()}` : 'MODEL_API_KEY=<在本机填写，不要提交到 Git>',
+    'MODEL_API_KEY=<在本机填写，不要提交到 Git>',
     `MODEL_VISION_ENABLED=${String(form.vision_enabled)}`,
   ]
   await navigator.clipboard.writeText(lines.join('\n'))
-  ElMessage.success('环境变量模板已复制')
+  ElMessage.success('不含 API Key 的环境变量模板已复制')
 }
 
 onMounted(load)
@@ -210,7 +210,7 @@ onMounted(load)
               <template #prefix><el-icon><Key /></el-icon></template>
             </el-input>
             <div class="key-controls">
-              <small><el-icon><Lock /></el-icon> 服务端永不回传原 Key；测试请求也不会写入审计日志。</small>
+              <small><el-icon><Lock /></el-icon> 服务端永不回传原 Key；切换 Base URL 不沿用旧 Key，复制模板也不含 Key。</small>
               <el-checkbox v-model="form.clear_api_key">清除当前 Key</el-checkbox>
             </div>
           </el-form-item>

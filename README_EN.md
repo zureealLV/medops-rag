@@ -1,6 +1,10 @@
 # MedOps Enterprise Knowledge Q&A Agent RAG V3.4
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/zureeallv-medops-rag-kmjsru?v=73037b1565a7fc8e72ff8b53dcf39b43)](https://m8ven.ai/mcp/zureeallv-medops-rag-kmjsru)
+
 [中文首页](README.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [Summary Provider policy](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
+
+Source code is open source under the [MIT License](LICENSE). Referenced third-party materials, trademarks, and external datasets retain their original terms; this repository does not relicense their source content.
 
 An auditable, tenant-scoped Agent RAG assistant for **public documents and internal enterprise knowledge**.
 The first version used public medical and medical-device sources to validate provenance, abstention, and

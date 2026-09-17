@@ -73,6 +73,16 @@ def test_mcp_initialize_and_tool_schemas(tmp_path: Path):
         assert set(listed) == {"list_knowledge_bases", "rag_search", "rag_answer"}
         assert "ctx" not in listed["rag_search"]["inputSchema"]["properties"]
         assert listed["rag_search"]["inputSchema"]["properties"]["top_k"]["maximum"] == 10
+        for name, open_world in (
+            ("list_knowledge_bases", False),
+            ("rag_search", False),
+            ("rag_answer", True),
+        ):
+            annotations = listed[name]["annotations"]
+            assert annotations["readOnlyHint"] is False
+            assert annotations["destructiveHint"] is False
+            assert annotations["idempotentHint"] is False
+            assert annotations["openWorldHint"] is open_world
 
 
 def test_mcp_allows_loopback_browser_origin_and_rejects_external_origin(tmp_path: Path):

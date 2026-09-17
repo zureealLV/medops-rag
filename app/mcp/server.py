@@ -11,6 +11,7 @@ from anyio import to_thread
 from mcp.server import MCPServer
 from mcp.server.mcpserver import Context
 from mcp.server.mcpserver.exceptions import ToolError
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from app.agents.model import ModelProvider
@@ -27,6 +28,18 @@ from app.services.answers import answer_async
 from app.services.retrieval import search
 
 IdentityResolver = Callable[[Context, str, str], RequestContext]
+
+
+def _tool_annotations(*, open_world: bool) -> ToolAnnotations:
+    # Authentication updates last_used_at and search/answer write audit records.
+    # These tools do not mutate tenant content, but are not strictly read-only or
+    # idempotent in the protocol's side-effect sense.
+    return ToolAnnotations(
+        readOnlyHint=False,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=open_world,
+    )
 
 
 def _tool_error(error: AppError) -> ToolError:
@@ -140,7 +153,7 @@ def create_mcp_server(
         version="3.5.0",
     )
 
-    @server.tool()
+    @server.tool(annotations=_tool_annotations(open_world=False))
     def list_knowledge_bases(ctx: Context) -> dict[str, Any]:
         """List knowledge bases visible to the authenticated MedOps tenant."""
         settings = resolve_settings()
@@ -148,7 +161,7 @@ def create_mcp_server(
         items = knowledge_base_service.list_all(settings.database_path, identity.tenant_id)
         return {"knowledge_bases": [item.model_dump() for item in items]}
 
-    @server.tool()
+    @server.tool(annotations=_tool_annotations(open_world=False))
     def rag_search(
         query: Annotated[str, Field(min_length=2, max_length=1000)],
         ctx: Context,
@@ -203,7 +216,7 @@ def create_mcp_server(
         )
         return result.model_dump()
 
-    @server.tool()
+    @server.tool(annotations=_tool_annotations(open_world=True))
     async def rag_answer(
         question: Annotated[str, Field(min_length=2, max_length=2000)],
         ctx: Context,

@@ -127,6 +127,45 @@ def test_model_config_connection_test_uses_ephemeral_key_and_sanitized_response(
     assert "test-secret-ephemeral" not in response.text
 
 
+def test_provider_key_is_not_reused_for_another_endpoint(tmp_path: Path) -> None:
+    seen: list[str | None] = []
+
+    def provider(request: httpx.Request) -> httpx.Response:
+        seen.append(request.headers.get("Authorization"))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "OK"}}]})
+
+    settings = Settings(
+        database_path=tmp_path / "model-config-key-scope.db",
+        app_env="test",
+        model_api_key="existing-provider-secret",
+        model_base_url="https://api.deepseek.com",
+    )
+    transport = httpx.MockTransport(provider)
+    with TestClient(create_app(settings, model_async_transport=transport)) as client:
+        changed = {
+            "provider": "custom",
+            "model_name": "other-model",
+            "base_url": "https://other-provider.example/v1",
+        }
+        tested = client.post(
+            "/system/model-config/test",
+            headers={"X-Tenant-ID": "hospital-a"},
+            json=changed,
+        )
+        assert tested.status_code == 200
+        assert seen == [None]
+
+        applied = client.put(
+            "/system/model-config",
+            headers={"X-Tenant-ID": "hospital-a"},
+            json=changed,
+        )
+        assert applied.status_code == 200
+        assert applied.json()["api_key_configured"] is False
+        assert applied.json()["api_key_source"] == "none"
+        assert client.app.state.settings.model_api_key == ""
+
+
 def test_model_config_rejects_unsafe_or_malformed_endpoints(
     client: TestClient,
     tenant_headers: dict[str, str],

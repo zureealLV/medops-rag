@@ -80,7 +80,10 @@ def _test_endpoint_allowed(settings: Settings, base_url: str) -> None:
 def _effective_key(settings: Settings, data: ModelConfigInput) -> str:
     if data.clear_api_key:
         return ""
-    return data.api_key if data.api_key is not None else settings.model_api_key
+    if data.api_key is not None:
+        return data.api_key
+    # Never carry a configured secret over to another Provider endpoint.
+    return settings.model_api_key if data.base_url == settings.model_base_url else ""
 
 
 @router.get("")
@@ -101,9 +104,10 @@ async def apply_model_config(
     settings: SettingsDep,
     request_id: RequestIdDep,
 ) -> ModelConfigView:
+    effective_key = _effective_key(settings, data)
     updated = replace(
         settings,
-        model_api_key=_effective_key(settings, data),
+        model_api_key=effective_key,
         model_base_url=data.base_url,
         model_name=data.model_name,
         model_vision_enabled=data.vision_enabled,
@@ -112,7 +116,7 @@ async def apply_model_config(
     request.app.state.settings_ref["value"] = updated
     request.app.state.model_config_source = "runtime"
     request.app.state.model_config_provider = data.provider
-    if data.clear_api_key:
+    if not effective_key:
         request.app.state.model_api_key_source = "none"
     elif data.api_key is not None:
         request.app.state.model_api_key_source = "runtime"
