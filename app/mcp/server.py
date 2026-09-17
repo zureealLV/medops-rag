@@ -144,11 +144,12 @@ def create_mcp_server(
 
     server = MCPServer(
         name="MedOps RAG",
-        description="Tenant-scoped medical and medical-device evidence retrieval.",
+        description="Tenant-scoped enterprise knowledge retrieval and grounded answers.",
         instructions=(
             "List the caller's knowledge bases first when no knowledge_base_id is known. "
             "Use rag_search for evidence discovery and rag_answer for a grounded answer. "
-            "Preserve returned citations and never present the system as medical advice."
+            "Preserve returned citations and avoid unsupported claims. "
+            "When the medical policy profile is active, never provide individual medical advice."
         ),
         version="3.5.0",
     )
@@ -168,7 +169,7 @@ def create_mcp_server(
         knowledge_base_id: Annotated[int | None, Field(ge=1)] = None,
         top_k: Annotated[int, Field(ge=1, le=10)] = 5,
     ) -> dict[str, Any]:
-        """Search tenant-scoped medical evidence without generating an answer."""
+        """Search tenant-scoped knowledge-base evidence without generating an answer."""
         settings = resolve_settings()
         identity = resolve_identity(ctx, "POST", "/search")
         request = _effective_search(

@@ -54,7 +54,7 @@ def test_mcp_initialize_and_tool_schemas(tmp_path: Path):
         )
         assert initialize.status_code == 200
         assert initialize.json()["result"]["serverInfo"] == {
-            "description": "Tenant-scoped medical and medical-device evidence retrieval.",
+            "description": "Tenant-scoped enterprise knowledge retrieval and grounded answers.",
             "name": "MedOps RAG",
             "version": "3.5.0",
         }
@@ -72,6 +72,7 @@ def test_mcp_initialize_and_tool_schemas(tmp_path: Path):
         listed = {tool["name"]: tool for tool in tools.json()["result"]["tools"]}
         assert set(listed) == {"list_knowledge_bases", "rag_search", "rag_answer"}
         assert "ctx" not in listed["rag_search"]["inputSchema"]["properties"]
+        assert "knowledge-base evidence" in listed["rag_search"]["description"]
         assert listed["rag_search"]["inputSchema"]["properties"]["top_k"]["maximum"] == 10
         for name, open_world in (
             ("list_knowledge_bases", False),
