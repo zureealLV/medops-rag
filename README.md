@@ -1,6 +1,8 @@
-# MedOps RAG V3.4｜可审计的企业知识库问答 Agent
+# MedOps RAG V3.5｜可审计的企业知识库问答 Agent
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/zureeallv-medops-rag-kmjsru?v=73037b1565a7fc8e72ff8b53dcf39b43)](https://m8ven.ai/mcp/zureeallv-medops-rag-kmjsru)
+
+> M8ven 的「Verified」表示发布者认领已验证；右侧等级是其独立信任评估，可能随复核变化，不等于生产或医疗安全认证。
 
 [English](README_EN.md) · [学习导览](docs/LEARNING_GUIDE.md) · [部署说明](docs/v2/DEPLOYMENT.md) · [安全威胁模型](THREAT_MODEL.md)
 

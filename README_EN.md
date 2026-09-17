@@ -1,6 +1,8 @@
-# MedOps Enterprise Knowledge Q&A Agent RAG V3.4
+# MedOps Enterprise Knowledge Q&A Agent RAG V3.5
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/zureeallv-medops-rag-kmjsru?v=73037b1565a7fc8e72ff8b53dcf39b43)](https://m8ven.ai/mcp/zureeallv-medops-rag-kmjsru)
+
+> M8ven "Verified" confirms the publisher claim; the grade is M8ven's separate trust assessment and may change on re-evaluation. Neither is a production or medical safety certification.
 
 [中文首页](README.md) · [Enterprise roadmap](docs/v4/ENTERPRISE_ROADMAP.md) · [Adaptive challenge v3](docs/v3/ADAPTIVE_CHALLENGE_V3_EVALUATION.md) · [Summary Provider policy](docs/v4/SUMMARY_PROVIDER_POLICY.md) · [Concurrency audit](docs/v3/CONCURRENCY_OPTIONS.md) · [Agent tools/checkpoints](docs/v4/AGENT_TOOLS_AND_CHECKPOINTS.md) · [Agent benchmark](docs/v3/BENCHMARK_AGENT_ORCHESTRATION.md) · [Official Chinese corpus](docs/v2/OFFICIAL_CHINESE_CORPUS.md) · [Authentication](docs/v2/AUTHORIZATION.md) · [Deployment](docs/v2/DEPLOYMENT.md) · [Threat model](THREAT_MODEL.md)
 
@@ -19,6 +21,8 @@ explainable adaptive retrieval, DeepSeek V4 Flash, token/cost telemetry,
 and measured chunk-profile gates. It retains V2.4's six hash-pinned Chinese government
 PDFs, 15,000-record Huatuo research corpus, NLM MedlinePlus import, multimodal evidence, SQLite trigram FTS and
 the enterprise operations console as reproducible validation assets.
+V3.5 adds tenant- and actor-scoped persistent LangGraph conversations, contextual follow-up handling,
+and separate login and role-aware Web interfaces.
 
 > Educational portfolio software. It does not process real patient or enterprise-sensitive records, claim regulatory compliance, or execute system-changing tools.
 
